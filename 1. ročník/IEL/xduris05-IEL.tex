@@ -1,0 +1,351 @@
+\documentclass{article}
+\usepackage[czech]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[left=2cm, text={17cm, 24cm}, top=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage[european]{circuitikz}
+\usepackage{amssymb}
+\title{IEL -- Semestrálny projekt}
+\author{Tomáš Ďuriš}
+\date{\today}
+\begin{document}
+	\begin{titlepage}
+		\begin{center}	
+			\Huge{Vysoké učení technické v Brně}\\
+			\huge{Fakulta informačných technologií}\\
+			\vspace{1cm}
+			\huge{Elektronika pre informačné technológie}
+			\vspace{3cm}
+			\huge{2018/2019}\\
+			\vspace{2cm}
+			\huge{\textbf{Semestrálny projekt}}\\
+			\vspace{12cm}
+	    	\Large{Tomáš Ďuriš (xduris05)~~~~~~~~~~~~~~~~~~ Brno 19.12 2018}
+		\end{center}	
+	\end{titlepage}
+\section*{1.}
+\large{Zadanie:}
+Stanovte $U_{R3}$ a $I_{R3}$. Použite metódu postupného zjednodušovania obvodu
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|[|c|c|c|c|c|c|c|c|c|c|c|c|c|c]}
+    \hline
+    sk.&U_1 [V]&U_2 [V]&R_1 [\Omega]&R_2 [\Omega]&R_3 [\Omega]&R_4 [\Omega]&R_5 [\Omega]&R_6 [\Omega]&R_7 [\Omega]&R_8 [\Omega]\\
+    \hline
+    D&105&85&420&980&330&280&310&710&240&200\\
+    \hline
+    \end{tabular}
+\end{table}
+\newline
+\begin{center}
+    \begin{circuitikz}
+        \draw
+        (0,4) to[dcvsource, v_=$U_1$] (0,2)
+        (0,2) to[dcvsource, v_=$U_2$] (0,0)
+        (0,4) to[short, -*] (1,4)
+        (1,4) to[R, *-, l=$R_1$] (4,4)
+        (4,4) to[R, -*, l=$R_2$] (7,4)
+        (1,4) to[short, *-] (1,2)
+        (1,2) to[R, -*, l=$R_3$] (7,2)
+        (7,2) to[R, *-*, l=$R_4$] (7,4)
+        (7,4) to[R, *-, l=$R_5$] (10,4)
+        (7,2) to[R, *-*, l=$R_6$] (10,2)
+        (10,4) to[short] (10,0)
+        (10,0) to[short] (6,0)
+        (6,0) to [short, *-] (6,1)
+        (6,0) to [short, *-] (6,-1)
+        (6,1) to [R, l=$R_7$] (3,1)
+        (6,-1) to [R, l=$R_8$] (3,-1)
+        (3,1) to[short, -*] (3,0)
+        (3,-1) to[short, -*] (3,0)
+        (3,0) to[short] (0,0)
+        ;
+    \end{circuitikz}
+\end{center}
+\centerline {\huge{Riešenie metodou postupného zjedodušovania}}\\
+Označíme si uzly pre transfiguráciu (trojuholník $\Rightarrow$ hviezda):\\
+\begin{center}
+\begin{circuitikz}
+        \draw
+        (0,4) to[dcvsource, v_=$U_1$] (0,2)
+        (0,2) to[dcvsource, v_=$U_2$] (0,0)
+        (0,4) to[short] (1,4)
+        (1,4) to[R, *-, l=$R_{12}$] (4,4)
+        (4,4) to[R, l=$R_A$] (7,4)
+        (1,4) to[short, *-] (1,2)
+        (1,2) to[R, l=$R_3$] (4,2)
+        (4,2) to[R, l=$R_B$] (7,2)
+        (7,3) to[R, *-, l=$R_C$] (10,3)
+        (7,4) to[short] (7,2)
+        (10,3) to[short] (10,0)
+        (10,0) to[short] (6,0)
+        (6,0) to [R, l=$R_{78}$] (3,0)
+        (3,0) to[short] (0,0)
+        ;
+    \end{circuitikz}
+\end{center}\\
+Prevedieme transfiguráciu a spojenie $R_1$ a $R_2$:\\
+$$R_{12} = R_1 + R_2 = 420 + 980 = 1400$$
+$$R_A = \frac{R_4 * R_5}{R_4 + R_6 + R_5} = \frac{280*310}{280+710+310} = \frac{863}{13}\Omega$$
+$$R_B = \frac{R_4 * R_6}{R_4 + R_6 + R_5} = \frac{280*710}{280+710+310} = \frac{1988}{13}\Omega$$
+$$R_C = \frac{R_6 * R_5}{R_4 + R_6 + R_5} = \frac{710*310}{280+710+310} = \frac{2201}{13}\Omega$$
+Sériove spojenie $R_{12}$ s $R_A$ a $R_3$ s $R_B$ a Paralelne spojenie $R_7$ s $R_8$
+$$R_{12A} = R_{12} + R_A = 1400 + \frac{863}{13} = \frac{19063}{13}\Omega$$
+$$R_{3B} = R_3 + R_A = 330 + \frac{1988}{13} = \frac{6278}{13}\Omega$$
+$$R_{78} = \frac{R_7 * R_8}{R_7 + R_8} = \frac{240 * 200}{240 + 200} = \frac{1200}{11}\Omega$$
+\begin{center}
+ \begin{circuitikz}
+        \draw
+        (0,4) to[dcvsource, v_=$U_1$] (0,2)
+        (0,2) to[dcvsource, v_=$U_2$] (0,0)
+        (0,4) to[R, l=$R_{12A3B}$] (7,4)
+        (7,4) to[R, l=$R_C$] (10,4)
+        (10,4) to[short] (10,0)
+        (10,0) to [R, l=$R_{78}$] (0,0)
+        ;
+    \end{circuitikz}
+\end{center}
+Paralelne spojenie $R_{12A}$ s $R_{3B}$ a spojenie zdrojov napätia
+$$R_{123AB} = \frac{R_{12A} * R_{3B}}{R_{12A} + R_{3B}} = \frac{\frac{19063}{13} * \frac{6278}{13}}{\frac{19063}{13} + \frac{6278}{13}} = 363,2833\Omega$$
+$$U_{12} = U_1 + U_2 = 105 + 85 = 190V$$
+Sériové spojenie $R_{123AB}$ s $R_{78}$ s $R_{C}$
+$$R_{EKV} = R_{123AB} + R_{78} + R_{C} = 363,2833 + \frac{1200}{11} + \frac{2201}{13} = 641,6819$$
+\begin{center}
+\begin{circuitikz}
+        \draw
+        (0,4) to[dcvsource, v_=$U$] (0,0)
+        (0,4) to[R, l=$R_{EKV}$] (10,4)
+        (10,4) to[short] (10,0)
+        (10,0) to [short] (0,0)
+        ;
+    \end{circuitikz}
+\end{center}
+Celkový prúd $I$:
+$$I = \frac{U}{R_{EKV}} = \frac{190}{641,6819} = 0,2961A$$
+Teraz môžme spätne dopočítať prúd a napätie na rezistore $R_3$
+$$U_{123AB} = I * R_{123AB} = 0,2961 * 363,2833 = 107,5682V$$
+$$I_{R3} \equiv I_{RB} \equiv I_{R3B} = \frac{U_{123AB}}{R_{3B}} = \frac{107,5682}{\frac{6278}{13}} = 0,22274A$$
+$$U_{R3} = I * R_3 = 0.2227 * 330 = 73,5055V$$
+\newpage
+\section*{2.}
+Zadanie:\\
+Stanovte $U_{R_1}$ a $I_{R_1}$. Použite metódu Théveninovej vety.
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|[|c|c|c|c|c|c|]}
+    \hline
+    sk.&U [V]&R_1 [\Omega]&R_2 [\Omega]&R_3 [\Omega]&R_4 [\Omega]&R_5 [\Omega]\\
+    \hline
+    C&200&70&220&630&240&450\\
+    \hline
+    \end{tabular}
+\end{table}
+\newline
+\begin{center}
+    \begin{circuitikz}
+        \draw
+        (2,4) to[dcvsource, v=$U$] (2,1)
+        (2,4) to[R, l=$R_5$] (0,4)
+        (0,4) to[short] (0,5)
+        (0,4) to[R, *-*, l=$R_2$] (-2,4)
+        (0,5) to[R, l=$R_1$] (-2,5)
+        (0,4) to[R, -*, l=$R_4$] (0,1)
+        (0,1) to[R, l=$R_3$] (-2,1)
+        (-2,1) to[short] (-2,5)
+        (0,1) to[short] (2,1)
+        ;
+    \end{circuitikz}
+\end{center}
+\centerline{\huge{Použijeme metódu Théveninovej vety}}
+Vypočítame si prvú smyčku :
+$$-450I_1 - 240I_2 + 200 = 0$$
+$$-45I_1 - 24I_2 + 20 = 0$$
+Vypočítame si druhú smyčku :\\
+$$-220(I_1-I_2)-630(I_1-I_2) + 240I_2 = 0$$
+$$-220I_1 + 220I_2 - 630I_1 + 630I_2 + 240I_2 = 0$$
+$$-850I_1 + 1090I_2 = 0$$
+$$-85I_1 + 109I_2 = 0$$
+Zistíme $I_2$:\\
+$$45I_1 + 24I_2 = 20$$
+$$-85I_1 + 109I_2 = 0$$ 
+$$3825I_1 + 2040I_2 = 1700$$
+$$-3825I_1 + 4905I_2 = 0 $$
+$$6945I_2 = 1700$$
+$$I_2 = 0,2448A$$
+Výpočet $I_1$:\\
+$$45I_1 + 24*0,2448 = 20$$
+$$45I_1 + 5,8752 = 20$$
+$$45I_1 = 14,1248$$
+$$I_1 = 0,3139A$$
+\begin{center}
+    \begin{circuitikz}
+        \draw
+        (2,4) to[dcvsource, v=$U$] (2,1)
+        (2,4) to[R, l=$R_5$] (0,4)
+        (0,4) to[short, -*] (0,5)
+        (0,4) to[R, *-*, l=$R_2$] (-2,4)
+        (0,4) to[R, -*, l=$R_4$] (0,1)
+        (0,1) to[R, l=$R_3$] (-2,1)
+        (-2,1) to[short, -*] (-2,5)
+        (0,1) to[short] (2,1)
+        ;
+        \draw[thin, ->, >=triangle 45] (1,2.8)node{$I_1$}  ++(-60:0.5) arc (-60:170:0.5);
+        \draw[thin, ->, >=triangle 45] (-1,2.8)node{$I_1 - I_2$}  ++(-60:0.5) arc (-60:170:0.5);
+    \end{circuitikz}
+\end{center}
+Odstránime cielený rezistor a počítame ďalej\\
+Výpočet $V_{th}$:\\
+$$-V_{th} + 220(I_1-I_2) = 0$$
+$$V_{th} = 220(I_1-I_2)$$
+$$V_{th} = 220 * 0,0691$$
+$$V_{th} = 15,202V$$
+Zjednodušíme obvod:\\
+$$R_{345} = R_3 + \frac{R_4*R_5}{R_4+R_5}$$
+$$R_{345} = \frac{18090}{23}$$
+$$R_{th} = \frac{\frac{18090}{23}*220}{\frac{18090}{23}+220}$$
+$$R_{th} = 171,9136\Omega$$
+Vypočítame prúd I:\\
+$$I_{R1} = \frac{V_{th}}{R_{th}+R_l}$$
+$$I_{R1} = 0,0628A$$
+A ako posledné vypočítame napätie U:\\
+$$U_{R1} = R*I$$
+$$U_{R1} = 4,396V$$
+\newpage
+\section*{3.}
+Zadanie:\\
+Stanovte napätie $U_{R_{3}}$ a prúd $I_{R_{3}}$.
+Použite metódu uzlových napätí ($U_A$, $U_B$, $U_C$)\\
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+        \hline
+        sk. & $U$~[V] & $I_{1}$~[A] & $I_{2}$~[A] & $R_{1}~[\Omega]$ & $R_{2}~[\Omega]$ & $R_{3}~[\Omega]$ & $R_{4}~[\Omega]$ & $R_{5}~[\Omega]$ \\
+        \hline
+        B&150&0.7&0.8&49&45&61&34&34\\
+        \hline
+    \end{tabular}
+\end{table}
+\begin{center}
+    \begin{circuitikz}
+		\draw (0, -4) to[dcvsource=$U$] (0, -2) to[R=$R_{1}$] (0, 0) -- (2, 0) to[R=$R_{2}$, v=$U_{A}$, *-*] (2, -4) -- (0, -4);
+		\draw (2, 0) -- (2, 2) to[ioosource=$I_{1}$] (6, 2) -- (6, 0) to[R=$R_{3}$, i=$I_{R_{3}}$, v=$U_{R_{3}}$, *-*] (2, 0);
+		\draw (6, 0) to[R=$R_{4}$] (6, -4) -- (8, -4) to[ioosource=$I_{2}$] (8, 0) -- (6, 0);
+		\draw (6, -4) to[R=$R_{5}$, v=$U_{C}$, *-*] (2, -4);
+		\draw (6, 0) to[open, v=$U_{B}$] (2, -4);
+	\end{circuitikz}
+\end{center}
+Označíme si jednotlivé uzly a zapíšeme rovnicu pre každý uzol
+$$A:I_{R1}-I_1+I_{R3}-I_{R2}=0$$
+$$B:I_1-I_{R3}+I_2-I_{R4}=0$$
+$$C:I_{R4}-I_2-I_{R5}=0$$
+Vyjadríme si prúdy na odporoch podľa ohmovho zákona
+$$A:-I_1+\frac{U-U_A}{R_1}+\frac{U_B-U_A}{R3}-\frac{U_A}{R_2}=0$$
+$$B:I_1-\frac{U_B-U_A}{R_3}+I_2-\frac{U_B-U_C}{R_4}=0$$
+$$C:-I_2-\frac{U_C}{R_5}+\frac{U_B-U_C}{R4}=0$$
+Dosadíme si čísla do rovníc
+$$A:-0,7+\frac{150-U_A}{49}+\frac{U_B-U_A}{61}-\frac{U_A}{45}=0$$
+$$B:0,7-\frac{U_B-U_A}{61}+0,8-\frac{U_B-U_C}{34}=0$$
+$$C:-0,8-\frac{U_C}{34}+\frac{U_C-U_C}{34}=0$$
+Po odstránení zlomkov a sčítaní rovnakých neznámych dostaneme výsledne rovnice v tvare
+$$A:7939U_A-2205U_B=317596,5$$
+$$B:34U_A-95U_B+61U_C=-3111$$
+$$C:{U_B}-2U_C=27,2$$
+Po výpočte 3 rovníc o 3 neznámych Cramerovým pravidlom dostaneme výsledné hodnoty
+$$U_A=58,3750$$
+$$U_B=66,1418$$
+$$U_C=19,4709$$
+Vieme, že $U_{R3}=U_B-U_A$ takže
+$$U_{R3}=7,7688V$$
+A ako posledné vypočítame $I_{R3}$
+$$I_{R3}=\frac{U_{R3}}{R_3}$$
+$$I_{R3}=0,1273A$$
+\newpage
+\section*{4.}
+Pre napájacie napätie platí: $U_1=U_1*sin(2\pi ft), u_2=U_2*sin(2\Pi ft).$
+Vo vzťahu pre napätie $u_{c2}=U_{c2}*sin(2\pi ft+\lambda_{c2})$ určte $|U_{c2}|$ a $\lambda_{c2}$. Použite metódu smyčkových prúdov.
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    sk. &U_1[V] &U_2[V] &R_1[$\Omega$] &R_2[$\Omega$] &R_3[$\Omega$] &L_1[mH] &L_2[mH] &C_1[$\mu$F] &C_2[$\mu$F] &f[Hz]\\
+    \hline
+    D&45&50&13&15&13&180&90&210&75&85\\
+    \hline
+    \end{tabular}
+\end{table} \\
+\begin{figure}[!h]
+	\centering
+	\begin{circuitikz}
+		\draw (0, 0) to[sV=$u_{1}$] (0, -2) -- (4, -2) to[R=$R_{3}$] (6, -2) -- (6, 0);
+		\draw (0, 0) -- (0, 2) to[C=$C_{1}$] (4, 2) to[R=$R_{1}$] (6, 2) to[sV=$u_{2}$] (6, 0);
+		\draw (0, 0) to[L=$L_{1}$, *-] (2, 0) to[R=$R_{2}$] (4, 0) to[L=$L_{2}$, -*] (6, 0);
+		\draw (4, 0) to[C=$C_{2}$, v=$u_{C_{2}}$, i=$i_{C_{2}}$, *-*] (4, -2);
+	\end{circuitikz}
+\end{figure}\\
+Vyjadríme si impedanciu cievok a kondenzátorov
+$$Z_{c1}=-\frac{j}{\omega*C_1}$$
+$$Z_{c1}=-8,9127j\Omega$$
+$$Z_{c2}=-\frac{j}{\omega*C_2}$$
+$$Z_{c2}=-24,9377j\Omega$$
+$$Z_{L1}=j*\omega*L_1$$
+$$Z_{L1}=96,1327j\Omega$$
+$$Z_{L2}=j*\omega*L_2$$
+$$Z_{L2}=48,0664j\Omega$$
+$$U_1=U_1*sin(2\pi f\frac{\pi}{2\omega})$$
+$$U_1=U_1*sin(90)$$
+Zostavime Rovnice pre smyčky
+$$A:-U_1+I_A*Z_{L1}+I_A*R_2+I_A+Z_{c2}-I_B*R_2-I_B*Z_{L1}-I_C*Z_{c2}=0$$
+$$B:U2+I_B*Z_{L2}+I_B*R_2+I_B*Z_{L1}+I_B*Z_{c1}+I_B*R_1-I_A*Z_{L1}-I_A*R_2-I_C*Z_{l2}=0$$
+$$C:I_C*R_3+I_C*Z_{c2}+I_C*Z_{L2}-I_A*Z_{c2}-I_B*Z_{L2}=0$$
+Napätie na zdroji dáme na druhú stranu a vyjmeme $I_A,I_B,I_C$ pred zátvorku a usporiadame
+$$I_A(Z_{L1}+R_2+Z_{c2})-I_B(R_2+Z_{L1})-I_C(Z_{c2})=U1$$
+$$-I_A(Z_{L1}-R_2)+I_B(Z_{L2}+R_2+Z_{L1}+Z_{c1}+R_1)-I_C(Z_{L2})=-U2$$
+$$-I_A(Z_{c2})-I_B(Z_{c2})+I_C(R_3+Z_{c2}+Z_{L2})=0$$
+Zostavíme maticu a vypočítame $I_A,I_C,I_{c2}$
+\begin{center}
+    \begin{pmatrix}
+      15 + 71,195j & -(15 + 96,1327j) & 24,9377j\\
+     -(15 + 96,1327j) & 28 + 135,2864j & -48,0664j\\
+     24,9377j & -48,0664j & 13 + 23,1287j\\
+    \end{pmatrix}
+    \begin{pmatrix}
+      45\\
+      -50\\
+      0\\
+    \end{pmatrix}
+\end{center}
+
+$$I_A=0,5563-0,9889j$$
+$$I_C=-0,4135+0,3571j$$
+$$I_{c2}=I_A-I_C=0,9698-1,346j$$
+Vypočítame $|U_{c2}|$ a $\varphi_{c2}$
+$$U_{c2} = I_{c2} * Z_{c2} = (0,9698 - 1,346j) * (-24,9377j) = -33.5661 - 24.6634j$$
+$$|U_{c2}| = \sqrt{(33.5661)^2 + (24,4389)^2} = 41,5205V$$
+$$\varphi _{c2} = -arctg(\frac{ImgU_{c2}}{ReU_{c2}}) * \frac{\pi}{180} = -arctg(\frac{33.5661}{24.4389}) * \frac{\pi}{180}= -0,01643 rad$$
+\newpage
+\section*{Výsledky}
+
+
+\vspace{50px}
+
+\begin{center}
+    \begin{tabular}{| c | c | c |}
+        \hline
+        \textbf{Př.} & \textbf{Sk.} & \textbf{Výsledeky} \\
+        \hline
+        1 & D & $U_{R_3} = 73,5055V, I_{R_3} = 0,2227A$ \\
+        \hline
+        2 & C & $U_{R_1} = 4,396V, I_{R_1} = 0,0628A$ \\
+        \hline
+        3 & B & $U_{R_3} = 7,7688V, I_{R_3} = 0,1273A$ \\
+        \hline
+        4 & D & $|U_{C_2}| = 41,5205V, \varphi_{C_2} = -0,01643rad$ \\
+        \hline
+        5 & C & $??$ \\
+        \hline
+    \end{tabular}
+\end{center}
+\end{document}

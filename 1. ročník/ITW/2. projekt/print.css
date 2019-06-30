@@ -1,0 +1,338 @@
+﻿body {
+    color: black;
+    font-size: 10pt;
+    text-align: justify;
+    background-color: #ffffff;
+}
+
+header, footer {
+    display: none;
+}
+
+
+.logo {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+    .logo img {
+        height: 150px;
+        padding: 0px;
+        margin: 0px;
+    }
+/*FOTO*/
+.foto {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    background-color: #4b3e2e;
+}
+
+    .foto img {
+        width: 100%;
+        box-shadow: inset 0px 11px 8px -10px #CCC,
+    }
+
+.fotokava {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    background-color: #4b3e2e;
+}
+
+    .fotokava img {
+        width: 100%;
+    }
+
+.fotokav {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+.about {
+    background: white;
+}
+
+.about_text {
+    width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 40px;
+}
+
+.about p {
+    border-top: 2px solid darkgray;
+    padding: 10px 20px
+}
+
+.about h2 {
+    padding: 50px 0px 10px 0px;
+}
+
+#gallery {
+    display: flex;
+    justify-content: space-between;
+}
+
+.zmrzliny {
+    padding-top: 20px;
+}
+
+.about_text h2 {
+    border-bottom-style: solid;
+}
+
+.zmrzliny .desc {
+    display: flex;
+    justify-content: center;
+}
+
+.o_zmrzlinach {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    font-style: italic;
+}
+
+    .o_zmrzlinach p {
+        font-size: 20px;
+    }
+
+.vafle_content a {
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.vafle_content {
+    margin-top: 20px;
+    margin-left: 10px;
+}
+
+    .vafle_content p {
+        margin-bottom: 50px;
+    }
+
+    .vafle_content ul li {
+        margin-bottom: 20px;
+    }
+
+.kontakt_h {
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+    font-size: 50px;
+    font-weight: bold;
+    border-bottom: solid;
+}
+
+.mapouter {
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    text-align: center;
+    height: 500px;
+}
+
+.gmap_canvas {
+    overflow: hidden;
+    background: none !important;
+    height: 500px;
+    width: 1200px;
+}
+
+.making_foto {
+    display: flex;
+    justify-content: center;
+}
+
+#akcie {
+    background: white;
+    position: relative;
+}
+
+#events {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0px;
+    background: #4b3e2e;
+    border: 0;
+    color: silver;
+    box-shadow: 0px 0px 8px 5px rgba(0, 0, 0, 0.4);
+}
+
+    #events:hover {
+        cursor: pointer;
+    }
+
+#events_hid {
+    width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 30px;
+}
+
+#datum {
+    text-align: right;
+    padding-right: 20px;
+    color: #4b4b4b;
+}
+
+.events_text {
+    display: flex;
+    border-top: 2px solid darkgray;
+    padding: 10px 20px;
+}
+
+
+#events_hid h2 {
+    padding: 50px 0px 0px 0px;
+}
+
+.events_text p {
+    padding-right: 100px;
+    align-self: center;
+}
+
+
+.footer_text {
+    display: flex;
+    justify-content: space-between;
+    width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 30px;
+    text-decoration: none;
+}
+
+    .footer_text a {
+        text-decoration: none;
+    }
+
+        .footer_text a:hover {
+            text-decoration: underline;
+        }
+
+.footer_menu ul {
+    display: flex;
+    list-style: circle;
+    margin: 0;
+    text-decoration: none;
+}
+
+
+    .footer_menu ul li {
+        list-style: none;
+        margin-left: 15px;
+        font-size: 16px;
+        margin-right: 10px;
+        text-decoration: none;
+    }
+
+        .footer_menu ul li a {
+            color: silver;
+        }
+
+#autor {
+    width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 10px;
+}
+
+footer h2 {
+    font-size: 15px;
+    font-family: Cairo, sans-serif;
+    color: silver;
+}
+
+footer {
+    margin-top: 15px;
+    background: #4b3e2e;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    position: relative;
+    border-top: 1px solid #656565;
+}
+
+/*KONTAKT*/
+
+.kontakt_text {
+    width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-around;
+}
+
+#nadpis {
+    text-align: center;
+    font-size: 30px;
+    background: #323234;
+    padding-top: 20px;
+    padding-bottom: 10px;
+    color: silver;
+    margin-top: 20px;
+}
+
+.kontakt_text p {
+    border-top: 1px solid grey;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+    .kontakt_text p b {
+        display: inline-block;
+        width: 60px;
+        color: #323234;
+    }
+
+    .kontakt_text p i {
+        color: #353535;
+    }
+
+.kontakt_text h2 {
+    font-size: 30px;
+    color: #323234;
+}
+
+
+/*MAPA*/
+#mapa_webu {
+    display: block;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    margin-left: 100px;
+    width: 300px;
+    font-size: 20px;
+    line-height: 30px;
+}
+
+    #mapa_webu a {
+        color: #4b3e2e;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+        #mapa_webu a:hover {
+            text-decoration: underline;
+        }
+
+        #mapa_webu a:active {
+            color: red;
+        }
+
+        #mapa_webu a:visited {
+            text-decoration: underline;
+        }
+
+@media print {
+
+    }
+}
