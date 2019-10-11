@@ -48,7 +48,25 @@ int solved;
 */
 void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen ) {
 
+char top_char;
+if(stackEmpty(s))
+  return;
+while(!stackEmpty(s))
+{
+  stackTop(s, &top_char);
+  stackPop(s);
+
+  if(top_char == '(')
+    return;
+  else 
+  {
+    postExpr[*postLen] = top_char;
+    (*postLen)++;
+  }
 }
+
+}
+
 
 /*
 ** Pomocná funkce doOperation.
@@ -61,6 +79,25 @@ void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen ) {
 ** představuje parametr postLen, výstupním polem znaků je opět postExpr.
 */
 void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen ) {
+
+char top_char;
+if (stackEmpty(s))
+{
+  stackPush(s, c);
+  return;
+}
+else
+  stackTop(s,&top_char);
+
+if((top_char == '(') || ((top_char == '+' || top_char == '-') && ((c == '*') || c == '/')))
+{
+  stackPush(s, c);
+  return;
+}
+postExpr[*postLen] = top_char;
+stackPop(s);
+(*postLen)++;
+doOperation(s,c,postExpr,postLen);
 
 }
 
@@ -110,8 +147,54 @@ void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen ) {
 */
 char* infix2postfix (const char* infExpr) {
 
-  solved = 0;                        /* V případě řešení smažte tento řádek! */
-  return NULL;                /* V případě řešení můžete smazat tento řádek. */
-}
+unsigned postLen = 0;
+char c;
+char *postExpr = (char *) malloc(MAX_LEN * sizeof(char));
 
+if(!postExpr)
+  return NULL;
+
+tStack *s = (tStack *) malloc(MAX_LEN * sizeof(tStack));
+if(!s)
+{
+  free(postExpr);
+  return NULL;
+}
+ stackInit(s);
+
+c = *(infExpr);
+while (c != '\0')
+{
+  	if(c == '+' || c == '-' || c == '*' || c == '/')
+    {
+      doOperation(s,c,postExpr, &postLen);
+    }
+    else if (c == '(')
+      stackPush(s,c);
+    else if (c == ')')
+      untilLeftPar(s, postExpr, &postLen);
+    else if (c == '=')
+    {
+      while (!stackEmpty(s))
+      {
+        stackTop(s,&postExpr[postLen]);
+        stackPop(s);
+        postLen++;
+      }
+      postExpr[postLen]='=';
+      postLen++;
+      postExpr[postLen]='\0';
+    }
+    else if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+    {
+      postExpr[postLen] = c;
+      postLen++;
+    }
+    infExpr++;
+    c = (*infExpr);
+
+}
+  free(s);
+  return postExpr;
+}
 /* Konec c204.c */
