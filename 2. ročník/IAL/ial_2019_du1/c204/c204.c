@@ -49,16 +49,16 @@ int solved;
 void untilLeftPar ( tStack* s, char* postExpr, unsigned* postLen ) {
 
 char top_char;
-if(stackEmpty(s))
+if(stackEmpty(s)) //Ak je zásobník prázdny ukončíme funkciu
   return;
-while(!stackEmpty(s))
+while(!stackEmpty(s)) //inak ho vyprázdňujeme v cykle až kým nieje prázdny
 {
-  stackTop(s, &top_char);
-  stackPop(s);
+  stackTop(s, &top_char); //uložíme si premennú z vrcholu zásobníka do nami deklarovanej premennej top_char
+  stackPop(s); //odstránime ju zo zásobníka
 
-  if(top_char == '(')
+  if(top_char == '(') //ak sme zo zásobníka vybrali ľavú zátvorku, môžme skončiť cyklus
     return;
-  else 
+  else  //inak priradíme znak na koniec výstupného reťazca a inkrementujeme jeho dĺžku
   {
     postExpr[*postLen] = top_char;
     (*postLen)++;
@@ -81,23 +81,24 @@ while(!stackEmpty(s))
 void doOperation ( tStack* s, char c, char* postExpr, unsigned* postLen ) {
 
 char top_char;
-if (stackEmpty(s))
+if (stackEmpty(s)) //ak je prázdny zásobník, operátor vložíme na vrchol zásobníku
 {
   stackPush(s, c);
   return;
 }
-else
+else //inak si uložíme znak z vrcholu zásobníka do pomocnej premennej
   stackTop(s,&top_char);
-
+ 
+ //ak je na vrchole zásobníka lavá zátvorka, alebo operátor s nižšou prioritou, tak operátor uložíme na vrchol zásobníka.
 if((top_char == '(') || ((top_char == '+' || top_char == '-') && ((c == '*') || c == '/')))
 {
   stackPush(s, c);
   return;
 }
-postExpr[*postLen] = top_char;
-stackPop(s);
-(*postLen)++;
-doOperation(s,c,postExpr,postLen);
+postExpr[*postLen] = top_char; //vloženie znaku z vrcholu zásobníka na koniec výstupného reťazca
+stackPop(s); //odstránenie znaku z vrcholu zásobníka
+(*postLen)++; //inkrementácia vrcholu
+doOperation(s,c,postExpr,postLen);//volanie funckie pokým sa nám nepodarí vložiť operátor na vrchol zásobníka
 
 }
 
@@ -147,54 +148,61 @@ doOperation(s,c,postExpr,postLen);
 */
 char* infix2postfix (const char* infExpr) {
 
+//deklarácia pomocných premenných
 unsigned postLen = 0;
 char c;
+//alokácia pamäte pre výstupný reťazec
 char *postExpr = (char *) malloc(MAX_LEN * sizeof(char));
-
+//ošetrenie chyby alokácie
 if(!postExpr)
   return NULL;
 
+//alokácia pamäti pre zásobník
 tStack *s = (tStack *) malloc(MAX_LEN * sizeof(tStack));
+//ošetrenie chyby alokácie
 if(!s)
 {
   free(postExpr);
   return NULL;
 }
- stackInit(s);
 
+stackInit(s); //inicializácia zásobníku
+//priradenie znaku zo vstupného reťazca do pomocnej premennej
 c = *(infExpr);
-while (c != '\0')
+while (c != '\0') //cyklus kým nedôjdeme na koniec vstupného reťazca
 {
-  	if(c == '+' || c == '-' || c == '*' || c == '/')
+  	if(c == '+' || c == '-' || c == '*' || c == '/') //ak išlo o operátor, tak ho spracujeme pomocou funckie doOperation
     {
       doOperation(s,c,postExpr, &postLen);
     }
-    else if (c == '(')
+    else if (c == '(') //ak išlo o ľavú zátvorku, tak ju vložíme na vrchol zásobníku
       stackPush(s,c);
-    else if (c == ')')
+    else if (c == ')') //ak išlo o pravú zátvorku, tak vyprázdnime zásobník až po ľavú zátvorku
       untilLeftPar(s, postExpr, &postLen);
-    else if (c == '=')
+    else if (c == '=') // ak išlo o '='
     {
-      while (!stackEmpty(s))
+      while (!stackEmpty(s)) //uložíme znaky z vrcholu zásobníku na koniec výstupného reťazca a inkrementujeme jeho dĺžku
       {
         stackTop(s,&postExpr[postLen]);
-        stackPop(s);
+        stackPop(s); //odstránime znak zo zásobníku
         postLen++;
       }
-      postExpr[postLen]='=';
-      postLen++;
-      postExpr[postLen]='\0';
+      postExpr[postLen]='='; //pridáme znak '=' na koniec reťazca
+      postLen++; //inkrementujeme jeho dĺžku
+      postExpr[postLen]='\0'; //pridanie koncového znaku na koniec řetazca
     }
+    //ak išlo o operand, tak ho pridáme na koniec výstupného reťazca a inkrementujeme jeho dĺžku
     else if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
     {
       postExpr[postLen] = c;
       postLen++;
     }
-    infExpr++;
+    //priradenie nasledujúceho znaku do pomocnej premennej a opakovanie cyklu
+    infExpr++; 
     c = (*infExpr);
 
 }
-  free(s);
-  return postExpr;
+  free(s); //uvoľnenie pamäti
+  return postExpr; //vrátenie výstupného reťazca
 }
 /* Konec c204.c */
