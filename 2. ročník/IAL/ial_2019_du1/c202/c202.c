@@ -60,13 +60,13 @@ void stackInit ( tStack* s ) {
 ** volejte funkci stackError(SERR_INIT). U ostatních funkcí pro zjednodušení
 ** předpokládejte, že tato situace nenastane. 
 */
-	if(s==NULL)
+/* Inicializácia zásobníka */
+	if(s==NULL) //ošetrenie chybnej štruktúry
 	{
 		stackError(SERR_INIT);
 		return;
 	}
-	s->top = -1;
-	//solved = 0;                      /* V případě řešení, smažte tento řádek! */
+	s->top = -1; //inicializácia na hodnotu -1 -> prázdny zásobník
 }
 
 int stackEmpty ( const tStack* s ) {
@@ -75,8 +75,7 @@ int stackEmpty ( const tStack* s ) {
 ** Funkci implementujte jako jediný příkaz. Vyvarujte se zejména konstrukce
 ** typu "if ( true ) b=true else b=false".
 */
-	return (s->top == -1) ? 1 : 0;	
-	//solved = 0;                      /* V případě řešení, smažte tento řádek! */
+	return (s->top == -1) ? 1 : 0;	//vrátenie hodnoty na základe toho, či je zásobník prázdny (1) alebo nie (0)
 }
 
 int stackFull ( const tStack* s ) {
@@ -88,8 +87,8 @@ int stackFull ( const tStack* s ) {
 **
 ** Funkci implementujte jako jediný příkaz.
 */	
- return(s->top == (STACK_SIZE - 1) ? 1 : 0);
-	//solved = 0;                      /* V případě řešení, smažte tento řádek! */
+//Indexujeme od 0, čiže max_size=stack_size - 1
+ return(s->top == (STACK_SIZE - 1) ? 1 : 0); // vrátenie hodnoty na základe toho, či je zásobník plný (1) alebo nie (0)
 }
 
 void stackTop ( const tStack* s, char* c ) {
@@ -102,16 +101,14 @@ void stackTop ( const tStack* s, char* c ) {
 ** Pro ověření, zda je zásobník prázdný, použijte dříve definovanou
 ** funkci stackEmpty.
 */
-	if (stackEmpty (s))
+	if (stackEmpty (s)) // prázdny zásobník ošetríme volaním chybovej funkcie
 	 {
 		stackError(SERR_TOP);
 		return;
 	 }
 	else
-		*c = (s->arr[(s->top)]);
+		*c = (s->arr[(s->top)]); //inak vrátime znak z vrcholu zásobníku (s->top - index vrcholu)
 	
-
-	//solved = 0;                      /* V případě řešení, smažte tento řádek! */
 }
 
 
@@ -127,9 +124,8 @@ void stackPop ( tStack* s ) {
 ** jednoduchost neděláme.
 ** 
 */
-	if(!stackEmpty(s))
-		s->top--;
-	  //solved = 0;                      /* V případě řešení, smažte tento řádek! */
+	if(!stackEmpty(s)) //overenie či nieje zásobník prázdny
+		s->top--; //(dekrementujeme index vrcholu -  odstránime prvok z vrcholu)
 }
 
 
@@ -141,19 +137,16 @@ void stackPush ( tStack* s, char c ) {
 ** Pro ověření, zda je zásobník plný, použijte dříve definovanou
 ** funkci stackFull.
 */
-	if(stackFull(s))
+	if(stackFull(s)) // ak je zásobník plný, voláme chybovú funkciu
 	{
 		stackError(SERR_PUSH);
 		return;
 	}
 	else
 	{
-		s->top++;
-		s->arr[s->top] = c;
+		s->top++; //inkrementujeme index vrcholu zásobníku
+		s->arr[s->top] = c; //vložíme prvok na "nový" vrchol
 	}
-	
-	
-	//solved = 0;                      /* V případě řešení, smažte tento řádek! */
 }
 
 /* Konec c202.c */
