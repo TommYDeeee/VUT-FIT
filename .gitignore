@@ -63,7 +63,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-
+*/IFJ/*
 
 ### Above combination will ignore all files without extension ###
 
