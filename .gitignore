@@ -63,7 +63,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-2. ročník/IFJ
+2. ročník/IFJ/*
 
 
 ### Above combination will ignore all files without extension ###
