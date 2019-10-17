@@ -64,8 +64,7 @@ Mkfile.old
 dkms.conf
 
 2. ročník/IFJ/*
-
-
+IFJ/
 ### Above combination will ignore all files without extension ###
 
 # Ignore files with extension `.class` & `.sm`
