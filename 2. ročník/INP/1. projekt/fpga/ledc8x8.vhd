@@ -85,24 +85,15 @@ process(RESET, SMCLK, rise)
 	begin
 		if (state = '0') then
 			case (rows) is				
-				when "10000000" =>
-					leds <= "00000111";
-				when "01000000" =>
-					leds <= "11011111";
-				when "00100000" =>
-					leds <= "11010011";
-				when "00010000" =>
-					leds <= "11010101";
-				when "00001000" =>
-					leds <= "11010101";
-				when "00000100" =>
-					leds <= "11110101";
-				when "00000010" =>
-					leds <= "11110011";
-				when "00000001" =>
-					leds <= "11111111";
-				when others =>
-					leds <= "11111111";
+				when "10000000" => leds <= "00000111";
+				when "01000000" => leds <= "11011111";
+				when "00100000" => leds <= "11010011";
+				when "00010000" => leds <= "11010101";
+				when "00001000" => leds <= "11010101";
+				when "00000100" => leds <= "11110101";
+				when "00000010" => leds <= "11110011";
+				when "00000001" => leds <= "11111111";
+				when others => leds <= "11111111";
 			end case;
 		else 
 			leds <= "11111111";
