@@ -179,8 +179,7 @@ void BTInit (tBTNodePtr *RootPtr)	{
 ** proto je třeba při práci s RootPtr použít dereferenční operátor *.
 **/
 	
-
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
+	*RootPtr = NULL;
 }
 
 void BTInsert (tBTNodePtr *RootPtr, int Content) {
@@ -194,9 +193,54 @@ void BTInsert (tBTNodePtr *RootPtr, int Content) {
 ** vzniká vždy jako list stromu. Funkci implementujte nerekurzivně.
 **/
 
+	tBTNodePtr ptr_insert =  NULL;
+	tBTNodePtr ptr = *RootPtr;
+	while(ptr)
+	{
+		ptr_insert = ptr;
+		if(Content > ptr->Cont)
+		{
+			ptr = ptr->RPtr;
+		}
+		else if(Content < ptr->Cont)
+		{
+			ptr = ptr->LPtr;
+		}
+		else if(Content == ptr->Cont)
+		{
+			return;
+		}
+	}
+
+
+	tBTNodePtr new_ptr = malloc(sizeof(struct tBTNode));
+	if(!new_ptr)
+	{
+		return;
+	}
+	new_ptr->Cont = Content;
+	new_ptr->LPtr = NULL;
+	new_ptr->RPtr = NULL;
 	
 
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
+	if(ptr_insert)
+	{
+		if(Content > ptr_insert->Cont)
+		{
+			ptr_insert->RPtr = new_ptr;
+			return;
+		}
+		else if(Content < ptr_insert->Cont)
+		{
+			ptr_insert->LPtr = new_ptr;
+			return;
+		}
+	}
+	else
+	{
+		*RootPtr = new_ptr;
+		return;
+	}
 }
 
 /*                                  PREORDER                                  */
@@ -209,9 +253,13 @@ void Leftmost_Preorder (tBTNodePtr ptr, tStackP *Stack)	{
 ** a ukazatele na ně is uložíme do zásobníku.
 **/
 
-	
+	while(ptr != NULL)
+	{
+		SPushP(Stack, ptr);
+		BTWorkOut(ptr);
+		ptr = ptr->LPtr;
+	}	
 
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
 }
 
 void BTPreorder (tBTNodePtr RootPtr)	{
@@ -220,10 +268,20 @@ void BTPreorder (tBTNodePtr RootPtr)	{
 ** Leftmost_Preorder a zásobníku ukazatelů. Zpracování jednoho uzlu stromu
 ** realizujte jako volání funkce BTWorkOut().
 **/
-
-	
-
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
+	if(RootPtr)
+	{
+		tStackP Stack;
+		SInitP(&Stack);
+		Leftmost_Preorder(RootPtr, &Stack);
+		while(!SEmptyP(&Stack))
+		{
+			tBTNodePtr ptr = STopPopP(&Stack);
+			if(ptr)
+			{
+				Leftmost_Preorder(ptr->RPtr, &Stack);
+			}
+		}
+	}
 }
 
 
@@ -237,10 +295,11 @@ void Leftmost_Inorder(tBTNodePtr ptr, tStackP *Stack)		{
 ** zásobníku.
 **/
 
-	
-
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
-
+	while(ptr)
+	{
+		SPushP(Stack, ptr);
+		ptr = ptr->LPtr;
+	}
 }
 
 void BTInorder (tBTNodePtr RootPtr)	{
@@ -249,10 +308,21 @@ void BTInorder (tBTNodePtr RootPtr)	{
 ** Leftmost_Inorder a zásobníku ukazatelů. Zpracování jednoho uzlu stromu
 ** realizujte jako volání funkce BTWorkOut().
 **/
-
-	
-
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
+	if(RootPtr)
+	{
+		tStackP Stack;
+		SInitP(&Stack);
+		Leftmost_Inorder(RootPtr, &Stack);
+		while(!SEmptyP(&Stack))
+		{
+			tBTNodePtr ptr = STopPopP(&Stack);
+			BTWorkOut(ptr);
+			if(ptr->RPtr)
+			{
+				Leftmost_Inorder(ptr->RPtr, &Stack);
+			}
+		}
+	}
 }
 
 /*                                 POSTORDER                                  */
@@ -266,9 +336,13 @@ void Leftmost_Postorder (tBTNodePtr ptr, tStackP *StackP, tStackB *StackB) {
 ** navštíven poprvé a že se tedy ještě nemá zpracovávat.
 **/
 
-	
+	while(ptr)
+	{
+		SPushP(StackP, ptr);
+		SPushB(StackB, 1);
+		ptr = ptr->LPtr;
+	}
 
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
 }
 
 void BTPostorder (tBTNodePtr RootPtr)	{
@@ -277,10 +351,32 @@ void BTPostorder (tBTNodePtr RootPtr)	{
 ** Leftmost_Postorder, zásobníku ukazatelů a zásobníku hotdnot typu bool.
 ** Zpracování jednoho uzlu stromu realizujte jako volání funkce BTWorkOut().
 **/
-
-	
-
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
+	if(RootPtr)
+	{
+		bool left;
+		tStackP StackP;
+		SInitP(&StackP);
+		tStackB StackB;
+		SInitB(&StackB);
+		Leftmost_Postorder(RootPtr, &StackP, &StackB);
+		while(!SEmptyP(&StackP))
+		{
+			tBTNodePtr ptr = STopPopP(&StackP);
+			left = STopPopB (&StackB);
+			if(ptr->RPtr && left)
+			{
+				SPushB(&StackB, 0);
+				SPushP(&StackP, ptr);
+				Leftmost_Postorder(ptr->RPtr, &StackP, &StackB);
+			}
+			else
+			{
+				BTWorkOut(ptr);
+			}
+			
+		}
+	}
+	return;
 }
 
 
@@ -291,9 +387,26 @@ void BTDisposeTree (tBTNodePtr *RootPtr)	{
 ** Funkci implementujte nerekurzivně s využitím zásobníku ukazatelů.
 **/
 
-	
+	tStackP Stack;
+	SInitP(&Stack);
+	tBTNodePtr ptr;
 
-	 solved = FALSE;		  /* V případě řešení smažte tento řádek! */
+	while(*RootPtr || !SEmptyP(&Stack))
+	{
+		if(!(*RootPtr))
+		{
+			*RootPtr = STopPopP(&Stack);
+		}
+		if((*RootPtr)->RPtr)
+		{
+			SPushP(&Stack, (*RootPtr)->RPtr);
+		}
+		ptr = *RootPtr;
+		*RootPtr = (*RootPtr)->LPtr;
+		free(ptr);
+		ptr = NULL;
+	}
+
 }
 
 /* konec c402.c */
