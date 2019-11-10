@@ -65,9 +65,9 @@ int hashCode ( tKey key ) {
 */
 
 void htInit ( tHTable* ptrht ) {
-	for (int i = 0; i < HTSIZE; i++)
+	for (int i = 0; i < HTSIZE; i++) //cyklus pre préjdenie všetkých indexov
 	{
-		(*ptrht) [i] = NULL;
+		(*ptrht) [i] = NULL; //ich následná inicializácia na hodnotu NULL
 	}
 }
 
@@ -79,19 +79,19 @@ void htInit ( tHTable* ptrht ) {
 */
 
 tHTItem* htSearch ( tHTable* ptrht, tKey key ) {
-	int item = hashCode(key);
-	tHTItem *current = (*ptrht)[item];
+	int item = hashCode(key); //získame index kľúču
+	tHTItem *current = (*ptrht)[item]; //spracuvávame prvú položku 
 	int found;
-	while(current)
+	while(current) 
 	{
-		found = strcmp(current->key, key);
+		found = strcmp(current->key, key); //ak je daná položka totožná s kľúčom tak ju vrátime
 		if(found == 0)
 		{
 			return current;
 		}
-		current = current->ptrnext;
+		current = current->ptrnext; // prejdeme na ďalšiu položku
 	}
-	return NULL;
+	return NULL; //položku sme nenašli
 }
 
 /*
@@ -107,22 +107,22 @@ tHTItem* htSearch ( tHTable* ptrht, tKey key ) {
 **/
 
 void htInsert ( tHTable* ptrht, tKey key, tData data ) {
-	tHTItem *current  = htSearch(ptrht, key);
-	if (current)
+	tHTItem *current  = htSearch(ptrht, key); //nájdeme prvok
+	if (current) //ak sme prvok našli v tabulke tak prepíšeme jeho dáta
 	{
 		current->data = data;
 	}
-	else
+	else //prvok v tabulke nieje
 	{
-		tHTItem *new = malloc(sizeof(tHTItem));
+		tHTItem *new = malloc(sizeof(tHTItem)); //vytvoríme nový
 		if(!new)
 		{
 			return;
 		}
-
+		//priradíme mu kľúč a dáta
 		new->data = data;
 		new->key = key;
-
+		//vložíme prvok na začiatok zoznamu
 		int item = hashCode(key);
 		current = (*ptrht)[item];
 		(*ptrht)[item] = new;
@@ -140,12 +140,12 @@ void htInsert ( tHTable* ptrht, tKey key, tData data ) {
 */
 
 tData* htRead ( tHTable* ptrht, tKey key ) {
-	tHTItem *current = htSearch(ptrht, key);
-	if(!current)
+	tHTItem *current = htSearch(ptrht, key); //nájdeme prvok
+	if(!current) //ak sme ho nenašli vrátime hodnotu NULL
 	{
 		return NULL;
 	}
-	else 
+	else //ak sme ho našli tak vrátime ukazateľ na jeho data
 	{
 		tData *tmp = &(current->data);
 		return tmp;
@@ -163,31 +163,31 @@ tData* htRead ( tHTable* ptrht, tKey key ) {
 */
 
 void htDelete ( tHTable* ptrht, tKey key ) {
-	int item = hashCode(key);
+	int item = hashCode(key); //získame index
 	tHTItem *current = (*ptrht)[item];
 	tHTItem *previous = NULL;
-
-	if(current == NULL)
+	//ak položka neexistuje nerobíme nič
+	if(!current)
 	{
 		return;
 	}
-	while(current)
+	while(current) //prejdeme všetky položky na indexe
 	{
-		if(current->key == key)
+		if(current->key == key) //ak nájdeme nami požadovanú
 		{
-			if(previous == NULL)
+			if(previous == NULL) //ak mažeme prvú položku
 			{
-				(*ptrht)[item] = current->ptrnext;
+				(*ptrht)[item] = current->ptrnext; //index bude odkazovať na ďalšiu položku
 			}
 			else 
 			{
-				previous->ptrnext = current->ptrnext;
+				previous->ptrnext = current->ptrnext; //inak ukazateľ predchádzajúcej položky bude ukazovať na nasledujúcu
 			}
-			free(current);
+			free(current); //uvoľníme položku
 			return;
 		}
-	previous = current;
-	current = current->ptrnext;
+		previous = current; //momentálnu uložíme ako predchádzajúcu
+		current = current->ptrnext; //ideme na ďaľšiu položku
 	}
 }
 
@@ -197,17 +197,17 @@ void htDelete ( tHTable* ptrht, tKey key ) {
 */
 
 void htClearAll ( tHTable* ptrht ) {
-	for (int i = 0; i < HTSIZE; i++)
+	for (int i = 0; i < HTSIZE; i++) //prejdeme všetky indexy
 	{
 		tHTItem *current = (*ptrht)[i];
 		tHTItem *next;
 
-		while(current)
+		while(current) //predjeme všetky položky na indexe
 		{
-			next=current->ptrnext;
-			free(current);
-			current = next;
+			next=current->ptrnext;//uložíme si nasledujúcu položku
+			free(current);//uvoľníme položku
+			current = next;	//nasledujúcu položku si uložíme ako aktuálnu
 		}
-		(*ptrht)[i] = NULL;
+		(*ptrht)[i] = NULL; //index je prázdny
 	}
 }

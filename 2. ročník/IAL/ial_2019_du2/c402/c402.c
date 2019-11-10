@@ -178,7 +178,7 @@ void BTInit (tBTNodePtr *RootPtr)	{
 ** Všimněte si, že zde se poprvé v hlavičce objevuje typ ukazatel na ukazatel,
 ** proto je třeba při práci s RootPtr použít dereferenční operátor *.
 **/
-	
+	//inicializácia stromu
 	*RootPtr = NULL;
 }
 
@@ -195,48 +195,49 @@ void BTInsert (tBTNodePtr *RootPtr, int Content) {
 
 	tBTNodePtr ptr_insert =  NULL;
 	tBTNodePtr ptr = *RootPtr;
-	while(ptr)
+	while(ptr) //prejdeme celý strom
 	{
 		ptr_insert = ptr;
-		if(Content > ptr->Cont)
+		if(Content > ptr->Cont) //ak je hodnota uzlu menšia ako vkladaná hodnota pokračujeme vpravo
 		{
 			ptr = ptr->RPtr;
 		}
-		else if(Content < ptr->Cont)
+		else if(Content < ptr->Cont)//ak je hodnota uzlu väčšia ako vkladaná hodnota pokračujeme vľavo
 		{
 			ptr = ptr->LPtr;
 		}
-		else if(Content == ptr->Cont)
+		else if(Content == ptr->Cont) //vkladaný uzol už existuje
 		{
 			return;
 		}
 	}
 
 
-	tBTNodePtr new_ptr = malloc(sizeof(struct tBTNode));
-	if(!new_ptr)
+	tBTNodePtr new_ptr = malloc(sizeof(struct tBTNode)); //vytvoríme nový prvok
+	if(!new_ptr) //alokácia zlyhala
 	{
 		return;
 	}
+	//naplníme ho hodnotami
 	new_ptr->Cont = Content;
 	new_ptr->LPtr = NULL;
 	new_ptr->RPtr = NULL;
 	
 
-	if(ptr_insert)
+	if(ptr_insert) //našli sme kam ho budeme vkladať
 	{
-		if(Content > ptr_insert->Cont)
+		if(Content > ptr_insert->Cont) //ak je hodnota uzlu menšia ako vkladaná hodnota tak ho vložíme vpravo
 		{
 			ptr_insert->RPtr = new_ptr;
 			return;
 		}
-		else if(Content < ptr_insert->Cont)
+		else if(Content < ptr_insert->Cont)//ak je hodnota uzlu väčšia ako vkladaná hodnota tak ho vložíme vľavo
 		{
 			ptr_insert->LPtr = new_ptr;
 			return;
 		}
 	}
-	else
+	else //ak je strom prázdny vložíme ako prvý prvok
 	{
 		*RootPtr = new_ptr;
 		return;
@@ -253,13 +254,12 @@ void Leftmost_Preorder (tBTNodePtr ptr, tStackP *Stack)	{
 ** a ukazatele na ně is uložíme do zásobníku.
 **/
 
-	while(ptr != NULL)
+	while(ptr != NULL) //kým nenarazíme na najľavejší uzol
 	{
-		SPushP(Stack, ptr);
-		BTWorkOut(ptr);
-		ptr = ptr->LPtr;
+		SPushP(Stack, ptr); //uložíme ukazovateľ na zásobník
+		BTWorkOut(ptr); //spracujeme navštívený uzol
+		ptr = ptr->LPtr; //pokračujeme na uzol vľavo
 	}	
-
 }
 
 void BTPreorder (tBTNodePtr RootPtr)	{
@@ -271,12 +271,12 @@ void BTPreorder (tBTNodePtr RootPtr)	{
 	if(RootPtr)
 	{
 		tStackP Stack;
-		SInitP(&Stack);
-		Leftmost_Preorder(RootPtr, &Stack);
-		while(!SEmptyP(&Stack))
+		SInitP(&Stack); //inicializujeme zásobník
+		Leftmost_Preorder(RootPtr, &Stack); //spracujeme ľavý podstrom
+		while(!SEmptyP(&Stack)) //pokiaľ nieje zásobník prázdny
 		{
-			tBTNodePtr ptr = STopPopP(&Stack);
-			if(ptr)
+			tBTNodePtr ptr = STopPopP(&Stack); //vyberieme ukazovateľ zo zásobníku
+			if(ptr->RPtr) //pokračujeme v pravom podstrome
 			{
 				Leftmost_Preorder(ptr->RPtr, &Stack);
 			}
@@ -295,10 +295,10 @@ void Leftmost_Inorder(tBTNodePtr ptr, tStackP *Stack)		{
 ** zásobníku.
 **/
 
-	while(ptr)
+	while(ptr) //kým narazíme na najľavejší uzol
 	{
-		SPushP(Stack, ptr);
-		ptr = ptr->LPtr;
+		SPushP(Stack, ptr); //uložíme ukazovateľ na zásobník
+		ptr = ptr->LPtr; // pokračujeme vľavo
 	}
 }
 
@@ -311,13 +311,13 @@ void BTInorder (tBTNodePtr RootPtr)	{
 	if(RootPtr)
 	{
 		tStackP Stack;
-		SInitP(&Stack);
-		Leftmost_Inorder(RootPtr, &Stack);
-		while(!SEmptyP(&Stack))
+		SInitP(&Stack); //inicializujeme zásobník
+		Leftmost_Inorder(RootPtr, &Stack); //spracujeme ľavý podstrom
+		while(!SEmptyP(&Stack)) //pokiaľ nieje zásobník prázdny
 		{
-			tBTNodePtr ptr = STopPopP(&Stack);
-			BTWorkOut(ptr);
-			if(ptr->RPtr)
+			tBTNodePtr ptr = STopPopP(&Stack); //vyberieme ukazovateľ zo zásobníku
+			BTWorkOut(ptr); //spracujeme ukazovateľ
+			if(ptr->RPtr) //pokračujeme v pravom podstrome
 			{
 				Leftmost_Inorder(ptr->RPtr, &Stack);
 			}
@@ -336,13 +336,12 @@ void Leftmost_Postorder (tBTNodePtr ptr, tStackP *StackP, tStackB *StackB) {
 ** navštíven poprvé a že se tedy ještě nemá zpracovávat.
 **/
 
-	while(ptr)
+	while(ptr) //kým narazíme na najľavejší uzol
 	{
-		SPushP(StackP, ptr);
-		SPushB(StackB, 1);
-		ptr = ptr->LPtr;
+		SPushP(StackP, ptr); //uložíme ukazovateľ na zásobník
+		SPushB(StackB, true); //uložíme, že sme navštívili uzol prvý krát
+		ptr = ptr->LPtr; //pokračujeme vľavo
 	}
-
 }
 
 void BTPostorder (tBTNodePtr RootPtr)	{
@@ -353,27 +352,26 @@ void BTPostorder (tBTNodePtr RootPtr)	{
 **/
 	if(RootPtr)
 	{
-		bool left;
+		bool left; //pomocná bool premenná
 		tStackP StackP;
-		SInitP(&StackP);
+		SInitP(&StackP); //inicializácia zásobníka
 		tStackB StackB;
-		SInitB(&StackB);
-		Leftmost_Postorder(RootPtr, &StackP, &StackB);
-		while(!SEmptyP(&StackP))
+		SInitB(&StackB); //inicializácia Bool zásobníka
+		Leftmost_Postorder(RootPtr, &StackP, &StackB); //spracujeme ľavý podstrom
+		while(!SEmptyP(&StackP)) //pokiaľ nieje zásobník prázdny
 		{
-			tBTNodePtr ptr = STopPopP(&StackP);
-			left = STopPopB (&StackB);
-			if(ptr->RPtr && left)
+			tBTNodePtr ptr = STopPopP(&StackP); //vyberieme ukazovateľ zo zásobníku
+			left = STopPopB (&StackB); //vyberieme bool hodnotu zo zásobníku
+			if(ptr->RPtr && left) //ak sme išli z ľavého podstromu (na zásobníku bolo true)
 			{
-				SPushB(&StackB, 0);
-				SPushP(&StackP, ptr);
+				SPushB(&StackB, false);
+				SPushP(&StackP, ptr); //vrátime uzol na zásobník
 				Leftmost_Postorder(ptr->RPtr, &StackP, &StackB);
 			}
-			else
+			else //ak sme išli z pravého podstromu 
 			{
-				BTWorkOut(ptr);
+				BTWorkOut(ptr); 
 			}
-			
 		}
 	}
 	return;
@@ -388,25 +386,29 @@ void BTDisposeTree (tBTNodePtr *RootPtr)	{
 **/
 
 	tStackP Stack;
-	SInitP(&Stack);
+	SInitP(&Stack); //inicializujeme zásobník
 	tBTNodePtr ptr;
 
-	while(*RootPtr || !SEmptyP(&Stack))
+	while(*RootPtr) //pokiaľ zásobník nieje prázdny alebo máme čo odstraňovať
 	{
-		if(!(*RootPtr))
-		{
-			*RootPtr = STopPopP(&Stack);
-		}
-		if((*RootPtr)->RPtr)
+		if((*RootPtr)->RPtr) //ak je pravý podstrom tak ukazatel si uložíme na vrchol zásobníku
 		{
 			SPushP(&Stack, (*RootPtr)->RPtr);
 		}
-		ptr = *RootPtr;
-		*RootPtr = (*RootPtr)->LPtr;
-		free(ptr);
-		ptr = NULL;
-	}
 
+		ptr = *RootPtr;
+		*RootPtr = (*RootPtr)->LPtr; //ukazatel na ľavý podstrom
+		free(ptr); //uvoľnenie uzlu
+		ptr = NULL;
+
+		if(!(*RootPtr))  //došli sme na koniec lavej diagonály
+		{
+			if(!SEmptyP(&Stack)) //pokiaľ nieje zásobník prázdny (obsahuje pravé podstromy)
+			{
+				*RootPtr = STopPopP(&Stack); //uložíme hodnotu z vrcholu zásobníku
+			}
+		}
+	}
 }
 
 /* konec c402.c */

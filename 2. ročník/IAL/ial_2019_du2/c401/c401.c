@@ -54,10 +54,8 @@ void BSTInit (tBSTNodePtr *RootPtr) {
 ** Proto je třeba při přiřazení přes RootPtr použít dereferenční operátor *.
 ** Ten bude použit i ve funkcích BSTDelete, BSTInsert a BSTDispose.
 **/
-
+	//
 	*RootPtr = NULL;
-
-
 }
 
 int BSTSearch (tBSTNodePtr RootPtr, char K, int *Content)	{
@@ -75,25 +73,25 @@ int BSTSearch (tBSTNodePtr RootPtr, char K, int *Content)	{
 ** pomocnou funkci.
 **/
 
-	if (RootPtr)
+	if (RootPtr) //ak strom nieje prázdny
 	{
-		if (K == RootPtr->Key)
+		if (K == RootPtr->Key) //ak sa kľúč koreňa rovná hladanému kľúču (uzol sa našiel)
 		{
-			*Content = RootPtr->BSTNodeCont;
-			return TRUE;
+			*Content = RootPtr->BSTNodeCont; //uložíme si jeho obsah
+			return TRUE; //vrátime TRUE
 		}
 
-		else if (K < RootPtr->Key)
+		else if (K < RootPtr->Key) //ak je kľúč menší ako kľúč koreňa
 		{
-			return BSTSearch(RootPtr->LPtr, K, Content); 
+			return BSTSearch(RootPtr->LPtr, K, Content); //pokračujeme v ľavom podstrome
 		}
 
-		else if(K > RootPtr->Key)
+		else if(K > RootPtr->Key) //ak je kľúč väčší ako kľúč koreňa
 		{
-			return BSTSearch(RootPtr->RPtr, K, Content);
+			return BSTSearch(RootPtr->RPtr, K, Content); //pokračujeme v pravom podstrome
 		}
 	}
-	return FALSE;
+	return FALSE; //ak strom je prázdny vrátime FALSE
 }
 
 
@@ -113,31 +111,31 @@ void BSTInsert (tBSTNodePtr* RootPtr, char K, int Content)	{
 ** rychlosti, tak z hlediska paměťových nároků. Zde jde ale o školní
 ** příklad, na kterém si chceme ukázat eleganci rekurzivního zápisu.
 **/
-	if(!(*RootPtr))
+	if(!(*RootPtr)) //vytvoríme si nový prvok 
 	{
-		*RootPtr = malloc(sizeof(struct tBSTNode));
+		*RootPtr = malloc(sizeof(struct tBSTNode)); //alokácia miesta sa nepodarila
+		if(!RootPtr) //alokácia sa nepodarila
+		{
+			return;
+		}
+		//"naplnenie" prvku hodnotami
 		(*RootPtr)->Key = K;
         (*RootPtr)->BSTNodeCont = Content;
 		(*RootPtr)->LPtr = NULL;
 		(*RootPtr)->RPtr = NULL;
 	}
 
-	if(!RootPtr)
-	{
-		return;
-	}
-
-	if((*RootPtr)->Key == K)
+	if((*RootPtr)->Key == K) //ak je kľúč rovný kľúču uzlu prepíšeme jeho obsah
 	{
 		(*RootPtr)->BSTNodeCont = Content;
 	}
 
-	if(K < (*RootPtr)->Key)
+	if(K < (*RootPtr)->Key) //ak je menší pokračujeme v ľavom podstrome
 	{
 		BSTInsert(&(*RootPtr)->LPtr, K, Content);
 	}
 
-	else if (K > (*RootPtr)->Key)
+	else if (K > (*RootPtr)->Key) //ak je väčší pokračujeme v pravom podstrome
 	{
 		BSTInsert(&(*RootPtr)->RPtr, K, Content);
 	}
@@ -155,19 +153,20 @@ void ReplaceByRightmost (tBSTNodePtr PtrReplaced, tBSTNodePtr *RootPtr) {
 ** Tato pomocná funkce bude použita dále. Než ji začnete implementovat,
 ** přečtěte si komentář k funkci BSTDelete().
 **/
-
-	  if ((*RootPtr)->RPtr) 
-	  {
-		  ReplaceByRightmost(PtrReplaced, &(*RootPtr)->RPtr);
-	  }
-	  else
-	  {
-		  tBSTNodePtr tmp = *RootPtr;
-		  PtrReplaced->Key = tmp->Key;
-		  PtrReplaced->BSTNodeCont = tmp->BSTNodeCont;
-		  *RootPtr = (*RootPtr)->LPtr;
-		  free(tmp);
-	  }
+	//ak existuje pravý podstrom tak pokračujeme do neho
+	if ((*RootPtr)->RPtr) 
+	{
+		ReplaceByRightmost(PtrReplaced, &(*RootPtr)->RPtr);
+	}
+	else //ak sme v "najpravejšom"
+	{
+		//presun hodnôt a uvoľnenie najpravejšieho uzlu
+		tBSTNodePtr tmp = *RootPtr;
+		PtrReplaced->Key = tmp->Key;
+		PtrReplaced->BSTNodeCont = tmp->BSTNodeCont;
+		*RootPtr = (*RootPtr)->LPtr;
+		free(tmp);
+	}
 }
 
 void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
@@ -183,40 +182,40 @@ void BSTDelete (tBSTNodePtr *RootPtr, char K) 		{
 ** pomocné funkce ReplaceByRightmost.
 **/
 
-	if(*RootPtr)
+	if(*RootPtr) //ak uzol neexistuje nerobíme nič
 	{
-		if((*RootPtr)->Key == K)
+		if((*RootPtr)->Key == K) //ak kľúč v uzle sa rovná hľadanému kľúču
 		{
-			if((*RootPtr)->LPtr && (*RootPtr)->RPtr)
+			if((*RootPtr)->LPtr && (*RootPtr)->RPtr) //ak má oba podstromy
 			{
-				ReplaceByRightmost(*RootPtr, &(*RootPtr)->LPtr);
+				ReplaceByRightmost(*RootPtr, &(*RootPtr)->LPtr); //voláme funkciu na nahradenie najpravejčím uzlom ľavého podstromu
 			}
-			else if(!(*RootPtr)->LPtr && !(*RootPtr)->RPtr)
+			else if(!(*RootPtr)->LPtr && !(*RootPtr)->RPtr) //ak nemá ani jeden podstrom
 			{
-				free(*RootPtr);
+				free(*RootPtr); //jednoducho ho odstránime
 				*RootPtr = NULL;
 			}
-			else
+			else //inak (to znamená že má jeden podstrom buď L alebo R)
 			{
 				tBSTNodePtr New_RootPtr = (*RootPtr);
-				if((*RootPtr)->LPtr)
+				if((*RootPtr)->LPtr) //ak má ľavý podstrom
 				{
-					(*RootPtr) = (*RootPtr)->LPtr;
+					(*RootPtr) = (*RootPtr)->LPtr; //otec zdedí lavého potomka
 				}
-				else if((*RootPtr)->RPtr)
+				else if((*RootPtr)->RPtr) //ak má pravý podstrom
 				{
-					*(RootPtr) = (*RootPtr)->RPtr;
+					*(RootPtr) = (*RootPtr)->RPtr; //otec zdedí pravého potomka
 				}
-				free(New_RootPtr);
+				free(New_RootPtr); //odstránime pôvodný prvok
 			}
 		}
-		else 
+		else //inak pokračujeme buď v L alebo v R podstrome
 		{
-			if ((*RootPtr)->Key < K)
+			if ((*RootPtr)->Key < K)  //ak je kľúč väčší tak pokračujeme v pravom podstrome
 			{
 				BSTDelete(&(*RootPtr)->RPtr, K);
 			}
-			else if((*RootPtr)->Key > K)
+			else if((*RootPtr)->Key > K) //ak je kľúč menší tak pokračujeme v ľavom podstrome
 			{
 				BSTDelete(&(*RootPtr)->LPtr, K);
 			}
@@ -233,12 +232,12 @@ void BSTDispose (tBSTNodePtr *RootPtr) {
 ** funkce.
 **/
 	
-	if((*RootPtr) != NULL)
+	if((*RootPtr) != NULL) //rušíme ak je čo rušiť
 	{
-		BSTDispose(&(*RootPtr)->LPtr);
-		BSTDispose(&(*RootPtr)->RPtr);
-		free(*RootPtr);
-		*RootPtr = NULL;
+		BSTDispose(&(*RootPtr)->LPtr); //pokračujeme a rušíme ľavý podstrom
+		BSTDispose(&(*RootPtr)->RPtr); //pokračujeme a rušíme pravý podstrom
+		free(*RootPtr); //zrušíme koreň
+		*RootPtr = NULL; // vrátime do pôvodného stavu 
 	}
 }
 
