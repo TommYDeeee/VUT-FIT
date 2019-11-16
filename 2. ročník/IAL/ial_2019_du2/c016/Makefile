@@ -1,13 +1,13 @@
 PRJ=c016
 
-PROGS=$(PRJ)-advanced-test
+PROGS=$(PRJ)-test
 CC=gcc
 CFLAGS=-Wall -std=c99 -pedantic -lm
 
 all: $(PROGS)
 
-$(PRJ)-advanced-test: $(PRJ).c $(PRJ)-advanced-test.c
-	$(CC) $(CFLAGS) -o $@ $(PRJ).c $(PRJ)-advanced-test.c
+$(PRJ)-test: $(PRJ).c $(PRJ)-test.c
+	$(CC) $(CFLAGS) -o $@ $(PRJ).c $(PRJ)-test.c
 
 clean:
 	rm -f *.o *.out $(PROGS)
