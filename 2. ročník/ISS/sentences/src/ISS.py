@@ -6,19 +6,19 @@ import soundfile as sf
 import matplotlib.pyplot as plt
 import numpy as np
 
-s, fs = sf.read('sa9.wav')
+s, fs = sf.read('../sentences/sa1.wav')
 
 
 f, t, sgr = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
 sgr_log = 10 * np.log10(sgr+1e-20) 
 
 
-s, fs = sf.read('q1.wav')
+s, fs = sf.read('../queries/q1.wav')
 
 f1, t1, sgr1 = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
 sgr_log1 = 10 * np.log10(sgr1+1e-20)
 
-s, fs = sf.read('q2.wav')
+s, fs = sf.read('../queries/q2.wav')
 
 
 f2, t2, sgr2 = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
@@ -64,6 +64,7 @@ finalmatrix2 = 0
 secondvalue = 0
 scores = []
 scores2 = []
+
 for d in range (len_final):
     sum = 0
     for i in range (len(matrix_query1)):
@@ -78,19 +79,20 @@ for d in range (len_final2):
         sum = sum + finalmatrix2
     scores2.append(sum / np.size(matrix_query2,0))
 
-fs, s_test = wavfile.read('sa9.wav')
+fs, s_test = wavfile.read('../sentences/sa1.wav')
 i = 0
 while i < len(scores):
     rating = scores[i]
     if rating > 0.6:
-        print('hit')
         print(rating)
+        print(i*160)
+        print('hit')
         hit = np.zeros(58*160)
         hit = np.asarray(hit, dtype=np.int16)
         for j in range (58 * 160):
             hit[j] = (s_test[(i*160) + j])
         i = i+ 58
-        wavfile.write('q1hit_sx293.wav', 16000, hit)
+        wavfile.write('../hits/q1hit_sa1.wav', 16000, hit)
     else:
         i = i + 1
 
@@ -98,14 +100,15 @@ i = 0
 while i < len(scores2):
     rating = scores2[i]
     if rating > 0.66:
-        print('hit')
         print(rating)
+        print(i*160)
+        print('hit')
         hit = np.zeros(71*160)
         hit = np.asarray(hit, dtype=np.int16)
         for j in range (71 * 160):
             hit[j] = (s_test[(i*160) + j])
         i = i+ 71
-        wavfile.write('q2hit_sx293.wav', 16000, hit)
+        wavfile.write('../hits/q2hit_sa1.wav', 16000, hit)
     else:
         i = i + 1
 
@@ -113,7 +116,7 @@ while i < len(scores2):
 
 
 _,axes = plt.subplots(3, sharex=True, figsize=(10,7))
-_.suptitle('"Musicians" and "Beverages" vs ' + 'sx293.wav')
+_.suptitle('"Musicians" and "Beverages" vs ' + 'sa1.wav')
 
 
 
@@ -127,7 +130,7 @@ axes[2].set_xlabel('Čas [s]')
 axes[2].grid(alpha=0.5, linestyle='--')
 
 
-s, fs = sf.read('sa9.wav')
+s, fs = sf.read('../sentences/sa1.wav')
 f, t, sgr = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
 f = range(17)
 matrix_sentence = matrix_sentence.transpose()
