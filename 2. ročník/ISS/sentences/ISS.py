@@ -6,14 +6,14 @@ import soundfile as sf
 import matplotlib.pyplot as plt
 import numpy as np
 
-s, fs = sf.read('sa10.wav')
+s, fs = sf.read('sa9.wav')
 
 
 f, t, sgr = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
 sgr_log = 10 * np.log10(sgr+1e-20) 
 
 
-s, fs = sf.read('q8.wav')
+s, fs = sf.read('q1.wav')
 
 f1, t1, sgr1 = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
 sgr_log1 = 10 * np.log10(sgr1+1e-20)
@@ -78,23 +78,56 @@ for d in range (len_final2):
         sum = sum + finalmatrix2
     scores2.append(sum / np.size(matrix_query2,0))
 
+fs, s_test = wavfile.read('sa9.wav')
+i = 0
+while i < len(scores):
+    rating = scores[i]
+    if rating > 0.6:
+        print('hit')
+        print(rating)
+        hit = np.zeros(58*160)
+        hit = np.asarray(hit, dtype=np.int16)
+        for j in range (58 * 160):
+            hit[j] = (s_test[(i*160) + j])
+        i = i+ 58
+        wavfile.write('q1hit_sx293.wav', 16000, hit)
+    else:
+        i = i + 1
+
+i = 0
+while i < len(scores2):
+    rating = scores2[i]
+    if rating > 0.66:
+        print('hit')
+        print(rating)
+        hit = np.zeros(71*160)
+        hit = np.asarray(hit, dtype=np.int16)
+        for j in range (71 * 160):
+            hit[j] = (s_test[(i*160) + j])
+        i = i+ 71
+        wavfile.write('q2hit_sx293.wav', 16000, hit)
+    else:
+        i = i + 1
+
+
+
 
 _,axes = plt.subplots(3, sharex=True, figsize=(10,7))
-_.suptitle('"Musicians" and "Beverages" vs ' + 'sx383.wav')
+_.suptitle('"Musicians" and "Beverages" vs ' + 'sx293.wav')
 
 
 
-axes[0].plot(np.arange(len(scores))/100, scores, label = 'Musicians')
-axes[0].plot(np.arange(len(scores2))/100, scores2, label = 'Beverages')
-axes[0].legend()
-axes[0].set_xlim([0,len(matrix_sentence)/100])
-axes[0].set_ylim([0,1])
-axes[0].set_ylabel('scores')
-axes[0].set_xlabel('Čas [s]')
-axes[0].grid(alpha=0.5, linestyle='--')
+axes[2].plot(np.arange(len(scores))/100, scores, label = 'Musicians')
+axes[2].plot(np.arange(len(scores2))/100, scores2, label = 'Beverages')
+axes[2].legend()
+axes[2].set_xlim([0,len(matrix_sentence)/100])
+axes[2].set_ylim([0,1])
+axes[2].set_ylabel('scores')
+axes[2].set_xlabel('Čas [s]')
+axes[2].grid(alpha=0.5, linestyle='--')
 
 
-s, fs = sf.read('sa10.wav')
+s, fs = sf.read('sa9.wav')
 f, t, sgr = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
 f = range(17)
 matrix_sentence = matrix_sentence.transpose()
@@ -103,9 +136,9 @@ axes[1].set_ylabel('features')
 axes[1].set_xlabel('Čas [s]')
 axes[1].invert_yaxis()
 
-axes[2].plot(np.arange(s.size) / 16000, s)
-axes[2].set_xlabel('Čas [s]')
-axes[2].set_ylabel('Signal')
+axes[0].plot(np.arange(s.size) / 16000, s)
+axes[0].set_xlabel('Čas [s]')
+axes[0].set_ylabel('Signal')
 
 
 
