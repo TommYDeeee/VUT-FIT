@@ -9,19 +9,19 @@ import numpy as np
 s, fs = sf.read('../sentences/sa1.wav')
 
 
-f, t, sgr = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
+f, t, sgr = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 512)
 sgr_log = 10 * np.log10(sgr+1e-20) 
 
 
 s, fs = sf.read('../queries/q1.wav')
 
-f1, t1, sgr1 = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
+f1, t1, sgr1 = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 512)
 sgr_log1 = 10 * np.log10(sgr1+1e-20)
 
 s, fs = sf.read('../queries/q2.wav')
 
 
-f2, t2, sgr2 = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 511)
+f2, t2, sgr2 = spectrogram(s, fs,nperseg=400, noverlap=240, nfft= 512)
 sgr_log2 = 10 * np.log10(sgr2+1e-20)
 
 matrix_sentence = np.zeros((16,len(sgr_log[0]))) 
