@@ -120,7 +120,7 @@ Analyzing hierarchy for entity <tlv_bare_ifc> in library <work> (architecture <m
 Analyzing hierarchy for entity <cpu> in library <work> (architecture <behavioral>).
 
 Analyzing hierarchy for entity <ram> in library <work> (architecture <behavioral>) with generics.
-	INIT = "----[-->+++<]>--.-[->+++<]>-.--[--->+<]>-.---.---------.++++++++++.+[++>---<]>++.+++++."
+	INIT = ">++++++++++[>++++++++++++>++++++++++>+++++<<<-]>$.>.!---.---$.---------.!+.>$--.!+++."
 
 Analyzing hierarchy for entity <lcd_controller> in library <work> (architecture <behavioral>) with generics.
 	CMDLEN = 100000
@@ -178,12 +178,10 @@ Analyzing Entity <tlv_bare_ifc> in library <work> (Architecture <main>).
 Entity <tlv_bare_ifc> analyzed. Unit <tlv_bare_ifc> generated.
 
 Analyzing Entity <cpu> in library <work> (Architecture <behavioral>).
-WARNING:Xst:819 - "C:/fitkitSVN/apps/inp/inp2019-proj2/fpga/cpu.vhd" line 203: One or more signals are missing in the process sensitivity list. To enable synthesis of FPGA/CPLD hardware, XST will assume that all necessary signals are present in the sensitivity list. Please note that the result of the synthesis may differ from the initial design specification. The missing signals are:
-   <current_state>, <cnt>
 Entity <cpu> analyzed. Unit <cpu> generated.
 
 Analyzing generic Entity <ram> in library <work> (Architecture <behavioral>).
-	INIT = "----[-->+++<]>--.-[->+++<]>-.--[--->+<]>-.---.---------.++++++++++.+[++>---<]>++.+++++."
+	INIT = ">++++++++++[>++++++++++++>++++++++++>+++++<<<-]>$.>.!---.---$.---------.!+.>$--.!+++."
 Entity <ram> analyzed. Unit <ram> generated.
 
 Analyzing generic Entity <lcd_controller> in library <work> (Architecture <behavioral>).
@@ -234,19 +232,18 @@ Unit <SPI_ctrl> synthesized.
 
 Synthesizing Unit <cpu>.
     Related source file is "C:/fitkitSVN/apps/inp/inp2019-proj2/fpga/cpu.vhd".
-INFO:Xst:1799 - State other_state is never reached in FSM <current_state>.
     Found finite state machine <FSM_1> for signal <current_state>.
     -----------------------------------------------------------------------
-    | States             | 29                                             |
-    | Transitions        | 46                                             |
+    | States             | 28                                             |
+    | Transitions        | 45                                             |
     | Inputs             | 14                                             |
     | Outputs            | 27                                             |
     | Clock              | CLK                       (rising_edge)        |
     | Clock enable       | EN                        (positive)           |
     | Reset              | RESET                     (positive)           |
     | Reset type         | asynchronous                                   |
-    | Reset State        | idle                                           |
-    | Power Up State     | idle                                           |
+    | Reset State        | fetch                                          |
+    | Power Up State     | fetch                                          |
     | Encoding           | automatic                                      |
     | Implementation     | automatic                                      |
     -----------------------------------------------------------------------
@@ -550,41 +547,39 @@ Optimizing FSM <fpga_inst/lcd_u/pstate/FSM> on signal <pstate[1:14]> with one-ho
  wa3   | 00001000000000
 -------------------------
 Analyzing FSM <FSM_1> for best encoding.
-Optimizing FSM <fpga_inst/bfcpu/current_state/FSM> on signal <current_state[1:29]> with one-hot encoding.
---------------------------------------------------
+Optimizing FSM <fpga_inst/bfcpu/current_state/FSM> on signal <current_state[1:28]> with one-hot encoding.
+-------------------------------------------------
  State           | Encoding
---------------------------------------------------
- idle            | 00000000000000000000000000001
- fetch           | 00000000000000000000000000010
- decode          | 00000000000000000000000000100
- pointer_inc     | 00000000000000000000000001000
- pointer_dec     | 00000000000000000000000010000
- value_inc       | 00000000000000000000000100000
- value_inc_write | 00000000000001000000000000000
- value_dec       | 00000000000000000000001000000
- value_dec_write | 00000000000010000000000000000
- putchar         | 00000000000000000000010000000
- putchar_2       | 00000000000100000000000000000
- getchar         | 00000000000000000000100000000
- other_state     | unreached
- save_to_tmp     | 00000000000000000010000000000
- save_from_tmp   | 00000000000000000100000000000
- save_to_tmp_2   | 00000000001000000000000000000
- save_from_tmp_2 | 00000000010000000000000000000
- while_start     | 00000000000000001000000000000
- while_start_2   | 00000000100000000000000000000
- while_start_3   | 00000001000000000000000000000
- while_start_4   | 00000010000000000000000000000
- while_start_5   | 00000100000000000000000000000
- while_end       | 00000000000000010000000000000
- while_end_2     | 00001000000000000000000000000
- while_end_3     | 00010000000000000000000000000
- while_end_4     | 00100000000000000000000000000
- while_end_5     | 01000000000000000000000000000
- while_end_6     | 10000000000000000000000000000
- comment         | 00000000000000100000000000000
- state_end       | 00000000000000000001000000000
---------------------------------------------------
+-------------------------------------------------
+ fetch           | 0000000000000000000000000001
+ decode          | 0000000000000000000000000010
+ pointer_inc     | 0000000000000000000000000100
+ pointer_dec     | 0000000000000000000000001000
+ value_inc       | 0000000000000000000000010000
+ value_inc_write | 0000000000000100000000000000
+ value_dec       | 0000000000000000000000100000
+ value_dec_write | 0000000000001000000000000000
+ putchar         | 0000000000000000000001000000
+ putchar_2       | 0000000000010000000000000000
+ getchar         | 0000000000000000000010000000
+ save_to_tmp     | 0000000000000000001000000000
+ save_from_tmp   | 0000000000000000010000000000
+ save_to_tmp_2   | 0000000000100000000000000000
+ save_from_tmp_2 | 0000000001000000000000000000
+ while_start     | 0000000000000000100000000000
+ while_start_2   | 0000000010000000000000000000
+ while_start_3   | 0000000100000000000000000000
+ while_start_4   | 0000001000000000000000000000
+ while_start_5   | 0000010000000000000000000000
+ while_end       | 0000000000000001000000000000
+ while_end_2     | 0000100000000000000000000000
+ while_end_3     | 0001000000000000000000000000
+ while_end_4     | 0010000000000000000000000000
+ while_end_5     | 0100000000000000000000000000
+ while_end_6     | 1000000000000000000000000000
+ comment         | 0000000000000010000000000000
+ state_end       | 0000000000000000000100000000
+-------------------------------------------------
 Analyzing FSM <FSM_0> for best encoding.
 Optimizing FSM <spictrl/pstate/FSM> on signal <pstate[1:6]> with one-hot encoding.
 ----------------------
@@ -671,8 +666,8 @@ Final Macro Processing ...
 Final Register Report
 
 Macro Statistics
-# Registers                                            : 200
- Flip-Flops                                            : 200
+# Registers                                            : 199
+ Flip-Flops                                            : 199
 
 =========================================================================
 
@@ -711,17 +706,17 @@ Cell Usage :
 #      LUT3                        : 77
 #      LUT3_D                      : 3
 #      LUT3_L                      : 5
-#      LUT4                        : 177
+#      LUT4                        : 178
 #      LUT4_D                      : 21
-#      LUT4_L                      : 14
+#      LUT4_L                      : 13
 #      MUXCY                       : 88
 #      MUXF5                       : 19
 #      VCC                         : 1
 #      XORCY                       : 81
-# FlipFlops/Latches                : 201
+# FlipFlops/Latches                : 200
 #      FD                          : 1
 #      FDC                         : 23
-#      FDCE                        : 140
+#      FDCE                        : 139
 #      FDE                         : 24
 #      FDP                         : 4
 #      FDPE                        : 4
@@ -748,7 +743,7 @@ Device utilization summary:
 Selected Device : 3s50pq208-4 
 
  Number of Slices:                      226  out of    768    29%  
- Number of Slice Flip Flops:            201  out of   1536    13%  
+ Number of Slice Flip Flops:            200  out of   1536    13%  
  Number of 4 input LUTs:                427  out of   1536    27%  
  Number of IOs:                         124
  Number of bonded IOBs:                 120  out of    124    96%  
@@ -777,7 +772,7 @@ Clock Information:
 ------------------------------------------------------------------------+-----------------------------------+-------+
 Clock Signal                                                            | Clock buffer(FF name)             | Load  |
 ------------------------------------------------------------------------+-----------------------------------+-------+
-SMCLK                                                                   | DCMclkgen/DCM_INST:CLKFX          | 204   |
+SMCLK                                                                   | DCMclkgen/DCM_INST:CLKFX          | 203   |
 fpga_inst/bfcpu/DATA_RDWR_not0001(fpga_inst/bfcpu/DATA_RDWR_not000147:O)| NONE(*)(fpga_inst/bfcpu/DATA_RDWR)| 1     |
 ------------------------------------------------------------------------+-----------------------------------+-------+
 (*) This 1 clock signal(s) are generated by combinatorial logic,
@@ -790,7 +785,7 @@ Asynchronous Control Signals Information:
 ---------------------------------------+---------------------------------------+-------+
 Control Signal                         | Buffer(FF name)                       | Load  |
 ---------------------------------------+---------------------------------------+-------+
-fpga_inst/cpu_rst(fpga_inst/cpu_rst1:O)| NONE(fpga_inst/bfcpu/cnt_0)           | 111   |
+fpga_inst/cpu_rst(fpga_inst/cpu_rst1:O)| NONE(fpga_inst/bfcpu/cnt_0)           | 110   |
 reset(reset1:O)                        | NONE(fpga_inst/kb_u/keybrd/cntr_reg_0)| 55    |
 SPI_FPGA_CS                            | IBUF                                  | 5     |
 ---------------------------------------+---------------------------------------+-------+
@@ -811,7 +806,7 @@ All values displayed in nanoseconds (ns)
 =========================================================================
 Timing constraint: Default period analysis for Clock 'SMCLK'
   Clock period: 35.118ns (frequency: 28.476MHz)
-  Total number of paths / destination ports: 8521 / 404
+  Total number of paths / destination ports: 8519 / 403
 -------------------------------------------------------------------------
 Delay:               9.833ns (Levels of Logic = 6)
   Source:            fpga_inst/bfcpu/current_state_FSM_FFd19 (FF)
@@ -884,13 +879,13 @@ Offset:              13.010ns (Levels of Logic = 5)
 
 
 Total REAL time to Xst completion: 6.00 secs
-Total CPU time to Xst completion: 5.88 secs
+Total CPU time to Xst completion: 5.84 secs
  
 --> 
 
 Total memory usage is 184536 kilobytes
 
 Number of errors   :    0 (   0 filtered)
-Number of warnings :   73 (   0 filtered)
-Number of infos    :    6 (   0 filtered)
+Number of warnings :   72 (   0 filtered)
+Number of infos    :    5 (   0 filtered)
 

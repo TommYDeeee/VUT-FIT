@@ -1,7 +1,7 @@
 -- cpu.vhd: Simple 8-bit CPU (BrainF*ck interpreter)
 -- Copyright (C) 2019 Brno University of Technology,
 --                    Faculty of Information Technology
--- Author(s): TomÃ¡Å¡ ÄŽuriÅ¡ (xduris05)
+-- Author(s): Tomáš Ïuriš (xduris05)
 --
 
 library ieee;
@@ -66,13 +66,11 @@ architecture behavioral of cpu is
  
  
  type state is (
-	idle,
 	fetch,
 	decode,
 	pointer_inc, pointer_dec,
 	value_inc, value_inc_write, value_dec, value_dec_write,
 	putchar, putchar_2, getchar,
-	other_state,
 	save_to_tmp, save_from_tmp, save_to_tmp_2, save_from_tmp_2,
 	while_start, while_start_2, while_start_3, while_start_4, while_start_5,
 	while_end, while_end_2, while_end_3, while_end_4, while_end_5, while_end_6,
@@ -94,8 +92,7 @@ begin
  --   - u synchronnich komponent obsahuje sensitivity list pouze CLK a RESET a 
  --   - u kombinacnich komponent obsahuje sensitivity list vsechny ctene signaly.
  
-	pc_process: process(CLK,RESET,pc_tmp,pc,pc_inc,pc_dec)
- 
+	pc_process: process(CLK,RESET,pc)
 	begin
 		if (RESET = '1') then
 			pc <= "0000000000000";
@@ -108,9 +105,8 @@ begin
 		end if;
 		pc_tmp <= pc;
 	end process;
-
-	cnt_process	:	process(CLK,RESET,cnt,cnt_inc,cnt_dec) 
-	
+	-- ---------------------------------------	
+	cnt_process	:	process(CLK,RESET) 
 	begin
 		if (RESET = '1') then
 			cnt <= "00000000";
@@ -122,9 +118,8 @@ begin
 			end if;
 		end if;
 	end process;
- 
- 	ptr_process	:	process(CLK,RESET,ptr_tmp,ptr,ptr_inc,ptr_dec) --ukazatel do pamate
-	
+	-- ---------------------------------------	
+ 	ptr_process	:	process(CLK,RESET,ptr)
 	begin
 		if (RESET = '1') then
 			ptr <= "1000000000000";
@@ -147,21 +142,19 @@ begin
 		end if;
 		ptr_tmp <= ptr;
 	end process;
-	
+	-- ---------------------------------------	
 	fsm_process : process(CLK,RESET)
-	
 	begin
 		if (RESET = '1') then
-			current_state <= idle;
+			current_state <= fetch;
 		elsif (CLK'event) and (CLK = '1') then
 			if (EN = '1') then
 				current_state <= next_state;
 			end if;
 		end if;		
 	end process;
-	
-	mux2: process(ptr_out_tmp, mux2_sel, ptr_tmp)
-	
+	-- ---------------------------------------	
+	mux2: process(mux2_sel, ptr_tmp)
 	begin
 
 		case mux2_sel is
@@ -171,23 +164,18 @@ begin
 		end case;
 
 	end process;
-	
+	-- ---------------------------------------	
 	mux1: process(ptr_out_tmp, mux1_sel, pc_tmp)
-	
-	begin
-			
+	begin		
 			case mux1_sel is
 			when '1' => DATA_ADDR <= pc_tmp;
 			when '0' => DATA_ADDR <= ptr_out_tmp;
 			when others =>
 		end case;
-
 	end process;
-	
+	-- ---------------------------------------	
 	mux3: process(IN_DATA, DATA_RDATA, mux3_sel)
-	
 	begin 
-	
 			case mux3_sel is
 			when "00" => DATA_WDATA <= IN_DATA;
 			when "01" => DATA_WDATA <= DATA_RDATA - 1;
@@ -195,16 +183,13 @@ begin
 			when "11" => DATA_WDATA <= DATA_RDATA;
 			when others =>
 		end case;
-
 	end process;
-			
+	-- ---------------------------------------			
 	OUT_DATA	<= DATA_RDATA;
-	
-	fsm_state: process(CLK, RESET, EN, DATA_RDATA, IN_VLD, OUT_BUSY)
-	
+	-- ---------------------------------------	
+	fsm_state: process(DATA_RDATA, IN_VLD, OUT_BUSY, current_state, cnt)
 	begin
-	
-		next_state <= idle;
+		next_state <= fetch;
 		
 		DATA_EN  <= '0';
 		OUT_WE   <= '0';
@@ -223,19 +208,13 @@ begin
 		mux1_sel <= '0';
 		mux2_sel <= '0';
 	
-		case current_state is
-		
-			when idle =>
-				next_state <= fetch;
-				
-			when fetch =>
-				
+		case current_state is	
+			when fetch =>				
 				DATA_EN    <= '1';
 				DATA_RDWR  <= '0';
 				mux1_sel   <= '1';
-				next_state <= decode; 
-				
-			
+				next_state <= decode; 			
+	-- ---------------------------------------			
 			when decode =>
 				case (DATA_RDATA) is
 						when X"3E" =>
@@ -262,8 +241,7 @@ begin
 							next_state <= while_end;
 						when others =>
 							next_state <= comment;
-					end case;
-				
+					end case;	
 	-- ---------------------------------------				
 				when pointer_inc =>
 					pc_inc <= '1';
