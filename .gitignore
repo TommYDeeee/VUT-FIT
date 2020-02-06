@@ -67,6 +67,8 @@ dkms.conf
 IFJ/
 2. ročník/ITU/*
 ITU/
+2. ročník/INM/*
+INM/
 ### Above combination will ignore all files without extension ###
 
 # Ignore files with extension `.class` & `.sm`
