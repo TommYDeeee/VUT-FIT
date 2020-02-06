@@ -53,11 +53,124 @@ function check_first_param($param, $zero_arg, $one_arg, $two_arg, $three_arg)
     else
     {
         fwrite(STDERR, "Invalid operation\n");
-        exit(21);
+        exit(22);
     }
 }
 
+function check_var($var)
+{
+    if (!preg_match("~^(LF|TF|GF)@[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $var))
+    {
+        fwrite(STDERR, "Invalid variable\n");
+        exit(22);
+    }
+}
+function write_var($number, $arg)
+{
+    global $xmldata;
+    $xmldata->startElement($number);
+    $xmldata->writeAttribute("type", "var");
+    $xmldata->text($arg);
+    $xmldata->endElement();
+}
 
+function check_const($const)
+{
+    if(preg_match("~^(LF|TF|GF)@[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $const))
+    {
+        return 0;
+    }
+
+    if(!preg_match("/^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^string@.*|^nil@nil$/", $const))
+    {
+        fwrite(STDERR, "Invalid constant\n");
+        exit(22);
+    }
+    if(preg_match("/^string@.*/", $const))
+    {
+        $backslash = preg_match_all("/\\\/", $const);
+        if($backslash > 0)
+        {
+            $escape = preg_match_all("/\\\[0-9]{3}/", $const);
+            if($escape != $backslash)
+            {
+                fwrite(STDERR, "Invalid escape\n");
+                exit(23);
+            }
+        }
+    }
+    return 1;
+}
+
+function write_const($number, $type, $arg)
+{
+    global $xmldata;
+    $xmldata->startElement($number);
+    $xmldata->writeAttribute("type", $type);
+    $xmldata->text($arg);
+    $xmldata->endElement();
+}
+
+function check_params($param, $word)
+{
+    switch ($param) {
+        case 0:
+            {
+                break;
+            }
+        case 1:
+            {
+                if($word[0] == "DEFVAR" || $word[0] == "POPS")
+                {
+
+                }
+                else if ($word[0] == "JUMP" || $word[0] == "CALL")
+                {
+
+                }
+                else if($word[0] == "LABEL")
+                {
+
+                }
+                else
+                {
+
+                }
+                break;
+            }
+        case 2:
+            {
+                if ($word[0] == "READ")
+                {
+
+                }
+                else
+                {
+                    check_var($word[1]);
+                    write_var("arg1", $word[1]);
+                    $const = check_const($word[2]);
+                    if($const == 0)
+                    {
+                        write_var("arg2", $word[2]);
+                    }
+                    else if ($const == 1)
+                    {
+                        $var = explode("@", $word[2], 2);
+                        write_const("arg2", $var[0], $var[1]);
+                    }
+                }
+                break;
+            }
+        case 3:
+            {
+                if ($word[0] == "JUMPIFEQ" || $word[0] == "JUMPIFNEQ")
+                {
+
+                }
+                break;
+            }
+    }
+}
 
 $options = array("stats:", "loc", "comments", "labels", "jumps", "help");
 $args = getopt("",$options);
@@ -140,7 +253,7 @@ foreach ($file as &$line)
         $xmldata->writeAttribute('order', $order);
         $xmldata->writeAttribute('opcode', $word[0]);
     }
-
+    check_params($inst_params, $word);
     //$count++;
     $xmldata->endElement();
     $order++;
