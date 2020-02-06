@@ -111,6 +111,42 @@ function write_const($number, $type, $arg)
     $xmldata->endElement();
 }
 
+function check_label($label)
+{
+    if (!preg_match("~^[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $label))
+    {
+        fwrite(STDERR, "Invalid label\n");
+        exit(22);
+    }
+}
+
+function write_label($number, $arg)
+{
+    global $xmldata;
+    $xmldata->startElement($number);
+    $xmldata->writeAttribute("type", "label");
+    $xmldata->text($arg);
+    $xmldata->endElement();
+}
+
+function check_type($type)
+{
+    if(!preg_match("/^int$|^bool$|^string$/", $type))
+    {
+        fwrite(STDERR, "Invalid type\n");
+        exit(22);
+    }
+}
+
+function write_type($number, $arg)
+{
+    global $xmldata;
+    $xmldata->startElement($number);
+    $xmldata->writeAttribute("type", "type");
+    $xmldata->text($arg);
+    $xmldata->endElement();
+}
+
 function check_params($param, $word)
 {
     switch ($param) {
@@ -122,19 +158,32 @@ function check_params($param, $word)
             {
                 if($word[0] == "DEFVAR" || $word[0] == "POPS")
                 {
-
+                    check_var($word[1]);
+                    write_var("arg1", $word[1]);
                 }
                 else if ($word[0] == "JUMP" || $word[0] == "CALL")
                 {
-
+                    check_label($word[1]);
+                    write_label("arg1", $word[1]);
                 }
                 else if($word[0] == "LABEL")
                 {
-
+                    check_label($word[1]);
+                    write_label("arg1", $word[1]);
+                    //TODO COUNT LABELS
                 }
                 else
                 {
-
+                    $const = check_const($word[1]);
+                    if($const == 0)
+                    {
+                        write_var("arg1", $word[1]);
+                    }
+                    else if ($const == 1)
+                    {
+                        $var = explode("@", $word[1], 2);
+                        write_const("arg1", $var[0], $var[1]);
+                    }
                 }
                 break;
             }
@@ -142,7 +191,10 @@ function check_params($param, $word)
             {
                 if ($word[0] == "READ")
                 {
-
+                    check_var($word[1]);
+                    write_var("arg1", $word[1]);
+                    check_type($word[2]);
+                    write_type("arg2", $word[2]);
                 }
                 else
                 {
@@ -165,7 +217,53 @@ function check_params($param, $word)
             {
                 if ($word[0] == "JUMPIFEQ" || $word[0] == "JUMPIFNEQ")
                 {
-
+                    check_label($word[1]);
+                    write_label("arg1", $word[1]);
+                    $const = check_const($word[2]);
+                    if($const == 0)
+                    {
+                        write_var("arg2", $word[2]);
+                    }
+                    else if ($const == 1)
+                    {
+                        $var = explode("@", $word[2], 2);
+                        write_const("arg2", $var[0], $var[1]);
+                    }
+                    $const = check_const($word[3]);
+                    if($const == 0)
+                    {
+                        write_var("arg3", $word[3]);
+                    }
+                    else if ($const == 1)
+                    {
+                        $var = explode("@", $word[3], 2);
+                        write_const("arg3", $var[0], $var[1]);
+                    }
+                }
+                else
+                {
+                    check_var($word[1]);
+                    write_var("arg1", $word[1]);
+                    $const = check_const($word[2]);
+                    if($const == 0)
+                    {
+                        write_var("arg2", $word[2]);
+                    }
+                    else if ($const == 1)
+                    {
+                        $var = explode("@", $word[2], 2);
+                        write_const("arg2", $var[0], $var[1]);
+                    }
+                    $const = check_const($word[3]);
+                    if($const == 0)
+                    {
+                        write_var("arg3", $word[3]);
+                    }
+                    else if ($const == 1)
+                    {
+                        $var = explode("@", $word[3], 2);
+                        write_const("arg3", $var[0], $var[1]);
+                    }
                 }
                 break;
             }
@@ -258,5 +356,6 @@ foreach ($file as &$line)
     $xmldata->endElement();
     $order++;
 }
+$xmldata->endDocument();
 echo $xmldata->outputMemory(true);
 ?>
