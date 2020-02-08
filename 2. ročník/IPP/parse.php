@@ -31,15 +31,15 @@ $count = 0;
 //Vytvorenie hlavičky XML súboru
 function xml_init()
 {
-    global $xmldata;
-    $xmldata->openMemory();
-    $xmldata->setIndent(true);
-    $xmldata->setIndentString("    ");
-    $xmldata->startDocument("1.0", "UTF-8");
-    $xmldata->startElement("program");
-    $xmldata->startAttribute("language");
-    $xmldata->text("IPPcode20");
-    $xmldata->endAttribute();
+    global $xml_file;
+    $xml_file->openMemory();
+    $xml_file->setIndent(true);
+    $xml_file->setIndentString("    ");
+    $xml_file->startDocument("1.0", "UTF-8");
+    $xml_file->startElement("program");
+    $xml_file->startAttribute("language");
+    $xml_file->text("IPPcode20");
+    $xml_file->endAttribute();
 }
 //funkcia na vrátenie očakávaného počtu parametrov
 function check_first_param($param, $zero_arg, $one_arg, $two_arg, $three_arg)
@@ -66,18 +66,18 @@ function check_var($var)
     if (!preg_match("~^(LF|TF|GF)@[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $var))
     {
         fwrite(STDERR, "Invalid variable\n");
-        exit(22);
+        exit(23);
     }
 }
 
 //Funkcia na výpis premennej do XML
 function write_var($number, $arg)
 {
-    global $xmldata;
-    $xmldata->startElement($number);
-    $xmldata->writeAttribute("type", "var");
-    $xmldata->text($arg);
-    $xmldata->endElement();
+    global $xml_file;
+    $xml_file->startElement($number);
+    $xml_file->writeAttribute("type", "var");
+    $xml_file->text($arg);
+    $xml_file->endElement();
 }
 
 //Funkcia na overenie lexikálnej správnosti konštánt
@@ -92,12 +92,12 @@ function check_const($const)
     if(!preg_match("/^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^string@.*|^nil@nil$/", $const))
     {
         fwrite(STDERR, "Invalid constant\n");
-        exit(22);
+        exit(23);
     }
     //ak sa jedná o reťazec tak skontrolujeme správnosť "escape" sekvencií a vrátime 1
     if(preg_match("/^string@.*/", $const))
     {
-        $backslash = preg_match_all("/\\\/", $const);
+        $backslash = preg_match_all("/\\\\/", $const);
         if($backslash > 0)
         {
             $escape = preg_match_all("/\\\[0-9]{3}/", $const);
@@ -114,11 +114,11 @@ function check_const($const)
 //funkcia na zápis konštanty do XML dokumentu
 function write_const($number, $type, $arg)
 {
-    global $xmldata;
-    $xmldata->startElement($number);
-    $xmldata->writeAttribute("type", $type);
-    $xmldata->text($arg);
-    $xmldata->endElement();
+    global $xml_file;
+    $xml_file->startElement($number);
+    $xml_file->writeAttribute("type", $type);
+    $xml_file->text($arg);
+    $xml_file->endElement();
 }
 
 //funkcia na overenie lexikálnej správnosti návestia
@@ -127,19 +127,18 @@ function check_label($label)
     if (!preg_match("~^[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $label))
     {
         fwrite(STDERR, "Invalid label\n");
-        exit(22);
+        exit(23);
     }
 }
-
 
 //funkcia na zápis návestia do XML
 function write_label($number, $arg)
 {
-    global $xmldata;
-    $xmldata->startElement($number);
-    $xmldata->writeAttribute("type", "label");
-    $xmldata->text($arg);
-    $xmldata->endElement();
+    global $xml_file;
+    $xml_file->startElement($number);
+    $xml_file->writeAttribute("type", "label");
+    $xml_file->text($arg);
+    $xml_file->endElement();
 }
 
 //funkcia na overenie lexikálnej správnosti typu
@@ -148,18 +147,18 @@ function check_type($type)
     if(!preg_match("/^int$|^bool$|^string$/", $type))
     {
         fwrite(STDERR, "Invalid type\n");
-        exit(22);
+        exit(23);
     }
 }
 
 //funkcia na zápis typu do XML
 function write_type($number, $arg)
 {
-    global $xmldata;
-    $xmldata->startElement($number);
-    $xmldata->writeAttribute("type", "type");
-    $xmldata->text($arg);
-    $xmldata->endElement();
+    global $xml_file;
+    $xml_file->startElement($number);
+    $xml_file->writeAttribute("type", "type");
+    $xml_file->text($arg);
+    $xml_file->endElement();
 }
 
 //funkcia na overenie či súhlasí zadaný počet parametrov a očakávaný počet
@@ -432,7 +431,7 @@ if ($argc > 1)
 if(!$file = fopen('php://stdin', 'r'))
 {
     fwrite(STDERR, "Wrong file\n");
-    exit(21);
+    exit(11);
 }
 $file = stream_get_contents($file);
 //Rozdelenie na riadky na zaklade delimiteru \n
@@ -441,8 +440,8 @@ $file = explode("\n", $file);
 $file = array_filter($file);
 
 $first_line = true;
-//inicializacia XML
-$xmldata = new XMLWriter;
+//inicializacia XML (použitie XMLWriter kvôli safe charakterom ako <,>
+$xml_file = new XMLWriter;
 xml_init();
 $order = 1;
 $loc = 0;
@@ -452,22 +451,21 @@ $jumps = 0;
 //prechadzanie po riadkoch
 foreach ($file as &$line)
 {
-    if (preg_match("#^[\s]+$#", $line))
-        continue;
-    $line = trim(preg_replace("/ +/", " ", $line));
 
-    if ($line[0] == "#")
+    if (preg_match("~^\s*#~", $line))
     {
         $comments++;
         continue;
     }
+    elseif (preg_match("~^\s*$~", $line)) continue;
 
     if (strpos($line, "#"))
     {
         $comments++;
         $line = substr($line,0, strpos($line, "#"));
     }
-    $line = trim(preg_replace("/ +/", " ", $line));
+
+    $line = trim(preg_replace("/\s+/", " ", $line));
     //skontrolovanie hlavicky
     if($first_line)
     {
@@ -479,7 +477,6 @@ foreach ($file as &$line)
         $first_line = false;
         continue;
     }
-    $loc++;
     //rozdelenie riadkov na slova
     $word = explode(" ", $line);
     $inst_params = check_first_param($word[0], $zero_arg_ins, $one_arg_ins, $two_arg_ins, $three_arg_ins);
@@ -494,17 +491,18 @@ foreach ($file as &$line)
     //generovanie instrukcii
     else
     {
-        $xmldata->startElement('instruction');
-        $xmldata->writeAttribute('order', $order);
-        $xmldata->writeAttribute('opcode', $word[0]);
+        $xml_file->startElement('instruction');
+        $xml_file->writeAttribute('order', $order);
+        $xml_file->writeAttribute('opcode', $word[0]);
     }
     check_params($inst_params, $word);
-    $xmldata->endElement();
+    $xml_file->endElement();
     $order++;
+    $loc++;
 }
 //ukoncenie a vypis XML na vystup
-$xmldata->endDocument();
-echo $xmldata->outputMemory(true);
+$xml_file->endDocument();
+echo $xml_file->outputMemory(true);
 //Rozsirenie pre vypis statistik
 if ($statsArg == true)
 {
