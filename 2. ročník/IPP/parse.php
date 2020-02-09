@@ -84,7 +84,7 @@ function write_var($number, $arg)
 function check_const($const)
 {
     //Ak je to premenná vrátime 0
-    if(preg_match("~^(LF|TF|GF)@[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $const))
+    if(preg_match("~^(LF|TF|GF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$~", $const))
     {
         return 0;
     }
@@ -124,7 +124,7 @@ function write_const($number, $type, $arg)
 //funkcia na overenie lexikálnej správnosti návestia
 function check_label($label)
 {
-    if (!preg_match("~^[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $label))
+    if (!preg_match("~^[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$~", $label))
     {
         fwrite(STDERR, "Invalid label\n");
         exit(23);
