@@ -470,7 +470,7 @@ foreach ($file as &$line)
     //skontrolovanie hlavicky
     if($first_line)
     {
-        if(strtolower($line) != ".ippcode19")
+        if(strtolower($line) != ".ippcode20")
         {
             fwrite(STDERR, "Invalid header\n");
             exit(21);
