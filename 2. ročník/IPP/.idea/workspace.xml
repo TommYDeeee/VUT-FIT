@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="725d1050-7c2a-4049-9646-c76405881b30" name="Default Changelist" comment="" />
+    <list default="true" id="725d1050-7c2a-4049-9646-c76405881b30" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/parse.php" beforeDir="false" afterPath="$PROJECT_DIR$/parse.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -15,7 +18,11 @@
   <component name="FavoritesManager">
     <favorites_list name="IPP" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
   <component name="ProjectId" id="1XOWEq0WvE9zHtq9V8dvnJ7NjWT" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
@@ -25,10 +32,10 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/parse.php" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Console Colors" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RunManager">
-    <configuration name="parse" type="PhpLocalRunConfigurationType" factoryName="PHP Console" path="$PROJECT_DIR$/parse.php">
+    <configuration name="parse" type="PhpLocalRunConfigurationType" factoryName="PHP Console" path="$PROJECT_DIR$/parse.php" scriptParameters="&lt;test">
       <CommandLine>
         <PhpTestInterpreterSettings>
           <option name="interpreterName" value="PHP 7.4" />
@@ -51,7 +58,13 @@
       <workItem from="1580918064983" duration="385000" />
       <workItem from="1580918462758" duration="47000" />
       <workItem from="1580988487692" duration="9271000" />
-      <workItem from="1580997918282" duration="18640000" />
+      <workItem from="1580997918282" duration="19211000" />
+      <workItem from="1581092463891" duration="12273000" />
+      <workItem from="1581162582272" duration="5012000" />
+      <workItem from="1581179587654" duration="165000" />
+      <workItem from="1581184034355" duration="703000" />
+      <workItem from="1581242863296" duration="930000" />
+      <workItem from="1581247782274" duration="9218000" />
     </task>
     <servers />
   </component>
@@ -63,37 +76,37 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="555" y="215" width="800" height="673" key="#Web_Browsers/0.27.1920.1053@0.27.1920.1053" timestamp="1580918488758" />
-    <state x="591" y="230" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1580917577645">
+    <state x="591" y="230" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1581021418940">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="591" y="230" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1580917577644" />
+    <state x="591" y="230" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1581021418940" />
     <state x="916" y="330" width="424" height="480" key="FileChooserDialogImpl" timestamp="1580917572033">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="916" y="330" width="424" height="480" key="FileChooserDialogImpl/0.27.1920.1053@0.27.1920.1053" timestamp="1580917572033" />
-    <state width="1874" height="155" key="GridCell.Tab.0.bottom" timestamp="1580918508832">
+    <state width="1120" height="155" key="GridCell.Tab.0.bottom" timestamp="1581021873131">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state width="1874" height="155" key="GridCell.Tab.0.bottom/0.27.1920.1053@0.27.1920.1053" timestamp="1580918508832" />
-    <state width="1874" height="155" key="GridCell.Tab.0.center" timestamp="1580918508832">
+    <state width="1120" height="155" key="GridCell.Tab.0.bottom/0.27.1920.1053@0.27.1920.1053" timestamp="1581021873131" />
+    <state width="1120" height="155" key="GridCell.Tab.0.center" timestamp="1581021873130">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state width="1874" height="155" key="GridCell.Tab.0.center/0.27.1920.1053@0.27.1920.1053" timestamp="1580918508832" />
-    <state width="1874" height="155" key="GridCell.Tab.0.left" timestamp="1580918508831">
+    <state width="1120" height="155" key="GridCell.Tab.0.center/0.27.1920.1053@0.27.1920.1053" timestamp="1581021873130" />
+    <state width="1120" height="155" key="GridCell.Tab.0.left" timestamp="1581021873130">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state width="1874" height="155" key="GridCell.Tab.0.left/0.27.1920.1053@0.27.1920.1053" timestamp="1580918508831" />
-    <state width="1874" height="155" key="GridCell.Tab.0.right" timestamp="1580918508832">
+    <state width="1120" height="155" key="GridCell.Tab.0.left/0.27.1920.1053@0.27.1920.1053" timestamp="1581021873130" />
+    <state width="1120" height="155" key="GridCell.Tab.0.right" timestamp="1581021873131">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state width="1874" height="155" key="GridCell.Tab.0.right/0.27.1920.1053@0.27.1920.1053" timestamp="1580918508832" />
+    <state width="1120" height="155" key="GridCell.Tab.0.right/0.27.1920.1053@0.27.1920.1053" timestamp="1581021873131" />
     <state x="912" y="496" width="432" height="147" key="NewPhpFileDialog" timestamp="1580917522888">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="912" y="496" width="432" height="147" key="NewPhpFileDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1580917522888" />
-    <state x="619" y="272" key="SettingsEditor" timestamp="1580918418303">
+    <state x="619" y="272" key="SettingsEditor" timestamp="1581184905406">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="619" y="272" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1580918418303" />
+    <state x="619" y="272" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1581184905406" />
   </component>
 </project>

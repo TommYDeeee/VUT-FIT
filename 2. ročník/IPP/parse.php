@@ -63,7 +63,7 @@ function check_first_param($param, $zero_arg, $one_arg, $two_arg, $three_arg)
 //funkcia na overenie lexikálnej správnosti premennej
 function check_var($var)
 {
-    if (!preg_match("~^(LF|TF|GF)@[a-zA-Z_\-$&%*][a-zA-Z0-9_\-$&%*]*$~", $var))
+    if (!preg_match("~^(LF|TF|GF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*?!]*$~", $var))
     {
         fwrite(STDERR, "Invalid variable\n");
         exit(23);
@@ -95,12 +95,12 @@ function check_const($const)
         exit(23);
     }
     //ak sa jedná o reťazec tak skontrolujeme správnosť "escape" sekvencií a vrátime 1
-    if(preg_match("/^string@.*/", $const))
+    if(preg_match("/^string@.+/", $const))
     {
         $backslash = preg_match_all("/\\\\/", $const);
         if($backslash > 0)
         {
-            $escape = preg_match_all("/\\\[0-9]{3}/", $const);
+            $escape = preg_match_all("/\\\\[0-9]{3}/", $const);
             if($escape != $backslash)
             {
                 fwrite(STDERR, "Invalid escape\n");
@@ -165,6 +165,7 @@ function write_type($number, $arg)
 function check_params($param, $word)
 {
     global $labels, $jumps;
+    $word[0] = strtoupper($word[0]);
     switch ($param) {
         case 0:
             {
@@ -469,7 +470,7 @@ foreach ($file as &$line)
     //skontrolovanie hlavicky
     if($first_line)
     {
-        if(strtolower($line) != ".ippcode20")
+        if(strtolower($line) != ".ippcode19")
         {
             fwrite(STDERR, "Invalid header\n");
             exit(21);
@@ -485,7 +486,6 @@ foreach ($file as &$line)
     if ($inst_params != $line_params)
     {
         fwrite(STDERR, "Invalid number of params\n");
-        echo $count;
         exit(23);
     }
     //generovanie instrukcii
@@ -493,7 +493,7 @@ foreach ($file as &$line)
     {
         $xml_file->startElement('instruction');
         $xml_file->writeAttribute('order', $order);
-        $xml_file->writeAttribute('opcode', $word[0]);
+        $xml_file->writeAttribute('opcode', strtoupper($word[0]));
     }
     check_params($inst_params, $word);
     $xml_file->endElement();
