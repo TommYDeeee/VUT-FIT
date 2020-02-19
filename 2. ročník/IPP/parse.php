@@ -361,7 +361,7 @@ if ($argc > 1)
                 echo "Pouzitie:\n";
                 echo "--help    pre vypisanie napovedy\n";
                 echo "--loc     pre vypisane statistik s poctom riadkov s instrukciami\n";
-                echo "--coments pre vypisanie poctu riadkov s komentami";
+                echo "--comments pre vypisanie poctu riadkov s komentami";
                 echo "--jumps   pre vypisanie poctu instrukcii pre podmienene/nepodmienene skoky, volania a navraty z funkcii\n";
                 echo "--stats=file pre zadanie suboru kam sa statistiky vypisu (ak je iba parameter --stats vystupom je prazdny subor)\n";
                 exit(0);
@@ -435,6 +435,11 @@ if(!$file = fopen('php://stdin', 'r'))
     exit(11);
 }
 $file = stream_get_contents($file);
+if (!($file))
+{
+    fwrite(STDERR, "Missing header\n");
+    exit(21);
+}
 //Rozdelenie na riadky na zaklade delimiteru \n
 $file = explode("\n", $file);
 //odstranenie prazdnych riadkov
@@ -449,6 +454,7 @@ $loc = 0;
 $comments = 0;
 $labels = 0;
 $jumps = 0;
+
 //prechadzanie po riadkoch
 foreach ($file as &$line)
 {
