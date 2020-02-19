@@ -8,7 +8,7 @@ isget = re.compile("^GET \/\S* HTTP\/(1\.0|1\.1)$")
 ispost = re.compile("^POST \/\S* HTTP\/(1\.0|1\.1)$") 
 
 def parsedata(data):
-    text = data.decode().split('\r\n')  
+    text = data.decode('utf-8').split('\r\n')  
     return text[0]
 
 def parse_get(url):
@@ -20,7 +20,7 @@ def parse_get(url):
 def get_request(request):
     url = parse_get(request)
     name = url['name'][0]
-    name = name.replace("\\","")
+    print(name)
     req_type = url['type'][0]
     ip = socket.gethostbyname(name)
     print(name+':'+req_type+'='+ip)
@@ -50,7 +50,7 @@ while True:
         print("waiting...")
         connection, address = SOCKET.accept()
         print("connection from", address)
-        data = connection.recv(1024)
+        data = connection.recv(2048)
         print(data)
         text = parsedata(data)
         if re.match(isrequest, text):
