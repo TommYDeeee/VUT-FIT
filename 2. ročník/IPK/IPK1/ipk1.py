@@ -64,14 +64,20 @@ def post_request(request, http_v):
             return data_to_send
         split_line = line.split(":")
         if(split_line[1] == "A"):
-            result = socket.gethostbyname(split_line[0])
-            result = line + "=" + result + '\n' 
-            body = body + result
+            try:
+                result = socket.gethostbyname(split_line[0])
+                result = line + "=" + result + '\n' 
+                body = body + result
+            except:
+                continue
         elif(split_line[1] == "PTR"):
-            result = socket.gethostbyaddr(split_line[0])
-            result = result[0]
-            result = line + "=" + result + '\n' 
-            body = body + result
+            try:
+                result = socket.gethostbyaddr(split_line[0])
+                result = result[0]
+                result = line + "=" + result + '\n' 
+                body = body + result
+            except:
+                continue
     body = body.strip()
     data_to_send = http_v + " 200 OK\r\n\r\n" + body + '\r\n'
     return data_to_send
