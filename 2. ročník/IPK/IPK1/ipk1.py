@@ -34,7 +34,11 @@ def get_request(request):
     except:
         data_to_send = http_v + " 400 Bad Request\r\n"
         return data_to_send
-    req_type = url['type'][0]
+    try:
+        req_type = url['type'][0]
+    except: 
+        data_to_send = http_v + " 400 Bad Request\r\n"
+        return data_to_send
     if (req_type == "A"):
         try:
             result = socket.gethostbyname(name)
@@ -109,7 +113,7 @@ while True:
         if re.match(isrequest, text):
             if re.match(isget,text):
                 response = get_request(text)
-                #print(repr(response))
+                print(response)
                 connection.send(response.encode())
                 connection.close()
             elif re.match(ispost,text):
@@ -128,7 +132,3 @@ while True:
             connection.close()
     except:
         break
-
-
-
-
