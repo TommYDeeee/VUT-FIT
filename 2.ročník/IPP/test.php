@@ -86,8 +86,8 @@ function run_tests()
         $name = pathinfo($test, PATHINFO_DIRNAME);
         $name = $name . "/" . pathinfo($test, PATHINFO_FILENAME);
         //echo "$name\n";
-        exec("touch ./tempfileparse");
-        exec("touch ./templog");
+        exec("touch ./tmp_parse");
+        exec("touch ./tmp_diff");
         if (pathinfo($test, PATHINFO_EXTENSION) == "rc")
         {
             $rc = fgets(fopen($test, "r"));
@@ -97,13 +97,13 @@ function run_tests()
             if (pathinfo($test, PATHINFO_EXTENSION) == "src")
             {
 
-                exec("php \"" . $file_p . "\" <\"" . $name . ".src\" > ./tempfileparse 2>/dev/null", $output, $return_parse);
+                exec("php \"" . $file_p . "\" <\"" . $name . ".src\" > ./tmp_parse 2>/dev/null", $output, $return_parse);
                 if ($return_parse == $rc)
                 {
                     if($rc == "0")
                     {
-                        $command = "java -jar ".$file_j." tempfileparse ".$name.".out diffs.xml /D options";
-                        echo "$command\n";
+                        $command = "java -jar ".$file_j." tmp_parse ".$name.".out tmp_diff /D options";
+                        #echo "$command\n";
                         exec($command,$output, $return_parse);
                         if($return_parse == "0")
                         {
@@ -114,7 +114,8 @@ function run_tests()
                             echo "JEXAMFAILED\n";
                         }
                     }
-                    echo "SUCESS\n";
+                    exec("rm -rf tmp_parse");
+                    exec("rm -rf tmp_diff");
                 }
                 else
                 {
@@ -124,6 +125,7 @@ function run_tests()
             }
         }
     }
+
 }
 
 $options = array("help", "directory", "recursive", "parse-script", "int-script", "parse-only", "int-only", "jexamxml");
