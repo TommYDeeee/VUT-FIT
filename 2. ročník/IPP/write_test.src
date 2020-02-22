@@ -1,4 +1,4 @@
 .IPPcode20
-# WRITE neprovadi za vystupem odradkovani, pokud to neni diktovano argumenty
+# WRITE neprovádí za výstupem odřádkování, pokud to není diktováno argumenty
 WRITE int@0
-WRITE string@abc
+WRITE string@ábč

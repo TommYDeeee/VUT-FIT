@@ -458,7 +458,7 @@ $jumps = 0;
 //prechadzanie po riadkoch
 foreach ($file as &$line)
 {
-
+    //odstranenie komentarov samostatne na riadku alebo ak su pred nimi biele znaky
     if (preg_match("~^\s*#~", $line))
     {
         $comments++;
@@ -466,17 +466,19 @@ foreach ($file as &$line)
     }
     elseif (preg_match("~^\s*$~", $line)) continue;
 
+    //odstranenie komentarov na riadku s inštrukciami
     if (strpos($line, "#"))
     {
         $comments++;
         $line = substr($line,0, strpos($line, "#"));
     }
 
+    //nahradenie viacerých bielych znakov za medzeru
     $line = trim(preg_replace("/\s+/", " ", $line));
     //skontrolovanie hlavicky
     if($first_line)
     {
-        if(strtolower($line) != ".ippcode20")
+        if(strtolower($line) != ".ippcode19")
         {
             fwrite(STDERR, "Invalid header\n");
             exit(21);
