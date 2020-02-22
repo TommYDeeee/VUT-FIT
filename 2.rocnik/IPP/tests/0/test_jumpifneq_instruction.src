@@ -1,0 +1,2 @@
+.IPPcode19
+JUMPIFNEQ label string@text string@text
