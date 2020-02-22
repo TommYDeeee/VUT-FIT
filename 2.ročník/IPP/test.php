@@ -114,8 +114,6 @@ function run_tests()
                             echo "JEXAMFAILED\n";
                         }
                     }
-                    exec("rm -rf tmp_parse");
-                    exec("rm -rf tmp_diff");
                 }
                 else
                 {
@@ -278,4 +276,6 @@ if($jexamxml_arg)
 find_files($path);
 create_missing_files();
 run_tests();
+exec("rm -rf tmp_parse");
+exec("rm -rf tmp_diff");
 ?>
