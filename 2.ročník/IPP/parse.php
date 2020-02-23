@@ -454,7 +454,7 @@ $loc = 0;
 $comments = 0;
 $labels = 0;
 $jumps = 0;
-
+$have_header = false;
 //prechadzanie po riadkoch
 foreach ($file as &$line)
 {
@@ -472,7 +472,6 @@ foreach ($file as &$line)
         $comments++;
         $line = substr($line,0, strpos($line, "#"));
     }
-
     //nahradenie viacerých bielych znakov za medzeru
     $line = trim(preg_replace("/\s+/", " ", $line));
     //skontrolovanie hlavicky
@@ -483,6 +482,7 @@ foreach ($file as &$line)
             fwrite(STDERR, "Invalid header\n");
             exit(21);
         }
+        $have_header = true;
         $first_line = false;
         continue;
     }
@@ -507,6 +507,11 @@ foreach ($file as &$line)
     $xml_file->endElement();
     $order++;
     $loc++;
+}
+if($have_header == false)
+{
+    fwrite(STDERR, "Invalid header\n");
+    exit(21);
 }
 //ukoncenie a vypis XML na vystup
 $xml_file->endDocument();

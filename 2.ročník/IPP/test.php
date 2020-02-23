@@ -62,7 +62,7 @@ function create_missing_files()
         if(pathinfo($test, PATHINFO_EXTENSION) == "src")
         {
             if (!file_exists($dir . "/" . $name . ".in")) {
-                echo "$dir/$name.in";
+                #echo "$dir/$name.in";
                 exec("touch " . $dir . "/" . $name . ".in");
             }
             if (!file_exists($dir . "/" . $name . ".out")) {
@@ -117,8 +117,12 @@ function run_tests()
                         }
                         else
                         {
-                            echo "style=\"color:red;background-color:#F05550;font-weight:bold\">FAILED";
+                            echo "style=\"color:red;background-color:#F78481;font-weight:bold\">FAILED";
                         }
+                    }
+                    else
+                    {
+                        echo "style=\"color:green;background-color:#30EB99;font-weight:bold\">SUCCEEDED";
                     }
                 }
                 else
