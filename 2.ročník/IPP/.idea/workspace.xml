@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="725d1050-7c2a-4049-9646-c76405881b30" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../2." beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../../2. ročník/IPP/.idea/workspace.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../../2.rocnik/IPP/README.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../../2.rocnik/IPP/parse.php" beforeDir="false" />
@@ -266,9 +268,6 @@
       <change beforePath="$PROJECT_DIR$/../../2.rocnik/IPP/write_test.rc" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../../2.rocnik/IPP/write_test.src" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/parse.php" beforeDir="false" afterPath="$PROJECT_DIR$/parse.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/test.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.php" beforeDir="false" afterPath="$PROJECT_DIR$/test.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -342,7 +341,7 @@
       <workItem from="1582376320060" duration="992000" />
       <workItem from="1582377326929" duration="1388000" />
       <workItem from="1582379294758" duration="5603000" />
-      <workItem from="1582479651016" duration="1170000" />
+      <workItem from="1582479651016" duration="1671000" />
     </task>
     <servers />
   </component>
@@ -390,6 +389,10 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="1006" y="283" width="800" height="532" key="Vcs.Push.Dialog.v2/0.27.1920.1053@0.27.1920.1053" timestamp="1581272286843" />
+    <state x="719" y="468" width="472" height="166" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1582481315590">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="719" y="468" width="472" height="166" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.27.1920.1053@0.27.1920.1053" timestamp="1582481315590" />
     <state x="1797" y="161" width="879" height="831" key="dock-window-1" timestamp="1582378499360">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>

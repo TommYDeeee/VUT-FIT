@@ -69,6 +69,13 @@ IFJ/
 ITU/
 2. ročník/INM/*
 INM/
+.idea/
+2.ročník/.idea/*
+2. ročník/.idea/*
+*.src
+*.in
+*.out
+*.rc
 ### Above combination will ignore all files without extension ###
 
 # Ignore files with extension `.class` & `.sm`
