@@ -26,6 +26,34 @@ function check_arg_validity()
     }
 }
 
+function check_files($file_p, $file_i, $file_j, $path)
+{
+    if (!file_exists($file_p))
+    {
+        echo "file_p";
+        fwrite(STDERR, "ERROR, file doesnt exist!\n");
+        exit(10);
+    }
+    if (!file_exists($file_i))
+    {
+        echo "file_i";
+        fwrite(STDERR, "ERROR, file doesnt exist!\n");
+        exit(10);
+    }
+    if (!file_exists($file_j))
+    {
+        echo "file_j";
+        fwrite(STDERR, "ERROR, file doesnt exist!\n");
+        exit(10);
+    }
+    if (!is_dir($path))
+    {
+        echo "path";
+        fwrite(STDERR, "ERROR, directory doesnt exist!\n");
+        exit(10);
+    }
+}
+
 function find_files($path)
 {
     global $recursive_arg, $all_tests;
@@ -90,8 +118,9 @@ function run_tests()
         $name = pathinfo($test, PATHINFO_DIRNAME);
         $name = $name . "/" . pathinfo($test, PATHINFO_FILENAME);
         //echo "$name\n";
-        exec("touch ./tmp_parse");
+        exec("touch ./tmp");
         exec("touch ./tmp_diff");
+        exec("touch ./tmp_both");
         if (pathinfo($test, PATHINFO_EXTENSION) == "rc")
         {
             $rc = fgets(fopen($test, "r"));
@@ -105,17 +134,17 @@ function run_tests()
                 "    
                 <tr>
                     <td class='number'>".$count."</td>
-                    <td>".$test_info.pathinfo($test, PATHINFO_FILENAME)."</td>
+                    <td>".$test_info.pathinfo($test, PATHINFO_DIRNAME)."/".pathinfo($test, PATHINFO_FILENAME)."</td>
                     <td ";
-                exec("php \"" . $file_p . "\" <\"" . $name . ".src\" > ./tmp_parse 2>/dev/null", $output, $return_parse);
-                if ($return_parse == $rc)
+                exec("php ".$file_p." <".$name.".src > ./tmp 2>/dev/null", $output, $return);
+                if ($return == $rc)
                 {
                     if($rc == "0")
                     {
-                        $command = "java -jar ".$file_j." tmp_parse ".$name.".out tmp_diff /D options";
+                        $command = "java -jar ".$file_j." tmp ".$name.".out tmp_diff /D options";
                         #echo "$command\n";
-                        exec($command,$output, $return_parse);
-                        if($return_parse == "0")
+                        exec($command,$output, $return);
+                        if($return == "0")
                         {
                             echo "class='ok'>OK!";
                             $count_passed++;
@@ -133,7 +162,96 @@ function run_tests()
                 }
                 else
                 {
-                    echo "class='failed'>FAILED!<span>&nbsp(expected rc: $rc, got: $return_parse)</span>";
+                    echo "class='failed'>FAILED!<span>&nbsp(expected rc: $rc, got: $return)</span>";
+                }
+                echo
+                "</td>
+                </tr>
+                ";
+                $count++;
+            }
+        }
+        elseif ($int_only_arg)
+        {
+            $test_info = "<b>INT ONLY:&nbsp&nbsp</b>";
+            if (pathinfo($test, PATHINFO_EXTENSION) == "src")
+            {
+                echo
+                    "    
+                <tr>
+                    <td class='number'>" . $count . "</td>
+                    <td>" . $test_info . pathinfo($test, PATHINFO_DIRNAME) . "/" . pathinfo($test, PATHINFO_FILENAME) . "</td>
+                    <td ";
+                exec("python3 " . $file_i . " --source=" . $name . ".src" . " --input=" . $name . ".in" . " > ./tmp 2>/dev/null", $output, $return);
+                if ($return == $rc)
+                {
+                    if ($rc == "0")
+                    {
+                        exec("diff ./tmp " . $name . ".out",$output ,$return);
+                        if ($return == "0")
+                        {
+                            echo "class='ok'>OK!";
+                            $count_passed++;
+                        }
+                        else
+                        {
+                            echo "class='failed'>FAILED!<span>&nbsp(diff match failed)</span>";
+                        }
+                    }
+                    else
+                    {
+                        echo "class='ok'>OK!";
+                        $count_passed++;
+                    }
+                }
+                else
+                {
+                    echo "class='failed'>FAILED!<span>&nbsp(expected rc: $rc, got: $return)</span>";
+                }
+                echo
+                "</td>
+                </tr>
+                ";
+                $count++;
+            }
+        }
+        else
+        {
+            $test_info = "<b>BOTH:&nbsp&nbsp</b>";
+            if (pathinfo($test, PATHINFO_EXTENSION) == "src")
+            {
+                echo
+                    "    
+                <tr>
+                    <td class='number'>" . $count . "</td>
+                    <td>" . $test_info . pathinfo($test, PATHINFO_DIRNAME) . "/" . pathinfo($test, PATHINFO_FILENAME) . "</td>
+                    <td ";
+                exec("php " . $file_p . " <" . $name . ".src > ./tmp 2>/dev/null", $output, $return);
+                exec("python3 " . $file_i . " --source=./tmp" . " --input=" . $name . ".in" . " > ./tmp_both 2>/dev/null", $output, $return);
+                if ($return == $rc)
+                {
+                    if ($rc == "0")
+                    {
+                        exec("diff ./tmp_both " . $name . ".out", $output, $return);
+                        if ($return == "0")
+                        {
+                            echo "class='ok'>OK!";
+                            $count_passed++;
+                        }
+                        else
+                        {
+                            echo "class='failed'>FAILED!<span>&nbsp(diff match failed)</span>";
+                        }
+                    }
+                    else
+                    {
+                        echo "class='ok'>OK!";
+                        $count_passed++;
+                    }
+                }
+                else
+                {
+                    echo "class='failed'>FAILED!<span>&nbsp(expected rc: $rc, got: $return)</span>";
                 }
                 echo
                 "</td>
@@ -191,11 +309,12 @@ function html_header()
             }
             td
             {
-                text-align: center;
+                text-align: left;
                 border: 2px solid black;
             }
             td.failed
             {
+                text-align: center;
                 color: red;
                 font-weight: bold;
             }
@@ -237,27 +356,26 @@ function html_header()
 
 function html_footer($count_passed)
 {
-    if($count_passed[0]/$count_passed[1]>=0.5)
-    {
-        echo
-        "
-            </table>
-            <h2>PASSED TESTS: $count_passed[0] / $count_passed[1]</h2>
-        </div>
-    </body>
-</html>
-";
-    }
-    else
-    {
-        echo
-        "
-            </table>
-            <h3>PASSED TESTS: $count_passed[0] / $count_passed[1]</h3>
-        </div>
-    </body>
-</html>
-";
+    if($count_passed[1] != 0) {
+        if ($count_passed[0] / $count_passed[1] >= 0.5) {
+            echo
+            "
+                </table>
+                <h2>PASSED TESTS: $count_passed[0] / $count_passed[1]</h2>
+            </div>
+        </body>
+    </html>
+    ";
+        } else {
+            echo
+            "
+                </table>
+                <h3>PASSED TESTS: $count_passed[0] / $count_passed[1]</h3>
+            </div>
+        </body>
+    </html>
+    ";
+        }
     }
 }
 
@@ -267,7 +385,7 @@ $directory_arg = $recursive_arg = $parse_script_arg = $int_script_arg = $parse_o
 $path = getcwd();
 $path = $path . '/';
 $file_p = realpath("./parse.php");
-$file_i = realpath("./interpretery.py");
+$file_i = realpath("./interpreter.py");
 $file_j = realpath("/pub/courses/ipp/jexamxml.jar");
 
 if($argc > 1)
@@ -362,45 +480,13 @@ if($argc > 1)
 }
 
 check_arg_validity();
-
-if ($parse_script_arg)
-{
-    if (!file_exists($file_p))
-    {
-        fwrite(STDERR, "ERROR, file doesnt exist!");
-        exit(10);
-    }
-}
-if ($int_script_arg)
-{
-    if (!file_exists($file_i))
-    {
-        fwrite(STDERR, "ERROR, file doesnt exist!");
-        exit(10);
-    }
-}
-if ($directory_arg)
-{
-    if (!is_dir($path))
-    {
-        fwrite(STDERR, "ERROR, directory doesnt exist!");
-        exit(10);
-    }
-}
-if($jexamxml_arg)
-{
-    if (!file_exists($file_j))
-    {
-        fwrite(STDERR, "ERROR, file doesnt exist!");
-        exit(10);
-    }
-}
-
+check_files($file_p, $file_i, $file_j, $path);
 html_header();
 find_files($path);
 create_missing_files();
 $count_passed = run_tests();
 html_footer($count_passed);
-exec("rm -rf tmp_parse");
 exec("rm -rf tmp_diff");
+exec("rm -rf tmp");
+exec("rm -rf tmp_both");
 ?>
