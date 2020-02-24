@@ -8,46 +8,100 @@
             h1
             {
                 text-align: center;
-                padding-bottom: 5%; 
                 font-size: 400%;
                 color: blue; 
+                margin-bottom: 0;
+            }
+            h2
+            {
+                text-align: center;
+                padding-bottom: 5%; 
+                font-size: 200%;
+                color: green; 
+            }
+            h3
+            {
+                text-align: center;
+                padding-bottom: 5%; 
+                font-size: 200%;
+                color: red; 
+            }
+            h5
+            {
+                font-size: 200%;
+                color: black;
+                text-align: center;
+                padding-bottom: 5%;
+                margin-top: 0; 
             }
             tr
             {
                 border: 2px solid black;
             }
-            table
+            td
             {
-            border-collapse: collapse;
+                text-align: center;
+                border: 2px solid black;
+            }
+            td.failed
+            {
+                color: red;
+                font-weight: bold;
+            }
+            td.ok
+            {
+                color:green;
+                background-color:#30EB99;
+                font-weight: bold; 
+            }
+            span
+            {
+                font-size: small;
+                font-style: italic;
+                color: black;
+            }
+            table.center
+            {
+                border-collapse: collapse;  
+                width: 75%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            td.number
+            {
+                width: 10%;
+                font-weight: bolder;
             }
         </style>
     <body>
     <h1>TEST SUMMARY</h1>
-    <table style='width: 100%'>
+    <h5>(test.php script for testing IPPcode20 language)</h5>
+    <table class='center'>
         <tr>
-            <th>Number</th>
+            <th class='number'>Number</th>
             <th>Name</th>
             <th>Result</th>
         </tr>    
                 <tr>
-                    <td>0</td>
-                    <td>/home/tomas/Documents/VUT-FIT/2.ročník/IPP/read_test.src</td>
-                    <td style="color:green;background-color:#30EB99;font-weight:bold">SUCCEEDED</td>
+                    <td class='number'>0</td>
+                    <td><b>PARSE ONLY:&nbsp&nbsp</b>read_test</td>
+                    <td class='ok'>OK!</td>
                 </tr>
                     
                 <tr>
-                    <td>1</td>
-                    <td>/home/tomas/Documents/VUT-FIT/2.ročník/IPP/simple_tag.src</td>
-                    <td style="color:green;background-color:#30EB99;font-weight:bold">SUCCEEDED</td>
+                    <td class='number'>1</td>
+                    <td><b>PARSE ONLY:&nbsp&nbsp</b>simple_tag</td>
+                    <td class='ok'>OK!</td>
                 </tr>
                     
                 <tr>
-                    <td>2</td>
-                    <td>/home/tomas/Documents/VUT-FIT/2.ročník/IPP/write_test.src</td>
-                    <td style="color:green;background-color:#30EB99;font-weight:bold">SUCCEEDED</td>
+                    <td class='number'>2</td>
+                    <td><b>PARSE ONLY:&nbsp&nbsp</b>write_test</td>
+                    <td class='ok'>OK!</td>
                 </tr>
                 
             </table>
+            <h2>PASSED TESTS: 3 / 3</h2>
         </div>
     </body>
 </html>

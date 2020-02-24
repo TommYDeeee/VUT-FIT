@@ -78,10 +78,13 @@ function create_missing_files()
     }
 }
 
+
 function run_tests()
 {
     global $all_tests, $parse_only_arg, $int_only_arg, $file_p, $file_i, $file_j;
-    $count = 0;
+    $count = $count_passed = 0;
+    $rc = "";
+    $test_info = "";
     foreach ($all_tests as $test)
     {
         $name = pathinfo($test, PATHINFO_DIRNAME);
@@ -95,13 +98,14 @@ function run_tests()
         }
         if($parse_only_arg)
         {
+            $test_info = "<b>PARSE ONLY:&nbsp&nbsp</b>";
             if (pathinfo($test, PATHINFO_EXTENSION) == "src")
             {
                 echo
                 "    
                 <tr>
-                    <td>".$count."</td>
-                    <td>".$test."</td>
+                    <td class='number'>".$count."</td>
+                    <td>".$test_info.pathinfo($test, PATHINFO_FILENAME)."</td>
                     <td ";
                 exec("php \"" . $file_p . "\" <\"" . $name . ".src\" > ./tmp_parse 2>/dev/null", $output, $return_parse);
                 if ($return_parse == $rc)
@@ -113,21 +117,23 @@ function run_tests()
                         exec($command,$output, $return_parse);
                         if($return_parse == "0")
                         {
-                            echo "style=\"color:green;background-color:#30EB99;font-weight:bold\">SUCCEEDED";
+                            echo "class='ok'>OK!";
+                            $count_passed++;
                         }
                         else
                         {
-                            echo "style=\"color:red;background-color:#F78481;font-weight:bold\">FAILED";
+                            echo "class='failed'>FAILED!<span>&nbsp(jexamxml match failed)</span>";
                         }
                     }
                     else
                     {
-                        echo "style=\"color:green;background-color:#30EB99;font-weight:bold\">SUCCEEDED";
+                        echo "class='ok'>OK!";
+                        $count_passed++;
                     }
                 }
                 else
                 {
-                    echo "style=\"color:red\">FAILED";
+                    echo "class='failed'>FAILED!<span>&nbsp(expected rc: $rc, got: $return_parse)</span>";
                 }
                 echo
                 "</td>
@@ -137,6 +143,7 @@ function run_tests()
             }
         }
     }
+    return array($count_passed, $count);
 }
 
 function html_header()
@@ -152,27 +159,106 @@ function html_header()
             h1
             {
                 text-align: center;
-                padding-bottom: 5%; 
                 font-size: 400%;
                 color: blue; 
+                margin-bottom: 0;
+            }
+            h2
+            {
+                text-align: center;
+                padding-bottom: 5%; 
+                font-size: 200%;
+                color: green; 
+            }
+            h3
+            {
+                text-align: center;
+                padding-bottom: 5%; 
+                font-size: 200%;
+                color: red; 
+            }
+            h5
+            {
+                font-size: 200%;
+                color: black;
+                text-align: center;
+                padding-bottom: 5%;
+                margin-top: 0; 
             }
             tr
             {
                 border: 2px solid black;
             }
-            table
+            td
             {
-            border-collapse: collapse;
+                text-align: center;
+                border: 2px solid black;
+            }
+            td.failed
+            {
+                color: red;
+                font-weight: bold;
+            }
+            td.ok
+            {
+                color:green;
+                background-color:#30EB99;
+                font-weight: bold; 
+            }
+            span
+            {
+                font-size: small;
+                font-style: italic;
+                color: black;
+            }
+            table.center
+            {
+                border-collapse: collapse;  
+                width: 75%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            td.number
+            {
+                width: 10%;
+                font-weight: bolder;
             }
         </style>
     <body>
     <h1>TEST SUMMARY</h1>
-    <table style='width: 100%'>
+    <h5>(test.php script for testing IPPcode20 language)</h5>
+    <table class='center'>
         <tr>
-            <th>Number</th>
+            <th class='number'>Number</th>
             <th>Name</th>
             <th>Result</th>
         </tr>";
+}
+
+function html_footer($count_passed)
+{
+    if($count_passed[0]/$count_passed[1]>=0.5)
+    {
+        echo
+        "
+            </table>
+            <h2>PASSED TESTS: $count_passed[0] / $count_passed[1]</h2>
+        </div>
+    </body>
+</html>
+";
+    }
+    else
+    {
+        echo
+        "
+            </table>
+            <h3>PASSED TESTS: $count_passed[0] / $count_passed[1]</h3>
+        </div>
+    </body>
+</html>
+";
+    }
 }
 
 $options = array("help", "directory", "recursive", "parse-script", "int-script", "parse-only", "int-only", "jexamxml");
@@ -313,14 +399,8 @@ if($jexamxml_arg)
 html_header();
 find_files($path);
 create_missing_files();
-run_tests();
-echo
-"
-            </table>
-        </div>
-    </body>
-</html>
-";
+$count_passed = run_tests();
+html_footer($count_passed);
 exec("rm -rf tmp_parse");
 exec("rm -rf tmp_diff");
 ?>
