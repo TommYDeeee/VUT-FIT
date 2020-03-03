@@ -30,25 +30,21 @@ function check_files($file_p, $file_i, $file_j, $path)
 {
     if (!file_exists($file_p))
     {
-        echo "file_p";
-        fwrite(STDERR, "ERROR, file doesnt exist!\n");
+        fwrite(STDERR, "ERROR, file parser.php doesnt exist!\n");
         exit(10);
     }
     if (!file_exists($file_i))
     {
-        echo "file_i";
-        fwrite(STDERR, "ERROR, file doesnt exist!\n");
+        fwrite(STDERR, "ERROR, file interpreter.py doesnt exist!\n");
         exit(10);
     }
     if (!file_exists($file_j))
     {
-        echo "file_j";
-        fwrite(STDERR, "ERROR, file doesnt exist!\n");
+        fwrite(STDERR, "ERROR, file jexamxml doesnt exist!\n");
         exit(10);
     }
     if (!is_dir($path))
     {
-        echo "path";
         fwrite(STDERR, "ERROR, directory doesnt exist!\n");
         exit(10);
     }
@@ -112,6 +108,7 @@ function run_tests()
     global $all_tests, $parse_only_arg, $int_only_arg, $file_p, $file_i, $file_j;
     $count = $count_passed = 0;
     $rc = "";
+    $last_dir = "";
     $test_info = "";
     foreach ($all_tests as $test)
     {
@@ -127,6 +124,18 @@ function run_tests()
         }
         if($parse_only_arg)
         {
+            if(pathinfo($test, PATHINFO_DIRNAME) != $last_dir)
+            {
+                $dir = pathinfo($test, PATHINFO_DIRNAME);
+                echo
+                "
+                    <tr class='blank_row'>
+                        <td colspan='3' class='dir'>
+                            $dir
+                        </td>
+                    </tr>
+                ";
+            }
             $test_info = "<b>PARSE ONLY:&nbsp&nbsp</b>";
             if (pathinfo($test, PATHINFO_EXTENSION) == "src")
             {
@@ -173,6 +182,18 @@ function run_tests()
         }
         elseif ($int_only_arg)
         {
+            if(pathinfo($test, PATHINFO_DIRNAME) != $last_dir)
+            {
+                $dir = pathinfo($test, PATHINFO_DIRNAME);
+                echo
+                "
+                    <tr class='blank_row'>
+                        <td colspan='3' class='dir'>
+                            $dir
+                        </td>
+                    </tr>
+                ";
+            }
             $test_info = "<b>INT ONLY:&nbsp&nbsp</b>";
             if (pathinfo($test, PATHINFO_EXTENSION) == "src")
             {
@@ -217,6 +238,18 @@ function run_tests()
         }
         else
         {
+            if(pathinfo($test, PATHINFO_DIRNAME) != $last_dir)
+            {
+                $dir = pathinfo($test, PATHINFO_DIRNAME);
+                echo
+                "
+                    <tr class='blank_row'>
+                        <td colspan='3' class='dir'>
+                            $dir
+                        </td>
+                    </tr>
+                ";
+            }
             $test_info = "<b>BOTH:&nbsp&nbsp</b>";
             if (pathinfo($test, PATHINFO_EXTENSION) == "src")
             {
@@ -260,6 +293,7 @@ function run_tests()
                 $count++;
             }
         }
+        $last_dir = pathinfo($test, PATHINFO_DIRNAME);
     }
     return array($count_passed, $count);
 }
@@ -268,7 +302,7 @@ function html_header()
 {
     echo
 "<!DOCTYPE html>
-<html>
+<html style='background-color: #282828; color: white'>
     <head>
         <meta charset='UTF-8'>
         <title>TEST RESULTS</title>
@@ -278,7 +312,7 @@ function html_header()
             {
                 text-align: center;
                 font-size: 400%;
-                color: blue; 
+                color: #4381F0; 
                 margin-bottom: 0;
             }
             h2
@@ -286,19 +320,19 @@ function html_header()
                 text-align: center;
                 padding-bottom: 5%; 
                 font-size: 200%;
-                color: green; 
+                color: #27e8a7; 
             }
             h3
             {
                 text-align: center;
                 padding-bottom: 5%; 
                 font-size: 200%;
-                color: red; 
+                color: #cc0000; 
             }
             h5
             {
                 font-size: 200%;
-                color: black;
+                color: #4381F0;
                 text-align: center;
                 padding-bottom: 5%;
                 margin-top: 0; 
@@ -314,12 +348,14 @@ function html_header()
             }
             td.failed
             {
+                background-color: #ff9999;
                 text-align: center;
-                color: red;
+                color: #cc0000;
                 font-weight: bold;
             }
             td.ok
             {
+                text-align: center;
                 color:green;
                 background-color:#30EB99;
                 font-weight: bold; 
@@ -341,6 +377,16 @@ function html_header()
             {
                 width: 10%;
                 font-weight: bolder;
+            }
+            .blank_row
+            {
+                background-color: #4381F0;
+            }
+            .dir
+            {
+                height: 25pt;
+                text-align: center;
+                font-weight: bold;
             }
         </style>
     <body>
@@ -386,7 +432,13 @@ $path = getcwd();
 $path = $path . '/';
 $file_p = realpath("./parse.php");
 $file_i = realpath("./interpreter.py");
-$file_j = realpath("/pub/courses/ipp/jexamxml.jar");
+$file_j = realpath("/pub/courses/ipp/jexamxml/jexamxml.jar");
+
+if((count(array_unique($argv))-1) != count($args))
+{
+    fwrite(STDERR, "ERROR, bad argument\n");
+    exit(10);
+}
 
 if($argc > 1)
 {

@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="725d1050-7c2a-4049-9646-c76405881b30" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/read_test.src" beforeDir="false" afterPath="$PROJECT_DIR$/read_test.src" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/parse.php" beforeDir="false" afterPath="$PROJECT_DIR$/parse.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/test.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.php" beforeDir="false" afterPath="$PROJECT_DIR$/test.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/write_test.rc" beforeDir="false" afterPath="$PROJECT_DIR$/write_test.rc" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +81,15 @@
       <workItem from="1582377326929" duration="1388000" />
       <workItem from="1582379294758" duration="5603000" />
       <workItem from="1582479651016" duration="1671000" />
-      <workItem from="1582540109077" duration="5402000" />
+      <workItem from="1582540109077" duration="5999000" />
+      <workItem from="1582548163827" duration="8433000" />
+      <workItem from="1582627523045" duration="1273000" />
+      <workItem from="1582631697202" duration="154000" />
+      <workItem from="1582647589431" duration="5399000" />
+      <workItem from="1582653865032" duration="63000" />
+      <workItem from="1582750339211" duration="425000" />
+      <workItem from="1582805746282" duration="1531000" />
+      <workItem from="1582971312673" duration="2318000" />
     </task>
     <servers />
   </component>

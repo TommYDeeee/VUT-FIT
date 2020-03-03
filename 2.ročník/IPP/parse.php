@@ -343,6 +343,12 @@ $commentsArg = false;
 $jumpsArg = false;
 $labelsArg = false;
 
+if((count(array_unique($argv))-1) != count($args))
+{
+    fwrite(STDERR, "ERROR, bad argument\n");
+    exit(10);
+}
+
 if ($argc > 1)
 {
     if(!empty($args))

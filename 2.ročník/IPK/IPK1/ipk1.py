@@ -1,6 +1,7 @@
 import socket
 import sys
 import re
+import numpy as np
 from urllib.parse import urlparse, parse_qs
 
 isrequest = re.compile("^(GET|POST) \/\S* HTTP\/(1\.0|1\.1)$")
@@ -42,6 +43,9 @@ def get_request(request):
     if (req_type == "A"):
         try:
             result = socket.gethostbyname(name)
+            if(result == name):
+                data_to_send = http_v + " 400 Bad Request\r\n"
+                return data_to_send
         except:
             data_to_send = http_v + " 404 Not Found\r\n"
             return data_to_send
@@ -49,6 +53,9 @@ def get_request(request):
         try:
             result = socket.gethostbyaddr(name)
             result = result[0]
+            if(result == name):
+                data_to_send = http_v + " 400 Bad Request\r\n"
+                return data_to_send
         except:
             data_to_send = http_v + " 404 Not Found\r\n"
             return data_to_send
@@ -63,6 +70,7 @@ def post_request(request, http_v):
     lines = request.split('\n')
     body = ""
     for line in lines:
+        line = line.replace(" ","")
         if not(re.match(correct_post,line)):
             data_to_send = http_v + " 400 Bad Request\r\n"
             return data_to_send
@@ -70,6 +78,8 @@ def post_request(request, http_v):
         if(split_line[1] == "A"):
             try:
                 result = socket.gethostbyname(split_line[0])
+                if(result == split_line[0]):
+                    continue
                 result = line + "=" + result + '\n' 
                 body = body + result
             except:
@@ -78,11 +88,16 @@ def post_request(request, http_v):
             try:
                 result = socket.gethostbyaddr(split_line[0])
                 result = result[0]
+                if(result == split_line[0]):
+                    continue
                 result = line + "=" + result + '\n' 
                 body = body + result
             except:
                 continue
     body = body.strip()
+    if not body:
+            data_to_send = http_v + " 400 Bad Request\r\n"
+            return data_to_send
     data_to_send = http_v + " 200 OK\r\n\r\n" + body + '\r\n'
     return data_to_send
 
@@ -90,7 +105,7 @@ if (len(sys.argv)!=2):
     sys.stderr.write("WRONG ARGUMENTS\n")
     sys.exit()
 
-PORT = int(sys.argv[1])
+PORT = np.uintc(sys.argv[1])
 SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 SOCKET.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 #print("localhost started on port:", PORT)
@@ -113,7 +128,7 @@ while True:
         if re.match(isrequest, text):
             if re.match(isget,text):
                 response = get_request(text)
-                print(response)
+                #print(response)
                 connection.send(response.encode())
                 connection.close()
             elif re.match(ispost,text):
