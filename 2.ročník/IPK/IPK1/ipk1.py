@@ -6,7 +6,7 @@ from urllib.parse import urlparse, parse_qs
 
 isrequest = re.compile("^(GET|POST) \/\S* HTTP\/(1\.0|1\.1)$")
 isget = re.compile("^GET \/\S* HTTP\/(1\.0|1\.1)$") 
-ispost = re.compile("^POST \/\S* HTTP\/(1\.0|1\.1)$") 
+ispost = re.compile("^POST /dns-query HTTP\/(1\.0|1\.1)$") 
 correct_post = re.compile("^.*:(PTR|A)$")
 http_v = 0
 
@@ -51,6 +51,11 @@ def get_request(request):
             return data_to_send
     elif (req_type == "PTR"):
         try:
+            socket.inet_aton(name)
+        except:
+            data_to_send = http_v + " 400 Bad Request\r\n"
+            return data_to_send            
+        try:
             result = socket.gethostbyaddr(name)
             result = result[0]
             if(result == name):
@@ -69,11 +74,14 @@ def get_request(request):
 def post_request(request, http_v):
     lines = request.split('\n')
     body = ""
+    error = " 404 Not Found\r\n"
     for line in lines:
         line = line.replace(" ","")
+        if not line:
+            continue
         if not(re.match(correct_post,line)):
-            data_to_send = http_v + " 400 Bad Request\r\n"
-            return data_to_send
+            error = " 400 Bad Request\r\n"
+            continue
         split_line = line.split(":")
         if(split_line[1] == "A"):
             try:
@@ -83,8 +91,13 @@ def post_request(request, http_v):
                 result = line + "=" + result + '\n' 
                 body = body + result
             except:
+                error = " 400 Bad Request\r\n"
                 continue
         elif(split_line[1] == "PTR"):
+            try:
+                socket.inet_aton(split_line[0])
+            except:
+                continue
             try:
                 result = socket.gethostbyaddr(split_line[0])
                 result = result[0]
@@ -96,7 +109,7 @@ def post_request(request, http_v):
                 continue
     body = body.strip()
     if not body:
-            data_to_send = http_v + " 400 Bad Request\r\n"
+            data_to_send = http_v + error
             return data_to_send
     data_to_send = http_v + " 200 OK\r\n\r\n" + body + '\r\n'
     return data_to_send
@@ -129,7 +142,7 @@ while True:
             if re.match(isget,text):
                 response = get_request(text)
                 #print(response)
-                connection.send(response.encode())
+                connection.sendall(response.encode())
                 connection.close()
             elif re.match(ispost,text):
                 text = data.decode('utf-8').split('\r\n\r\n') 
@@ -137,13 +150,15 @@ while True:
                 body =  body.rstrip()
                 response = post_request(body, http_v)
                 #print(repr(response))
-                connection.send(response.encode())
+                connection.sendall(response.encode())
                 connection.close()               
             else:
-                sys.stderr.write("WRONG REQUEST")
+                response = http_v + " 400 Bad Request\r\n"
+                connection.sendall(response.encode())
+                connection.close()
         else:
             response = http_v + " 405 Method Not Allowed\r\n"
-            connection.send(response.encode())
+            connection.sendall(response.encode())
             connection.close()
     except:
         break

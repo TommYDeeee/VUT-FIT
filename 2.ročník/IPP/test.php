@@ -150,7 +150,7 @@ function run_tests()
                 {
                     if($rc == "0")
                     {
-                        $command = "java -jar ".$file_j." tmp ".$name.".out tmp_diff /D options";
+                        $command = "java -jar ".$file_j." tmp ".$name.".out tmp_diff /D /pub/courses/ipp/jexamxml/options";
                         #echo "$command\n";
                         exec($command,$output, $return);
                         if($return == "0")

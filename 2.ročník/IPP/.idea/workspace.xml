@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="725d1050-7c2a-4049-9646-c76405881b30" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IPK/IPK1/ipk1.py" beforeDir="false" afterPath="$PROJECT_DIR$/../IPK/IPK1/ipk1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../IPK/IPK1/queries.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../IPK/IPK1/queries.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/parse.php" beforeDir="false" afterPath="$PROJECT_DIR$/parse.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/test.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.php" beforeDir="false" afterPath="$PROJECT_DIR$/test.php" afterDir="false" />
     </list>
@@ -90,6 +90,10 @@
       <workItem from="1582750339211" duration="425000" />
       <workItem from="1582805746282" duration="1531000" />
       <workItem from="1582971312673" duration="2318000" />
+      <workItem from="1583244427574" duration="215000" />
+      <workItem from="1583250566493" duration="105000" />
+      <workItem from="1583356913008" duration="28000" />
+      <workItem from="1583356956164" duration="6000" />
     </task>
     <servers />
   </component>
