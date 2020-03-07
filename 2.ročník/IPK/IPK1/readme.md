@@ -14,8 +14,9 @@ Spustenie skriptu prebieha pomocou Makefile,
 *make run PORT="číslo portu"*, číslo portu je potrebné vyberať z intervalu <1024, 65535>. V prípade výberu čísla mimo intervalu sa skript ukončí s chybou a návratovou hodnotou 1.
 
 #### Princíp fungovania
-Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý beží v nekonečnej slučke. Vytvorí sa socket a server čaká na spojenie s klientom. Ak dôjde k nadviazaniu spojenia server roztriedi priate dáta aj s hlavičkou a pokúsi sa o preklad či už IP adresy na doménové meno alebo naopak. Ak všetko prebehne úspešne server vráti odpoveď aj s príslušnou hlavičkou a spojenie sa ukončí. Avšak server beží naďalej a ukončí sa napríklad až pomocou prijatia SIGINT signálu.
-```c++
+Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý beží v nekonečnej slučke. Vytvorí sa socket a server čaká na spojenie s klientom. Ak dôjde k nadviazaniu spojenia server roztriedi priate dáta aj s hlavičkou a pokúsi sa o preklad či už IP adresy na doménové meno alebo naopak. Na preklad sa využíva funkcia **socket.gethostbyaddr()/scoket.gethostbyname()** Ak všetko prebehne úspešne server vráti odpoveď aj s príslušnou hlavičkou a spojenie sa ukončí. Avšak server beží naďalej a ukončí sa napríklad až pomocou prijatia SIGINT signálu.
+
+```
 Formát odpovede: HTTP verzia + kód odpovede\r\n\r\n + telo\r\n
 V prípade metódy POST sú jednotlivé odpovede oddelené \n a za poslednou je \r\n.
 ```
@@ -32,7 +33,13 @@ V prípade metódy POST sú jednotlivé odpovede oddelené \n a za poslednou je 
 - V prípade formálnej chyby na riadku v tele vstupu je daný riadok preskočený a pokračuje sa ďalej
 - V prípade preskočenia všetkých riadkov sa vráti buď *404 Not Found*, ak všetky riadky boli formálne správne ale nepodarilo sa im nájsť príslušný preklad, alebo *400 Bad Request*, ak aspoň jeden z chybných riadok nebol ani formálne správny.
 - V prípade nájdenia prekladu aspoň pre jeden riadok sa odošle *200 OK* v hlavičke a zoznam preložených riadkov v správnom formáte v tele odpovede.
-  
+
+#### Implementácia ošetrenia chýb v prípade metódy GET
+- Implementácia je obdobná ako pri metóde POST
+- V prípade formálnej chyby sa vráti odpoveď *400 Bad Request*
+- V prípade správne formálne zadaného požiadavku, ale nepodarilo sa nájsť odpovedajúce doménove meno/adresu IP je odpoveď *404 Not Found*
+
+
 #### Vzorový príklad na metódu GET
 **Vstup 1.**
 > curl localhost:5353/resolve?name=www.facebook.com\&type=A 
