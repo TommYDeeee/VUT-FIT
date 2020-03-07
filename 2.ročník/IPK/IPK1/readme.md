@@ -18,7 +18,7 @@ Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý be
 
 #### Kódy odpovedí v hlavičke
 ```
-200 OK:                                  požiadavka prebehla úspešne a v tele správy je odpoveď
+200 OK:                                   požiadavka prebehla úspešne a v tele správy je odpoveď
 400 Bad Request:                  formálna chyba parametrov ,vstupnej URL alebo formátu vstupu pre metódu POST
 404 Not Found:                      odpoveď nebola nájdená
 405 Method Not Allowed:    bola použitá iná operácia ako GET a POST
@@ -39,7 +39,8 @@ Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý be
 **Vstup 2.**
 > curl localhost:5353/resolve?name=www.facebook.com\&type=AB -i 
 
-doplnený parameter -i pre výpis hlavičky <br>
+doplnený parameter -i pre výpis hlavičky 
+
 **Výstup 2.**
 > HTTP/1.1 400 Bad Request 
 
