@@ -15,9 +15,9 @@ Spustenie skriptu prebieha pomocou Makefile,
 
 #### Princíp fungovania
 Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý beží v nekonečnej slučke. Vytvorí sa socket a server čaká na spojenie s klientom. Ak dôjde k nadviazaniu spojenia server roztriedi priate dáta aj s hlavičkou a pokúsi sa o preklad či už IP adresy na doménové meno alebo naopak. Ak všetko prebehne úspešne server vráti odpoveď aj s príslušnou hlavičkou a spojenie sa ukončí. Avšak server beží naďalej a ukončí sa napríklad až pomocou prijatia SIGINT signálu.
-```
-**Formát odpovede:** *HTTP verzia* + *kód odpovede\r\n\r\n* + *telo\r\n*
-- v prípade metódy POST sú jednotlivé odpovede oddelené \n a za poslednou je \r\n
+```c++
+Formát odpovede: HTTP verzia + kód odpovede\r\n\r\n + telo\r\n
+V prípade metódy POST sú jednotlivé odpovede oddelené \n a za poslednou je \r\n.
 ```
 
 #### Kódy odpovedí v hlavičke
@@ -47,6 +47,7 @@ doplnený parameter -i pre výpis hlavičky
 
 **Výstup 2.**
 > HTTP/1.1 400 Bad Request 
+
 
 ### Zdroje
 - <https://docs.python.org/3/library/socket.html>
