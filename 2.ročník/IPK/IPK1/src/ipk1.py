@@ -130,7 +130,7 @@ except:
     sys.stderr.write("WRONG PORT\n")
     sys.exit(1)
 
-SOCKET.listen(100)
+SOCKET.listen()
 while True:
     try:
         connection, address = SOCKET.accept()
@@ -156,5 +156,5 @@ while True:
             response = http_v + " 405 Method Not Allowed\r\n\r\n"
             connection.sendall(response.encode())
             connection.close()
-    except:
+    except KeyboardInterrupt:
         break
