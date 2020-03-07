@@ -27,44 +27,44 @@ def get_request(request):
     split_url = str.split(request)
     url = parse_get(split_url)
     if (url == 400):
-        data_to_send = http_v + " 400 Bad Request\r\n"
+        data_to_send = http_v + " 400 Bad Request\r\n\r\n"
         return data_to_send
     try:
         name = url['name'][0]
     except:
-        data_to_send = http_v + " 400 Bad Request\r\n"
+        data_to_send = http_v + " 400 Bad Request\r\n\r\n"
         return data_to_send
     try:
         req_type = url['type'][0]
     except: 
-        data_to_send = http_v + " 400 Bad Request\r\n"
+        data_to_send = http_v + " 400 Bad Request\r\n\r\n"
         return data_to_send
     if (req_type == "A"):
         try:
             result = socket.gethostbyname(name)
             if(result == name):
-                data_to_send = http_v + " 400 Bad Request\r\n"
+                data_to_send = http_v + " 400 Bad Request\r\n\r\n"
                 return data_to_send
         except:
-            data_to_send = http_v + " 404 Not Found\r\n"
+            data_to_send = http_v + " 404 Not Found\r\n\r\n"
             return data_to_send
     elif (req_type == "PTR"):
         try:
             socket.inet_aton(name)
         except:
-            data_to_send = http_v + " 400 Bad Request\r\n"
+            data_to_send = http_v + " 400 Bad Request\r\n\r\n"
             return data_to_send            
         try:
             result = socket.gethostbyaddr(name)
             result = result[0]
             if(result == name):
-                data_to_send = http_v + " 400 Bad Request\r\n"
+                data_to_send = http_v + " 400 Bad Request\r\n\r\n"
                 return data_to_send
         except:
-            data_to_send = http_v + " 404 Not Found\r\n"
+            data_to_send = http_v + " 404 Not Found\r\n\r\n"
             return data_to_send
     else:
-        data_to_send = http_v + " 400 Bad Request\r\n"
+        data_to_send = http_v + " 400 Bad Request\r\n\r\n"
         return data_to_send
     result = name + ":" + req_type + "=" + result
     data_to_send = http_v + " 200 OK\r\n\r\n" + result + "\r\n"
@@ -73,13 +73,13 @@ def get_request(request):
 def post_request(request, http_v):
     lines = request.split('\n')
     body = ""
-    error = " 404 Not Found\r\n"
+    error = " 404 Not Found\r\n\r\n"
     for line in lines:
         line = line.replace(" ","")
         if not line:
             continue
         if not(re.match(correct_post,line)):
-            error = " 400 Bad Request\r\n"
+            error = " 400 Bad Request\r\n\r\n"
             continue
         split_line = line.split(":")
         if(split_line[1] == "A"):
@@ -90,7 +90,7 @@ def post_request(request, http_v):
                 result = line + "=" + result + '\n' 
                 body = body + result
             except:
-                error = " 400 Bad Request\r\n"
+                error = " 400 Bad Request\r\n\r\n"
                 continue
         elif(split_line[1] == "PTR"):
             try:
@@ -149,11 +149,11 @@ while True:
                 connection.sendall(response.encode())
                 connection.close()               
             else:
-                response = http_v + " 400 Bad Request\r\n"
+                response = http_v + " 400 Bad Request\r\n\r\n"
                 connection.sendall(response.encode())
                 connection.close()
         else:
-            response = http_v + " 405 Method Not Allowed\r\n"
+            response = http_v + " 405 Method Not Allowed\r\n\r\n"
             connection.sendall(response.encode())
             connection.close()
     except:
