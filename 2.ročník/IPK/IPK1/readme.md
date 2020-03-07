@@ -11,10 +11,10 @@ Cieľom bolo vytvoriť implementáciu serveru, ktorý umožní komunikovať pros
 Skript bol napísaný v jazyku Python
 #### Spustenie
 Spustenie skriptu prebieha pomocou Makefile, 
-*make run PORT="číslo portu"*, číslo portu je potrebné vyberať z intervalu <1024, 65535>. V prípade výberu čísla mimo intervalu sa skript ukončí s chybou a návratovou hodnotou 1.
+```make run PORT="číslo portu"```, číslo portu je potrebné vyberať z intervalu <1024, 65535>. V prípade výberu čísla mimo intervalu sa skript ukončí s chybou a návratovou hodnotou 1.
 
 #### Princíp fungovania
-Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý beží v nekonečnej slučke. Vytvorí sa socket a server čaká na spojenie s klientom. Ak dôjde k nadviazaniu spojenia server roztriedi priate dáta aj s hlavičkou a pokúsi sa o preklad či už IP adresy na doménové meno alebo naopak. Na preklad sa využíva funkcia **socket.gethostbyaddr()/scoket.gethostbyname()** Ak všetko prebehne úspešne server vráti odpoveď aj s príslušnou hlavičkou a spojenie sa ukončí. Avšak server beží naďalej a ukončí sa napríklad až pomocou prijatia SIGINT signálu.
+Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý beží v nekonečnej slučke. Vytvorí sa socket a server čaká na spojenie s klientom. Ak dôjde k nadviazaniu spojenia server roztriedi priate dáta aj s hlavičkou a pokúsi sa o preklad či už IP adresy na doménové meno alebo naopak. Na preklad sa využíva funkcia **socket.gethostbyaddr()** prípadne **socket.gethostbyname()** Ak všetko prebehne úspešne server vráti odpoveď aj s príslušnou hlavičkou a spojenie sa ukončí. Avšak server beží naďalej a ukončí sa napríklad až pomocou prijatia SIGINT signálu.
 
 ```
 Formát odpovede: HTTP verzia + kód odpovede\r\n\r\n + telo\r\n
@@ -31,7 +31,7 @@ V prípade metódy POST sú jednotlivé odpovede oddelené \n a za poslednou je 
 #### Implementácia ošetrenia chýb v prípade metódy POST
 - Ak je prázdne telo (obsah súboru) vracia sa *404 Not Found*
 - V prípade formálnej chyby na riadku v tele vstupu je daný riadok preskočený a pokračuje sa ďalej
-- V prípade preskočenia všetkých riadkov sa vráti buď *404 Not Found*, ak všetky riadky boli formálne správne ale nepodarilo sa im nájsť príslušný preklad, alebo *400 Bad Request*, ak aspoň jeden z chybných riadok nebol ani formálne správny.
+- V prípade preskočenia všetkých riadkov sa vráti buď *404 Not Found*, ak všetky riadky boli formálne správne ale nepodarilo sa im nájsť príslušný preklad, alebo *400 Bad Request*, ak aspoň jeden z chybných riadkov nebol ani formálne správny.
 - V prípade nájdenia prekladu aspoň pre jeden riadok sa odošle *200 OK* v hlavičke a zoznam preložených riadkov v správnom formáte v tele odpovede.
 
 #### Implementácia ošetrenia chýb v prípade metódy GET
