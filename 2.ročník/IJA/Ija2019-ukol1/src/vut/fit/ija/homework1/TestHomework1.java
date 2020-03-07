@@ -40,7 +40,7 @@ public class TestHomework1 {
     private static void test() {
         // pokusí se vytvořit souřadnice (-10,60) -- nelze!
         Coordinate c0 = MyCoordinate.create(-10,60);
-        assert c0 == null 
+        assert c0 == null
                 : "Nelze vytvorit souradnice se zapornou hodnotou";
 
         Street str1 = new MyStreet("str1", MyCoordinate.create(10, 10), MyCoordinate.create(10, 100));

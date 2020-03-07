@@ -139,7 +139,7 @@ SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 SOCKET.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 try:
-    SOCKET.bind(("", PORT))
+    SOCKET.bind(("127.0.0.1", PORT))
 except:
     sys.stderr.write("WRONG PORT\n")
     sys.exit(1)

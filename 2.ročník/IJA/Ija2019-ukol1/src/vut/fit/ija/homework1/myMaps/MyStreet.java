@@ -21,14 +21,14 @@ public class MyStreet implements Street {
     String ID;
     Coordinate coordinate1;
     Coordinate coordinate2;
-    List<Stop> list = new ArrayList<Stop>();
+    ArrayList<Stop> list;
 
     public MyStreet (String ID, Coordinate coordinate1, Coordinate coordinate2)
     {
         this.ID = ID;
         this.coordinate1 = coordinate1;
         this.coordinate2 = coordinate2;
-        //this.list = Arrays.asList();
+        list = new ArrayList<Stop>();
     }
     /**
      * Vrátí identifikátor ulice.

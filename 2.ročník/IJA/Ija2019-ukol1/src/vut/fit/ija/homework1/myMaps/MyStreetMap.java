@@ -8,13 +8,17 @@ import vut.fit.ija.homework1.maps.Coordinate;
 import vut.fit.ija.homework1.maps.Street;
 import vut.fit.ija.homework1.maps.StreetMap;
 import java.util.List;
-import java.util.Arrays;
 /**
  * Reprezentuje jednu mapu, která obsahuje ulice.
  * @author koci
  */
 public class MyStreetMap implements StreetMap {
-    List<Street> list = new ArrayList<Street>();
+    ArrayList<Street> list;
+
+    public MyStreetMap() {
+        list = new ArrayList<>();
+    }
+
     /**
      * Přidá ulici do mapy.
      * @param s Objekt reprezentující ulici.

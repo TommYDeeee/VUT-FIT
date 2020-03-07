@@ -56,11 +56,10 @@ public class MyStop implements Stop{
      */
     public Street getStreet() {return street;}
 
-    public boolean equals(Object o) {
-        if(o instanceof Stop) {
-            return this.ID == ((Stop)o).getId();
-        } else {
-            return false;
-        }
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        MyStop myStop = (MyStop) object;
+        return ID.equals(myStop.ID);
     }
 }

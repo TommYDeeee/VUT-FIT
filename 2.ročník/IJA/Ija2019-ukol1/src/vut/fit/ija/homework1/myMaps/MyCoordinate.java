@@ -18,9 +18,11 @@ public class MyCoordinate implements Coordinate {
         this.y=y;
     }
 
+
     public static MyCoordinate create(int x, int y){
         if (x >= 0 && y >= 0) {
             return new MyCoordinate(x, y);
+
         }else{
             return null;
         }
@@ -44,12 +46,12 @@ public class MyCoordinate implements Coordinate {
         return y;
     }
 
-    public boolean equals(Object o) {
-        if(o instanceof Coordinate) {
-            return (this.x == ((Coordinate)o).getX() && this.y == ((Coordinate)o).getY());
-        } else {
-            return false;
-        }
-    }
 
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        MyCoordinate that = (MyCoordinate) object;
+        return x == that.x &&
+                y == that.y;
+    }
 }
