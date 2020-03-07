@@ -18,9 +18,9 @@ Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý be
 
 #### Kódy odpovedí v hlavičke
 ```
-200 OK:                              požiadavka prebehla úspešne a v tele správy je odpoveď
-400 Bad Request:               formálna chyba parametrov ,vstupnej URL alebo formátu vstupu pre metódu POST
-404 Not Found:                   odpoveď nebola nájdená
+200 OK:                                požiadavka prebehla úspešne a v tele správy je odpoveď
+400 Bad Request:                formálna chyba parametrov ,vstupnej URL alebo formátu vstupu pre metódu POST
+404 Not Found:                    odpoveď nebola nájdená
 405 Method Not Allowed:    bola použitá iná operácia ako GET a POST
 ```
 #### Implementácia ošetrenia chýb v prípade metódy POST
@@ -31,15 +31,15 @@ Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý be
   
 #### Vzorový príklad na metódu GET
 **Vstup 1.**
-> curl localhost:5353/resolve?name=www.facebook.com\&type=A >
+> curl localhost:5353/resolve?name=www.facebook.com\&type=A <
 **Výstup 1.**
-> www.facebook.com:A=157.240.30.35 >
+> www.facebook.com:A=157.240.30.35 <
 
 **Vstup 2.**
-> curl localhost:5353/resolve?name=www.facebook.com\&type=AB -i >
+> curl localhost:5353/resolve?name=www.facebook.com\&type=AB -i <
 doplnený parameter -i pre výpis hlavičky
 **Výstup 2.**
-> HTTP/1.1 400 Bad Request >
+> HTTP/1.1 400 Bad Request <
 
 ### Zdroje
 - <https://docs.python.org/3/library/socket.html>
