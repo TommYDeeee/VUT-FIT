@@ -1,1 +1,2 @@
-255.255.255.255:PTR
+www.kokotina.czek:AB
+www.picovina.skek:A
