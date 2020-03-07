@@ -1,7 +1,6 @@
 import socket
 import sys
 import re
-import numpy as np
 from urllib.parse import urlparse, parse_qs
 
 isrequest = re.compile("^(GET|POST) \/\S* HTTP\/(1\.0|1\.1)$")
@@ -116,32 +115,30 @@ def post_request(request, http_v):
 
 if (len(sys.argv)!=2):
     sys.stderr.write("WRONG ARGUMENTS\n")
-    sys.exit()
-
-PORT = np.uintc(sys.argv[1])
+    sys.exit(1)
+try:
+    PORT = int(sys.argv[1])
+except:
+    sys.stderr.write("WRONG PORT\n")
+    sys.exit(1)
 SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 SOCKET.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-#print("localhost started on port:", PORT)
 
 try:
     SOCKET.bind(("", PORT))
 except:
     sys.stderr.write("WRONG PORT\n")
-    sys.exit()
+    sys.exit(1)
 
 SOCKET.listen(100)
 while True:
     try:
-        #print("waiting...")
         connection, address = SOCKET.accept()
-        #print("connection from", address)
         data = connection.recv(1024)
-        #print(data)
         text = parsedata(data)
         if re.match(isrequest, text):
             if re.match(isget,text):
                 response = get_request(text)
-                #print(response)
                 connection.sendall(response.encode())
                 connection.close()
             elif re.match(ispost,text):
@@ -149,7 +146,6 @@ while True:
                 body = '\r\n\r\n'.join(text[1:])
                 body =  body.rstrip()
                 response = post_request(body, http_v)
-                #print(repr(response))
                 connection.sendall(response.encode())
                 connection.close()               
             else:
