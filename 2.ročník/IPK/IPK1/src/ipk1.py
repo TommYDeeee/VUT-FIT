@@ -90,12 +90,12 @@ def post_request(request, http_v):
                 result = line + "=" + result + '\n' 
                 body = body + result
             except:
-                error = " 400 Bad Request\r\n\r\n"
                 continue
         elif(split_line[1] == "PTR"):
             try:
                 socket.inet_aton(split_line[0])
             except:
+                error = " 400 Bad Request\r\n\r\n" 
                 continue
             try:
                 result = socket.gethostbyaddr(split_line[0])

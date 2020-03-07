@@ -299,7 +299,7 @@ function print_stats()
     $file = fopen($dest, 'w');
     if(!$file)
     {
-        fwrite(STDERR, "ERROR, too many arguments\n");
+        fwrite(STDERR, "ERROR, cannot open file\n");
         exit(12);
     }
     if ($jumpsArg == false && $commentsArg == false && $locArg == false && $labelsArg == false)
@@ -331,7 +331,6 @@ function print_stats()
         }
     }
     fclose($file);
-
 }
 
 //parsovanie argumentov z príkazoveho riadku
@@ -446,7 +445,7 @@ if (!($file))
     fwrite(STDERR, "Missing header\n");
     exit(21);
 }
-//Rozdelenie na riadky na zaklade delimiteru \n
+//Rozdelenie na riadkov na zaklade delimiteru \n
 $file = explode("\n", $file);
 //odstranenie prazdnych riadkov
 $file = array_filter($file);

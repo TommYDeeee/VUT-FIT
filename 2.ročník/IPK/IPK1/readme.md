@@ -14,7 +14,8 @@ Spustenie skriptu prebieha pomocou Makefile,
 ```make run PORT="číslo portu"```, číslo portu je potrebné vyberať z intervalu <1024, 65535>. V prípade výberu čísla mimo intervalu sa skript ukončí s chybou a návratovou hodnotou 1.
 
 #### Princíp fungovania
-Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý beží v nekonečnej slučke. Vytvorí sa socket a server čaká na spojenie s klientom. Ak dôjde k nadviazaniu spojenia server roztriedi priate dáta aj s hlavičkou a pokúsi sa o preklad či už IP adresy na doménové meno alebo naopak. Na preklad sa využíva funkcia **socket.gethostbyaddr()** prípadne **socket.gethostbyname()** Ak všetko prebehne úspešne server vráti odpoveď aj s príslušnou hlavičkou a spojenie sa ukončí. Avšak server beží naďalej a ukončí sa napríklad až pomocou prijatia SIGINT signálu.
+Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý beží v nekonečnej slučke. Vytvorí sa socket a server čaká na spojenie s klientom. Ak dôjde k nadviazaniu spojenia, server skontroluje priate dáta pomocou regulárnych výrazov a rozčlení ich na potrebné časti pomocou vlastnej funkcie **parsedata(data)** a **parse_get(url)** *ak sa jedná o metódu GET*. Následne sa pokúsi o preklad či už IP adresy na doménové meno alebo naopak, ktorý prebieha aj s dodatočnou kontrolou a triedením vo funkciach **get_request(request)** alebo **post_request()** na základe zvolenej metódy. Na preklad sa využíva funkcia **socket.gethostbyaddr()** prípadne **socket.gethostbyname()** Ak všetko prebehne úspešne server vráti odpoveď aj s príslušnou hlavičkou a spojenie sa ukončí. Avšak server beží naďalej a ukončí sa napríklad až pomocou prijatia SIGINT signálu.
+
 
 ```
 Formát odpovede: HTTP verzia + kód odpovede\r\n\r\n + telo\r\n
