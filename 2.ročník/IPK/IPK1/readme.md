@@ -19,7 +19,7 @@ Po úspešnom vybratí čísla portu sa na danom porte spustí server, ktorý be
 
 ```
 Formát odpovede: HTTP verzia + kód odpovede\r\n\r\n + telo\r\n
-V prípade metódy POST sú jednotlivé odpovede oddelené \n a za poslednou je \r\n.
+V prípade metódy POST sú jednotlivé odpovede oddelené \r\n a za poslednou je taktiež \r\n.
 ```
 
 #### Kódy odpovedí v hlavičke
@@ -30,7 +30,7 @@ V prípade metódy POST sú jednotlivé odpovede oddelené \n a za poslednou je 
 405 Method Not Allowed:    bola použitá iná operácia ako GET a POST
 ```
 #### Implementácia ošetrenia chýb v prípade metódy POST
-- Ak je prázdne telo (obsah súboru) vracia sa *404 Not Found*
+- Ak je prázdne telo (obsah súboru) vracia sa *404 Not Found* (biele znaky sa ignorujú a ráta sa to ako prázdny súbor)
 - V prípade formálnej chyby na riadku v tele vstupu je daný riadok preskočený a pokračuje sa ďalej
 - V prípade preskočenia všetkých riadkov sa vráti buď *404 Not Found*, ak všetky riadky boli formálne správne ale nepodarilo sa im nájsť príslušný preklad, alebo *400 Bad Request*, ak aspoň jeden z chybných riadkov nebol ani formálne správny.
 - V prípade nájdenia prekladu aspoň pre jeden riadok sa odošle *200 OK* v hlavičke a zoznam preložených riadkov v správnom formáte v tele odpovede.
