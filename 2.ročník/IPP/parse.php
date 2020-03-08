@@ -89,18 +89,18 @@ function check_const($const)
         return 0;
     }
     //inak skontrolujeme či zápis konštanty je správny
-    if(!preg_match("/^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^string@.*|^nil@nil$/", $const))
+    if(!preg_match("~^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^string@.*|^nil@nil$~", $const))
     {
         fwrite(STDERR, "Invalid constant\n");
         exit(23);
     }
     //ak sa jedná o reťazec tak skontrolujeme správnosť "escape" sekvencií a vrátime 1
-    if(preg_match("/^string@.+/", $const))
+    if(preg_match("~^string@.+~", $const))
     {
-        $backslash = preg_match_all("/\\\\/", $const);
+        $backslash = preg_match_all("~\\\\~", $const);
         if($backslash > 0)
         {
-            $escape = preg_match_all("/\\\\[0-9]{3}/", $const);
+            $escape = preg_match_all("~\\\\[0-9]{3}~", $const);
             if($escape != $backslash)
             {
                 fwrite(STDERR, "Invalid escape\n");
@@ -144,7 +144,7 @@ function write_label($number, $arg)
 //funkcia na overenie lexikálnej správnosti typu
 function check_type($type)
 {
-    if(!preg_match("/^int$|^bool$|^string$/", $type))
+    if(!preg_match("~^int$|^bool$|^string$~", $type))
     {
         fwrite(STDERR, "Invalid type\n");
         exit(23);
@@ -379,7 +379,7 @@ if ($argc > 1)
         }
         if (array_key_exists("stats", $args))
         {
-            $dest = preg_grep("/^--stats=.+$/", $argv);
+            $dest = preg_grep("~^--stats=.+$~", $argv);
             if(count($dest)!= 1)
             {
                 fwrite(STDERR, "ERROR, too many --stats\n");
@@ -478,7 +478,7 @@ foreach ($file as &$line)
         $line = substr($line,0, strpos($line, "#"));
     }
     //nahradenie viacerých bielych znakov za medzeru
-    $line = trim(preg_replace("/\s+/", " ", $line));
+    $line = trim(preg_replace("~\s+~", " ", $line));
     //skontrolovanie hlavicky
     if($first_line)
     {

@@ -4,10 +4,11 @@ import re
 from urllib.parse import urlparse, parse_qs
 
 # Regulárne výrazy na formálnu kontrolu URL
-isrequest = re.compile("^(GET|POST) \/\S* HTTP\/(1\.0|1\.1)$")
-isget = re.compile("^GET \/\S* HTTP\/(1\.0|1\.1)$") 
-ispost = re.compile("^POST /dns-query HTTP\/(1\.0|1\.1)$") 
+is_request = re.compile("^(GET|POST) \/\S* HTTP\/(1\.0|1\.1)$")
+is_get = re.compile("^GET \/\S* HTTP\/(1\.0|1\.1)$") 
+is_post = re.compile("^POST /dns-query HTTP\/(1\.0|1\.1)$") 
 correct_post = re.compile("^.*:(PTR|A)$")
+is_domain = re.compile("(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]")
 http_v = 0
 
 # funkcia získa z prvého riadku požiadavku HTTP hlavičku a vráti prvý riadok s potrebnými informáciami
@@ -45,6 +46,9 @@ def get_request(request):
         data_to_send = http_v + " 400 Bad Request\r\n\r\n"
         return data_to_send
     if (req_type == "A"):
+        if(re.match(is_domain, name) is None):
+            data_to_send = http_v + " 400 Bad Request\r\n\r\n"
+            return data_to_send     
         try:
             result = socket.gethostbyname(name)
             if(result == name):
@@ -95,6 +99,9 @@ def post_request(request, http_v):
             continue
         split_line = line.split(":")
         if(split_line[1] == "A"):
+            if(re.match(is_domain, split_line[0]) is None):
+                error = " 400 Bad Request\r\n\r\n" 
+                continue 
             try:
                 result = socket.gethostbyname(split_line[0])
                 if(result == split_line[0]):
@@ -151,12 +158,12 @@ while True:
         connection, address = SOCKET.accept()
         data = connection.recv(1024)
         text = parsedata(data)
-        if re.match(isrequest, text):
-            if re.match(isget,text):
+        if re.match(is_request, text):
+            if re.match(is_get,text):
                 response = get_request(text)
                 connection.sendall(response.encode())
                 connection.close()
-            elif re.match(ispost,text):
+            elif re.match(is_post,text):
                 text = data.decode('utf-8').split('\r\n\r\n') 
                 body = '\r\n\r\n'.join(text[1:])
                 body =  body.rstrip()

@@ -4,6 +4,10 @@ import re
 import xml.etree.ElementTree as ET
 
 pattern = re.compile(r'\s+')
+var_pattern = re.compile(r'^(LF|TF|GF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*?!]*$')
+sym_pattern = re.compile(r'^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^nil@nil$')
+label_pattern = re.compile(r'^[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$')
+
 
 zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK"]
 one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT"]
@@ -53,17 +57,32 @@ def check_xml_ins(xml):
     xml[:] = [item[-1] for item in sort_ins]
     execute_ins(xml)
 
-def var_check(type, text):
-    #TODO
-    True
+def var_check(text):
+    if not (re.match(var_pattern, text)):
+        exit_xml()
 
 def sym_check(type, text):
-    #TODO
-    True
+    if (type == 'var'):
+        if not (re.match(var_pattern, text)):
+            exit_xml()
+    elif (type == 'string'):
+        backslash = re.findall(r'\\', text)
+        if(backslash):
+            escape = re.findall(r'\\[0-9]{3}', text)
+            if (len(escape)!= len(backslash)):
+                exit_xml()
+    else:
+        text = type + '@' + text
+        if not (re.match(sym_pattern, text)):
+            exit_xml()
 
-def label_check(type, text):
-    #TODO
-    True
+def label_check(text):
+    if not (re.match(label_pattern, text)):
+        exit_xml()
+
+def type_check(text):
+    if not (re.match(r'^int$|^bool$|^string$', text)):
+        exit_xml()
 
 def zero_arg_check(ins):
     if(len(ins) != 0):
@@ -80,7 +99,7 @@ def one_arg_check(ins):
     ins_name = ins.attrib['opcode'].upper()
     if ins_name in ["DEFVAR", "POPS"]:
         if(arg.attrib['type'] == 'var'):
-            var_check(arg.attrib['type'], arg.text)
+            var_check(arg.text)
         else:
             exit_xml()
     elif ins_name in ["PUSHS","WRITE","EXIT","DPRINT"]:
@@ -90,20 +109,65 @@ def one_arg_check(ins):
             exit_xml()
     elif ins_name in ["CALL","LABEL","JUMP"]:
         if(arg.attrib['type'] == 'label'):
-            label_check(arg.attrib["type"], arg.text)
+            label_check(arg.text)
         else:
             exit_xml()
 
 def two_arg_check(ins):
-    print(len(ins))
+    if(ins[0].tag != 'arg1' or ins[1].tag != 'arg2'):
+        exit_xml()
+    if(len(ins) != 2):
+        exit_xml()
     for arg in ins:
-        True
-       # print(arg)
-       # print(len(arg.attrib))
+        if(len(arg) != 0):
+            exit_xml()
+        if (len(arg.attrib) != 1 or 'type' not in arg.attrib):
+            exit_xml()
+        if(arg.tag == 'arg1' ):
+            if(arg.attrib['type'] == 'var'):
+                var_check(arg.text)
+            else:
+                exit_xml()
+        elif(arg.tag == 'arg2'):
+            if((ins.attrib['opcode'].upper()) == 'READ'):
+                if(arg.attrib['type']  == 'type'):
+                    type_check(arg.text)
+                else:
+                    exit_xml()
+            else:
+                if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil"]):
+                    sym_check(arg.attrib['type'], arg.text)
+                else:
+                    exit_xml()
+
+
 def three_arg_check(ins):
+    if(ins[0].tag != 'arg1' or ins[1].tag != 'arg2' or ins[2].tag != 'arg3'):
+        exit_xml()
+    if(len(ins)!=3):
+        exit_xml()
     for arg in ins:
-      #  print(arg)
-      True
+        if(len(arg)!=0):
+            exit_xml
+        if(len(arg.attrib) !=1 or 'type' not in arg.attrib):
+            exit_xml()
+        if(arg.tag == 'arg1'):
+            if(ins.attrib['opcode'].upper() in ['JUMPIFEQ', 'JUMPIFNEQ']):
+                if(arg.attrib['type'] == 'label'):
+                    label_check(arg.text)
+                else:
+                    exit_xml()
+            else:
+                if(arg.attrib['type'] == 'var'):
+                    var_check(arg.text)
+                else:
+                    exit_xml()
+        elif(arg.tag == 'arg2' or arg.tag == 'arg3'):
+            if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil"]):
+                sym_check(arg.attrib['type'], arg.text)
+            else:
+                    exit_xml()
+
 
 
 def execute_ins(xml):
