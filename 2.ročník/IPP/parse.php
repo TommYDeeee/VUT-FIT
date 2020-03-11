@@ -27,6 +27,7 @@ $three_arg_ins = array
     "CONCAT", "GETCHAR", "SETCHAR", "JUMPIFEQ", "JUMPIFNEQ"
 );
 $count = 0;
+$all_labels = [];
 
 //Vytvorenie hlavičky XML súboru
 function xml_init()
@@ -164,7 +165,7 @@ function write_type($number, $arg)
 //funkcia na overenie či súhlasí zadaný počet parametrov a očakávaný počet
 function check_params($param, $word)
 {
-    global $labels, $jumps;
+    global $labels, $jumps, $all_labels;
     $word[0] = strtoupper($word[0]);
     switch ($param) {
         case 0:
@@ -192,7 +193,11 @@ function check_params($param, $word)
                 {
                     check_label($word[1]);
                     write_label("arg1", $word[1]);
-                    $labels++;
+                    if(in_array($word[1], $all_labels) == false)
+                    {
+                        $labels++;
+                    }
+                    array_push($all_labels, $word[1]);
                 }
                 else
                 {
