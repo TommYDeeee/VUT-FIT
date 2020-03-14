@@ -7,7 +7,11 @@ pattern = re.compile(r'\s+')
 var_pattern = re.compile(r'^(LF|TF|GF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*?!]*$')
 sym_pattern = re.compile(r'^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^nil@nil$')
 label_pattern = re.compile(r'^[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$')
-
+escape_pattern = re.compile(r'\\[0-9]{3}')
+labels = {}
+TF = None
+GF = {}
+LF = []
 
 zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK"]
 one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT"]
@@ -18,6 +22,19 @@ three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2I
 def exit_xml():
     sys.stderr.write('xml is invalid\n')
     sys.exit(32)     
+
+def exit_semantics():
+    sys.stderr.write('Semantic error\n')
+    sys.exit(52)
+
+def exit_non_var():
+    sys.stderr.write('Variable is not existing!\n')
+    sys.exit(54)    
+
+def exit_non_frame():
+    sys.stderr.write('Frame is not existing!\n')
+    sys.exit(55)    
+
 
 def print_help():
     print("TODO HELP")
@@ -36,7 +53,8 @@ def check_xml_root(xml):
         exit_xml()
     if (xml.tail !=  None):
         exit_xml()
-    check_xml_ins(xml)
+    xml = check_xml_ins(xml)
+    return xml
 
 def check_xml_ins(xml):
     order = 0
@@ -56,6 +74,7 @@ def check_xml_ins(xml):
         exit_xml()
     xml[:] = [item[-1] for item in sort_ins]
     execute_ins(xml)
+    return xml
 
 def var_check(text):
     if not (re.match(var_pattern, text)):
@@ -110,6 +129,11 @@ def one_arg_check(ins):
     elif ins_name in ["CALL","LABEL","JUMP"]:
         if(arg.attrib['type'] == 'label'):
             label_check(arg.text)
+            if(ins_name == "LABEL"):
+                if(arg.text in labels):
+                    exit_semantics()
+                else:
+                    labels[arg.text] = int(ins.attrib["order"])
         else:
             exit_xml()
 
@@ -195,6 +219,179 @@ def get_args(ins):
     else:
         exit_xml()
 
+
+def interpret_escape(escape):
+    def replace(match):
+        return chr(int(match.group()[1:]))
+    escape = re.sub(escape_pattern, replace, escape)
+    return escape
+
+def var_values(var):
+    frame, var_value = var.split("@", 1)
+    return frame, var_value
+
+def save_to_var(frame, var , symb):
+    if (frame == "TF"):
+        if TF == None:
+            exit_non_frame()
+        elif var not in TF.keys():
+            exit_non_var()
+        else:
+            TF[var] = symb
+    elif (frame == "LF"):
+        if not LF:
+            exit_non_frame()
+        elif var not in LF[-1].keys():
+            exit_non_var()
+        else:
+            LF[-1][var] = symb
+    else:
+        if var not in GF.keys():
+            exit_non_var()
+        else:
+            GF[var] = symb
+
+def init_var(frame, var):
+    if (frame == "TF"):
+        if TF == None:
+            exit_non_frame()
+        elif var in TF.keys():
+            exit_semantics
+        else:
+            TF[var] = None
+    elif (frame == "LF"):
+        if not LF:
+            exit_non_frame()
+        elif var in LF[-1].keys():
+            exit_semantics
+        else:
+            LF[-1][var] = None
+    else:
+        if var in GF.keys():
+            exit_semantics
+        else:
+            GF[var] = None
+
+def r_Move(var, symb, var_value, symb_value):
+    if (symb['type'] == 'var'):
+        #TODO
+        print("yes")
+    else:
+        if(symb['type'] == 'string'):
+            symb_value = interpret_escape(symb_value)
+        frame, var_value = var_values(var_value)
+        save_to_var(frame, var_value, symb_value)
+
+def r_Createframe():
+    global TF
+    TF = {}
+
+def r_Defvar(var_value):
+    frame, var_value = var_values(var_value)
+    init_var(frame, var_value)
+    
+
+def run_instructions(xml):
+    position = 0
+    while position < len(xml):
+        instruction = xml[position]
+        opcode = instruction.attrib['opcode']
+        try:
+            arg1 = instruction[0].attrib
+            arg1_text = instruction[0].text
+        except:
+            pass
+        try:
+            arg2 = instruction[1].attrib
+            arg2_text = instruction[1].text
+        except:
+            pass        
+        try:
+            arg3 = instruction[2].attrib
+            arg3_text = instruction[2].text
+        except:
+            pass
+
+
+        if (opcode == "MOVE"):
+            r_Move(arg1, arg2, arg1_text, arg2_text)
+
+        elif (opcode == "CREATEFRAME"):
+            r_Createframe()
+
+        elif (opcode == "PUSHFRAME"):
+            True
+        elif (opcode == "POPFRAME"):
+            True
+        elif (opcode == "DEFVAR"):
+            r_Defvar(arg1_text)
+
+        """elif (opcode == "CALL"):
+
+        elif (opcode == "CALL"):
+
+        elif (opcode == "RETURN"):
+
+        elif (opcode == "PUSHS"):
+
+        elif (opcode == "POPS"):
+
+        elif (opcode == "ADD"):
+
+        elif (opcode == "SUB"):
+
+        elif (opcode == "MUL"):
+
+        elif (opcode == "IDIV"):
+
+        elif (opcode == "LT"):
+
+        elif (opcode == "GT"):
+
+        elif (opcode == "EQ"):
+
+        elif (opcode == "AND"):
+
+        elif (opcode == "OR"):
+
+        elif (opcode == "NOT"):
+
+        elif (opcode == "INT2CHAR"):
+
+        elif (opcode == "STRI2INT"):
+
+        elif (opcode == "READ"):
+
+        elif (opcode == "WRITE"):
+
+        elif (opcode == "CONCAT"):
+
+        elif (opcode == "STRLEN"):
+
+        elif (opcode == "GETCHAR"):
+
+        elif (opcode == "SETCHAR"):
+
+        elif (opcode == "TYPE"):
+
+        elif (opcode == "LABEL"):
+
+        elif (opcode == "JUMP"):
+
+        elif (opcode == "JUMPIFEQ"):
+
+        elif (opcode == "JUMPIFNEQ"):
+
+        elif (opcode == "EXIT"):
+
+        elif (opcode == "DPRINT"):
+
+        elif (opcode == "BREAK"):"""
+
+    
+        position+=1
+        
+
 arg_input = arg_source = False
 if ('--help' in sys.argv):
     if ((len(sys.argv))!=2):
@@ -252,5 +449,6 @@ else:
 
 xml = xml_raw.getroot()
 #print(ET.tostring(xml, encoding='utf8').decode('utf8'))
-check_xml_root(xml)
+xml = check_xml_root(xml)
+run_instructions(xml)
 
