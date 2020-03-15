@@ -29,6 +29,10 @@ def exit_semantics():
     sys.stderr.write('Semantic error\n')
     sys.exit(52)
 
+def exit_operands():
+    sys.stderr.write('Wrong operands\n')
+    sys.exit(53)
+
 def exit_non_var():
     sys.stderr.write('Variable is not existing!\n')
     sys.exit(54)    
@@ -40,6 +44,10 @@ def exit_non_frame():
 def exit_none_var():
     sys.stderr.write('Missing variable value\n')
     sys.exit(56)
+
+def exit_bad_operand():
+    sys.stderr.write("Bad operand given\n")
+    sys.exit(57)
 
 def print_help():
     print("TODO HELP")
@@ -356,7 +364,6 @@ def r_Pushs(symb, symb_value):
         if(symb_value == None):
             exit_none_var()
     data.append(symb_value)
-    print(data)
 
 def r_Pops(var, var_value):
     global data
@@ -366,13 +373,41 @@ def r_Pops(var, var_value):
     frame, var_value = var_values(var_value)
     save_to_var(frame, var_value, value)
 
+def r_Add(var, type1, value1, type2, value2):
+    if (type1['type'] != 'int' and type2['type'] != 'int'):
+        exit_operands()
+    result = int(value1) + int(value2)
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result)
+
+def r_Sub(var, type1, value1, type2, value2):
+    if (type1['type'] != 'int' and type2['type'] != 'int'):
+        exit_operands()
+    result = int(value1) - int(value2)
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result)    
+
+def r_Mul(var, type1, value1, type2, value2):
+    if (type1['type'] != 'int' and type2['type'] != 'int'):
+        exit_operands()
+    result = int(value1) * int(value2)
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result)   
+
+def r_Idiv(var, type1, value1, type2, value2):
+    if (type1['type'] != 'int' and type2['type'] != 'int'):
+        exit_operands()
+    if (value2 == "0"):
+        exit_bad_operand()
+    result = int(value1) / int(value2)
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, int(result))   
+
 def run_instructions(xml):
     position = 0
     while position < len(xml):
         instruction = xml[position]
         opcode = instruction.attrib['opcode']
-        print(position)
-        print(opcode)
         try:
             arg1 = instruction[0].attrib
             arg1_text = instruction[0].text
@@ -403,20 +438,21 @@ def run_instructions(xml):
         elif (opcode == "RETURN"):
             position = r_Return(position)
         elif (opcode == "EXIT"):
+            print(TF)
             sys.exit(0)
         elif (opcode == "PUSHS"):
             r_Pushs(arg1, arg1_text)
         elif (opcode == "POPS"):
             r_Pops(arg1,arg1_text)
-        """elif (opcode == "ADD"):
-
+        elif (opcode == "ADD"):
+            r_Add(arg1_text, arg2, arg2_text, arg3,  arg3_text)
         elif (opcode == "SUB"):
-
+            r_Sub(arg1_text, arg2, arg2_text, arg3, arg3_text)
         elif (opcode == "MUL"):
-
+            r_Mul(arg1_text, arg2, arg2_text, arg3, arg3_text)
         elif (opcode == "IDIV"):
-
-        elif (opcode == "LT"):
+            r_Idiv(arg1_text, arg2, arg2_text, arg3, arg3_text)
+        """elif (opcode == "LT"):
 
         elif (opcode == "GT"):
 
