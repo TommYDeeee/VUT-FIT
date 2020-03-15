@@ -10,6 +10,7 @@ label_pattern = re.compile(r'^[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$')
 escape_pattern = re.compile(r'\\[0-9]{3}')
 labels = {}
 functions = []
+data = []
 TF = None
 GF = {}
 LF = []
@@ -111,7 +112,7 @@ def zero_arg_check(ins):
     if(len(ins) != 0):
         exit_xml()
 
-def one_arg_check(ins):
+def one_arg_check(ins, i):
     if(len(ins) != 1):
         exit_xml()
     for arg in ins:
@@ -137,7 +138,7 @@ def one_arg_check(ins):
                 if(arg.text in labels):
                     exit_semantics()
                 else:
-                    labels[arg.text] = int(ins.attrib["order"])
+                    labels[arg.text] = i
         else:
             exit_xml()
 
@@ -199,17 +200,19 @@ def three_arg_check(ins):
 
 
 def execute_ins(xml):
+    i = 0
     for ins in xml:
         ins_name = ins.attrib['opcode'].upper()
         args = get_args(ins_name)
         if(args == 0):
             zero_arg_check(ins)
         if(args == 1):
-            one_arg_check(ins)
+            one_arg_check(ins, i)
         if(args == 2):
             two_arg_check(ins)
         if (args == 3):
             three_arg_check(ins)
+        i+=1
 
 def get_args(ins):
     if ins in zero_ins:
@@ -340,12 +343,36 @@ def r_Call(label, position):
     else:
         exit_semantics()
 
+def r_Return(position):
+    global functions
+    if not functions:
+        exit_none_var()
+    return functions.pop()
+
+def r_Pushs(symb, symb_value):
+    global data
+    if(symb['type'] == 'var'):
+        symb_value = symb_from_var(symb_value)
+        if(symb_value == None):
+            exit_none_var()
+    data.append(symb_value)
+    print(data)
+
+def r_Pops(var, var_value):
+    global data
+    if(len(data) == 0):
+        exit_non_frame
+    value = data.pop()
+    frame, var_value = var_values(var_value)
+    save_to_var(frame, var_value, value)
 
 def run_instructions(xml):
     position = 0
     while position < len(xml):
         instruction = xml[position]
         opcode = instruction.attrib['opcode']
+        print(position)
+        print(opcode)
         try:
             arg1 = instruction[0].attrib
             arg1_text = instruction[0].text
@@ -361,7 +388,6 @@ def run_instructions(xml):
             arg3_text = instruction[2].text
         except:
             pass
-
         if (opcode == "MOVE"):
             r_Move(arg1, arg2, arg1_text, arg2_text)
         elif (opcode == "CREATEFRAME"):
@@ -373,14 +399,16 @@ def run_instructions(xml):
         elif (opcode == "DEFVAR"):
             r_Defvar(arg1_text)
         elif (opcode == "CALL"):
-            position = r_Call(arg1_text, position)
-        """elif (opcode == "RETURN"):
-
+            position = r_Call(arg1_text, position) - 1
+        elif (opcode == "RETURN"):
+            position = r_Return(position)
+        elif (opcode == "EXIT"):
+            sys.exit(0)
         elif (opcode == "PUSHS"):
-
+            r_Pushs(arg1, arg1_text)
         elif (opcode == "POPS"):
-
-        elif (opcode == "ADD"):
+            r_Pops(arg1,arg1_text)
+        """elif (opcode == "ADD"):
 
         elif (opcode == "SUB"):
 
@@ -418,7 +446,7 @@ def run_instructions(xml):
 
         elif (opcode == "TYPE"):
 
-        elif (opcode == "LABEL"):
+
 
         elif (opcode == "JUMP"):
 
@@ -426,7 +454,6 @@ def run_instructions(xml):
 
         elif (opcode == "JUMPIFNEQ"):
 
-        elif (opcode == "EXIT"):
 
         elif (opcode == "DPRINT"):
 
