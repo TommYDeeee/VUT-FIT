@@ -9,6 +9,7 @@ sym_pattern = re.compile(r'^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^nil@nil$'
 label_pattern = re.compile(r'^[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$')
 escape_pattern = re.compile(r'\\[0-9]{3}')
 labels = {}
+functions = []
 TF = None
 GF = {}
 LF = []
@@ -35,6 +36,9 @@ def exit_non_frame():
     sys.stderr.write('Frame is not existing!\n')
     sys.exit(55)    
 
+def exit_none_var():
+    sys.stderr.write('Missing variable value\n')
+    sys.exit(56)
 
 def print_help():
     print("TODO HELP")
@@ -272,24 +276,70 @@ def init_var(frame, var):
         else:
             GF[var] = None
 
+def symb_from_var(symb):
+    frame, var_value = var_values(symb)
+    if(frame == "TF"):
+        if (TF == None):
+            exit_non_frame()
+        try:
+            return TF.get(var_value)
+        except:
+            exit_non_var()
+    elif(frame == "LF"):
+        if not LF:
+            exit_non_frame()
+        try:
+            return LF.get(var_value)
+        except:
+            exit_non_var()
+    else:
+        try:
+            return GF.get(var_value)
+        except:
+            exit_non_var()
+
+
 def r_Move(var, symb, var_value, symb_value):
     if (symb['type'] == 'var'):
-        #TODO
-        print("yes")
+        symb_value = symb_from_var(symb_value)
+        if (symb_value == None):
+            exit_none_var()
     else:
         if(symb['type'] == 'string'):
             symb_value = interpret_escape(symb_value)
-        frame, var_value = var_values(var_value)
-        save_to_var(frame, var_value, symb_value)
+    frame, var_value = var_values(var_value)
+    save_to_var(frame, var_value, symb_value)
 
 def r_Createframe():
     global TF
     TF = {}
 
+def r_Pushframe():
+    global TF, LF
+    if not TF:
+        exit_non_frame()
+    LF.append(TF)
+    TF = None
+
+def r_Popframe():
+    global TF, LF
+    try:
+        TF = LF.pop()
+    except:
+        exit_non_frame()
+
 def r_Defvar(var_value):
     frame, var_value = var_values(var_value)
     init_var(frame, var_value)
-    
+
+def r_Call(label, position):
+    global functions
+    if label in labels:
+        functions.append(position)
+        return labels.get(label)
+    else:
+        exit_semantics()
+
 
 def run_instructions(xml):
     position = 0
@@ -312,25 +362,19 @@ def run_instructions(xml):
         except:
             pass
 
-
         if (opcode == "MOVE"):
             r_Move(arg1, arg2, arg1_text, arg2_text)
-
         elif (opcode == "CREATEFRAME"):
             r_Createframe()
-
         elif (opcode == "PUSHFRAME"):
-            True
+            r_Pushframe()
         elif (opcode == "POPFRAME"):
-            True
+            r_Popframe()
         elif (opcode == "DEFVAR"):
             r_Defvar(arg1_text)
-
-        """elif (opcode == "CALL"):
-
         elif (opcode == "CALL"):
-
-        elif (opcode == "RETURN"):
+            position = r_Call(arg1_text, position)
+        """elif (opcode == "RETURN"):
 
         elif (opcode == "PUSHS"):
 
@@ -451,4 +495,3 @@ xml = xml_raw.getroot()
 #print(ET.tostring(xml, encoding='utf8').decode('utf8'))
 xml = check_xml_root(xml)
 run_instructions(xml)
-
