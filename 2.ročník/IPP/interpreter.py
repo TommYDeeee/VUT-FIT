@@ -390,7 +390,7 @@ def r_Createframe():
 def r_Pushframe():
     global TF, LF
     if not TF:
-        exit_non_frame()
+        exit_non_var()
     LF.append(TF)
     TF = None
 
@@ -461,7 +461,7 @@ def r_Add(var, type1, value1, type2, value2):
         if(value2 == None):
             exit_none_var()
         type2 = get_type_val(value2)
-    if (type1 != 'int' and type2 != 'int'):
+    if (type1 != 'int' or type2 != 'int'):
         exit_operands()
     result = int(value1) + int(value2)
     frame, var_value = var_values(var)
@@ -480,7 +480,7 @@ def r_Sub(var, type1, value1, type2, value2):
         if(value2 == None):
             exit_none_var()
         type2 = get_type_val(value2)
-    if (type1 != 'int' and type2 != 'int'):
+    if (type1 != 'int' or type2 != 'int'):
         exit_operands()
     result = int(value1) - int(value2)
     frame, var_value = var_values(var)
@@ -499,7 +499,7 @@ def r_Mul(var, type1, value1, type2, value2):
         if(value2 == None):
             exit_none_var()
         type2 = get_type_val(value2)    
-    if (type1 != 'int' and type2 != 'int'):
+    if (type1 != 'int' or type2 != 'int'):
         exit_operands()
     result = int(value1) * int(value2)
     frame, var_value = var_values(var)
@@ -518,7 +518,7 @@ def r_Idiv(var, type1, value1, type2, value2):
         if(value2 == None):
             exit_none_var()
         type2 = get_type_val(value2)
-    if (type1 != 'int' and type2 != 'int'):
+    if (type1 != 'int' or type2 != 'int'):
         exit_operands()
     if (value2 == "0"):
         exit_bad_operand()
@@ -800,6 +800,197 @@ def r_Write(type1, type_value):
     else:
         exit_bad_operand()
 
+def r_Concat(var, type1, value1, type2, value2):
+    type1 = get_type(type1)
+    type2 = get_type(type2)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if (type2 == 'var'):
+        value2 = symb_from_var(value2)
+        if(value2 == None):
+            exit_none_var()
+        type2 = get_type_val(value2)    
+    if(type1 != 'string' or type2 != 'string'):
+        exit_bad_operand()
+    result = value1 + value2 
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result, get_type_val(result))
+    
+def r_Strlen(var, type1, value1):
+    type1 = get_type(type1)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if(type1 != 'string'):
+        exit_operands()
+    result = len(value1)     
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result, get_type_val(result))
+    
+def r_Getchar(var, type1, value1, type2, value2):
+    type1 = get_type(type1)
+    type2 = get_type(type2)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if (type2 == 'var'):
+        value2 = symb_from_var(value2)
+        if(value2 == None):
+            exit_none_var()
+        type2 = get_type_val(value2)
+    if(type1 != 'string' or type2 != 'int'):
+        exit_operands()
+    if 0 <= int(value2) <len(value1):
+        result = list(value1)
+        result = result[int(value2)]
+    else:
+        exit_string()
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result, get_type_val(result))
+      
+def r_Setchar(var_type, var_value, type1, value1, type2, value2):
+    type1 = get_type(type1)
+    type2 = get_type(type2)
+    var_type = get_type(var_type)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if (type2 == 'var'):
+        value2 = symb_from_var(value2)
+        if(value2 == None):
+            exit_none_var()
+        type2 = get_type_val(value2)
+    if(var_type == 'var'):
+        var_value_result = symb_from_var(var_value)
+        if(value1 == None):
+            exit_none_var
+        var_type = get_type_val(var_type)
+    else:
+        exit_operands()
+    if(type1 != 'int' or type2 != 'string' or var_type != 'string'):
+            exit_operands()
+    if(var_value == "" or value2 == ""):
+        exit_string()
+    var_value = interpret_escape(var_value)
+    value2 = interpret_escape(value2)
+    if (0<= int(value1) <len(value2)):
+        result = var_value_result[:int(value1)]+value2[0]+var_value_result[int(value1) + 1:]
+    else:
+        exit_string()
+    frame, var_value = var_values(var_value)
+    save_to_var(frame, var_value, result, get_type_val(result))
+
+def r_Type(var, type1, value1):
+    type1 = get_type(type1)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if (type1 == 'int'):
+        result = 'int'
+    elif(type1 == 'string'):
+        result = 'string'
+    elif(type1 == 'bool'):
+        result = 'bool'
+    elif(type1 == 'nil'):
+        result = 'nil'
+    else:
+        exit_operands
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result, get_type_val(result))
+
+def r_Jump(label):
+    global labels
+    if label not in labels.keys():
+        exit_semantics()
+    else:
+        return labels[label]
+
+def r_Jumpifeq(label, type1, value1, type2, value2, position):
+    global labels
+    type1 = get_type(type1)
+    type2 = get_type(type2)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if (type2 == 'var'):
+        value2 = symb_from_var(value2)
+        if(value2 == None):
+            exit_none_var()
+        type2 = get_type_val(value2)
+    if label not in labels.keys():
+        exit_semantics()
+    if(type1 == type2):
+        if(value1 == value2):
+            return labels[label]
+        else:
+            return position
+    else:
+        exit_operands()
+
+def r_Jumpifneq(label, type1, value1, type2, value2, position):
+    global labels
+    type1 = get_type(type1)
+    type2 = get_type(type2)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if (type2 == 'var'):
+        value2 = symb_from_var(value2)
+        if(value2 == None):
+            exit_none_var()
+        type2 = get_type_val(value2)
+    if label not in labels.keys():
+        exit_semantics()
+    if(type1 == type2):
+        if(value1 != value2):
+            return labels[label]
+        else:
+            return position
+    else:
+        exit_operands()
+
+def r_Dprint(type1, value1):
+    type1 = get_type(type1)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        sys.stderr.write(value1)
+    else:
+        sys.stderr.write(value1)
+
+def r_Break(position):
+    global LF, TF, GF
+    sys.stderr.write("\nPozicia:{0}\nLF:{1}\nTF:{2}\nGF:{3}\n".format(position+1, LF, TF, GF))
+
+def r_Exit(type1, value1):
+    type1 = get_type(type1)
+    if(type1== 'var'):
+        value1 = symb_from_var(value1)
+        if(value1 == None):
+            exit_none_var
+        type1 = get_type_val(value1)
+    if(type1 != 'int'):
+        exit_operands()
+    if(0 <= int(value1) <= 49):
+        exit(value1)
+    else:
+        exit_bad_operand()
 
 def run_instructions(xml):
     position = 0
@@ -837,7 +1028,7 @@ def run_instructions(xml):
         elif (opcode == "RETURN"):
             position = r_Return(position)
         elif (opcode == "EXIT"):
-            sys.exit(0)
+            r_Exit(arg1, arg1_text)
         elif (opcode == "PUSHS"):
             r_Pushs(arg1, arg1_text)
         elif (opcode == "POPS"):
@@ -870,28 +1061,26 @@ def run_instructions(xml):
             r_Read(arg1_text, arg2, arg2_text)
         elif (opcode == "WRITE"):
             r_Write(arg1, arg1_text)
-        """elif (opcode == "CONCAT"):
-
+        elif (opcode == "CONCAT"):
+            r_Concat(arg1_text, arg2, arg2_text, arg3, arg3_text)
         elif (opcode == "STRLEN"):
-
+            r_Strlen(arg1_text, arg2, arg2_text)
         elif (opcode == "GETCHAR"):
-
+            r_Getchar(arg1_text, arg2, arg2_text, arg3, arg3_text)
         elif (opcode == "SETCHAR"):
-
+            r_Setchar(arg1, arg1_text, arg2, arg2_text, arg3, arg3_text)
         elif (opcode == "TYPE"):
-
+            r_Type(arg1_text, arg2, arg2_text)
         elif (opcode == "JUMP"):
-
+            position = r_Jump(arg1_text)
         elif (opcode == "JUMPIFEQ"):
-
+            position = r_Jumpifeq(arg1_text, arg2, arg2_text, arg3, arg3_text, position)
         elif (opcode == "JUMPIFNEQ"):
-
-
+            position = r_Jumpifneq(arg1_text, arg2, arg2_text, arg3, arg3_text, position)
         elif (opcode == "DPRINT"):
-
-        elif (opcode == "BREAK"):"""
-
-    
+            r_Dprint(arg1, arg1_text)
+        elif (opcode == "BREAK"):
+            r_Break(position)
         position+=1
         
 
