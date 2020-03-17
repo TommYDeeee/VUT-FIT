@@ -65,6 +65,8 @@ def check_xml_root(xml):
     for attrib in xml.attrib:
         if(attrib not in ('name', 'language', 'description')):
             exit_xml
+    if not (list(xml)):
+        sys.exit(0)
     xml.text = re.sub(pattern, '', xml.text)
     if (xml.text):
         exit_xml()
@@ -102,6 +104,8 @@ def sym_check(type, text):
         if not (re.match(var_pattern, text)):
             exit_xml()
     elif (type == 'string'):
+        if(text == None):
+            text= ""
         backslash = re.findall(r'\\', text)
         if(backslash):
             escape = re.findall(r'\\[0-9]{3}', text)
@@ -250,6 +254,11 @@ def convert_to_bool(value1, value2):
     return value1, value2
 
 def get_type_val(value1):
+    try:
+        if(value1.get('nil') == None):
+            return 'nil'
+    except:
+        pass
     if type(value1) is bool:
        return 'bool'
     if type(value1) is int:
@@ -271,6 +280,8 @@ def get_type(value):
 
 
 def interpret_escape(escape):
+    if(escape == None):
+        return ""
     def replace(match):
         return chr(int(match.group()[1:]))
     escape = re.sub(escape_pattern, replace, escape)
@@ -298,6 +309,8 @@ def save_to_var(frame, var , symb, symb_type):
                     TF[var] = True
                 else:
                     TF[var] = False
+            elif(symb_type == 'nil'):
+                TF[var] = {'nil': None}
     elif (frame == "LF"):
         if not LF:
             exit_non_frame()
@@ -313,6 +326,8 @@ def save_to_var(frame, var , symb, symb_type):
                     LF[-1][var] = True
                 else:
                     LF[-1][var] = False
+            elif(symb_type == 'nil'):
+                LF[-1][var] = {'nil': None}
     else:
         if var not in GF.keys():
             exit_non_var()
@@ -326,25 +341,27 @@ def save_to_var(frame, var , symb, symb_type):
                     GF[var] = True
                 else:
                     GF[var] = False
+            elif (symb_type == 'nil' or symb_type == None):
+                GF[var] = {'nil': None}
 
 def init_var(frame, var):
     if (frame == "TF"):
         if TF == None:
             exit_non_frame()
         elif var in TF.keys():
-            exit_semantics
+            exit_semantics()
         else:
             TF[var] = None
     elif (frame == "LF"):
         if not LF:
             exit_non_frame()
         elif var in LF[-1].keys():
-            exit_semantics
+            exit_semantics()
         else:
             LF[-1][var] = None
     else:
         if var in GF.keys():
-            exit_semantics
+            exit_semantics()
         else:
             GF[var] = None
 
@@ -353,22 +370,22 @@ def symb_from_var(symb):
     if(frame == "TF"):
         if (TF == None):
             exit_non_frame()
-        try:
-            return TF.get(var_value)
-        except:
+        if var_value not in TF.keys():
             exit_non_var()
+        else:
+            return TF.get(var_value)
     elif(frame == "LF"):
         if not LF:
             exit_non_frame()
-        try:
-            return LF.get(var_value)
-        except:
+        if var_value not in LF[-1].keys():
             exit_non_var()
+        else:
+            return LF[-1].get(var_value)
     else:
-        try:
-            return GF.get(var_value)
-        except:
+        if var_value not in GF.keys():
             exit_non_var()
+        else:
+            return GF.get(var_value)
 
 
 def r_Move(var, symb, var_value, symb_value):
@@ -380,8 +397,17 @@ def r_Move(var, symb, var_value, symb_value):
     else:
         if(symb == 'string'):
             symb_value = interpret_escape(symb_value)
+        if(symb == 'bool'):
+            if(symb_value == 'true'):
+                symb_value = True
+            else:
+                symb_value = False
+        if(symb == 'nil'):
+            symb_value = {'nil': None}
+        if (symb == 'int'):
+            symb_value = int(symb_value)
     frame, var_value = var_values(var_value)
-    save_to_var(frame, var_value, symb_value, symb)
+    save_to_var(frame, var_value, symb_value, get_type_val(symb_value))
 
 def r_Createframe():
     global TF
@@ -389,8 +415,8 @@ def r_Createframe():
 
 def r_Pushframe():
     global TF, LF
-    if not TF:
-        exit_non_var()
+    if TF == None:
+        exit_non_frame()
     LF.append(TF)
     TF = None
 
@@ -444,6 +470,8 @@ def r_Pops(var, var_value):
     global data
     if(len(data) == 0):
         exit_non_frame
+    if(len(data) == 0):
+        exit_none_var()
     value = data.pop()
     frame, var_value = var_values(var_value)
     save_to_var(frame, var_value, value, get_type_val(value))
@@ -454,7 +482,7 @@ def r_Add(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -473,7 +501,7 @@ def r_Sub(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -492,7 +520,7 @@ def r_Mul(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -511,7 +539,7 @@ def r_Idiv(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -532,7 +560,7 @@ def r_Lt(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -549,22 +577,27 @@ def r_Lt(var, type1, value1, type2, value2):
             exit_operands()
     elif(type1 == 'bool'):
         if(type2 == 'bool'):
-            if(value1 == 'false'):
-                result = True
+            if(value1 == 'false' or value1 == False):
+                if(value2 == 'true' or value2 == True):
+                    result = True
+                else:
+                    result = False
             else:
                 result = False
         else:
-            exit_bad_operand()
+            exit_operands()
     elif(type1 == 'string'):
         if(type2 ==  'string'):
+            value1 = interpret_escape(value1)
+            value2 = interpret_escape(value2)
             if(value1 < value2):
                 result = True
             else:
                 result = False
         else:
-            exit_bad_operand()
+            exit_operands()
     else:
-        exit_bad_operand()
+        exit_operands()
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
@@ -574,7 +607,7 @@ def r_Gt(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -591,22 +624,27 @@ def r_Gt(var, type1, value1, type2, value2):
             exit_operands()
     elif(type1 == 'bool'):
         if(type2 == 'bool'):
-            if(value1 == 'true'):
-                result = True
+            if(value1 == 'true' or value1 == True):
+                if(value2 == 'false' or value2 == False):
+                    result = True
+                else:
+                    result = False
             else:
                 result = False
         else:
-            exit_bad_operand()
+            exit_operands()
     elif(type1 == 'string'):
         if(type2 ==  'string'):
+            value1 = interpret_escape(value1)
+            value2 = interpret_escape(value2)
             if(value1 > value2):
                 result = True
             else:
                 result = False
         else:
-            exit_bad_operand()
+            exit_operands()
     else:
-        exit_bad_operand()
+        exit_operands()
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
@@ -617,14 +655,19 @@ def r_Eq(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
         if(value2 == None):
             exit_none_var()
         type2 = get_type_val(value2)
-    if(type1 == 'int'):
+    if(type1 == 'nil' or type2 == 'nil'):
+        if(value1 == value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'int'):
         if(type2 == 'int'):
             if(int(value1) == int(value2)):
                 result = True
@@ -640,23 +683,19 @@ def r_Eq(var, type1, value1, type2, value2):
             else:
                 result = False
         else:
-            exit_bad_operand()
+            exit_operands()
     elif(type1 == 'string'):
         if(type2 ==  'string'):
+            value1 = interpret_escape(value1)
+            value2 = interpret_escape(value2)
             if(value1 == value2):
                 result = True
             else:
                 result = False
         else:
-            exit_bad_operand()
+            exit_operands()
     else:
-        if(type2 == 'nil'):
-            if(value1 == value2):
-                result = True
-            else:
-                result = False
-        else:
-            exit_bad_operand()
+        exit_operands()
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
@@ -666,7 +705,7 @@ def r_And(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -674,7 +713,7 @@ def r_And(var, type1, value1, type2, value2):
             exit_none_var()
         type2 = get_type_val(value2)
     if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
-        exit_bad_operand()
+        exit_operands()
     value1, value2 = convert_to_bool(value1, value2)  
     result = value1 and value2
     frame, var_value = var_values(var)
@@ -686,7 +725,7 @@ def r_Or(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -694,7 +733,7 @@ def r_Or(var, type1, value1, type2, value2):
             exit_none_var()
         type2 = get_type_val(value2)    
     if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
-        exit_bad_operand()
+        exit_operands()
     value1, value2 = convert_to_bool(value1, value2)
     result = value1 or value2
     frame, var_value = var_values(var)
@@ -705,11 +744,12 @@ def r_Not(var, type1, value1):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
+        type1 = get_type_val(value1)
     if(type1 not in ['bool', 'var']): 
-        exit_bad_operand()
-    if(type(value1) is not bool):
-        exit_bad_operand()
+        exit_operands()
+    if(value1 != 'true' and value1 != True and value1!= 'false' and value1 != False):
+        exit_operands()
     value1, value2 = convert_to_bool(value1, None)
     result = not value1
     frame, var_value = var_values(var)
@@ -720,11 +760,12 @@ def r_Int2char(var, type1, value1):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
+        type1 = get_type_val(type1)
     if(type1 not in ['int', 'var']):
-        exit_bad_operand()
+        exit_operands()
     try:
-        result = chr(value1)
+        result = chr(int(value1))
     except:
         exit_string()
     frame, var_value = var_values(var)
@@ -736,7 +777,7 @@ def r_Stri2int(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -744,7 +785,7 @@ def r_Stri2int(var, type1, value1, type2, value2):
             exit_none_var()
         type2 = get_type_val(value2)
     if(type1 not in ['string', 'var'] or type2 != 'int'):
-        exit_bad_operand()
+        exit_operands()
     if 0<= int(value2) <len(value1):
         char_ord = [ord(i) for i in value1]
         result = char_ord[int(value2)]
@@ -758,7 +799,9 @@ def r_Read(var, type1, type_val):
         inputi = input()
     else:
         inputi = input_f.readline().split("\n")[0]
-    if(type_val == 'int'):
+    if (len(inputi) <= 0):
+        result = None
+    elif(type_val == 'int'):
         try:
             result = int(inputi)
         except:
@@ -774,7 +817,7 @@ def r_Read(var, type1, type_val):
         else:
             result = True    
     else:
-        exit_operands()
+        exit_bad_operand()
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
@@ -783,10 +826,10 @@ def r_Write(type1, type_value):
     if(type1== 'var'):
         type_value = symb_from_var(type_value)
         if(type_value == None):
-            exit_none_var
-        print(type_value, end="")
-    elif(type1 == 'bool'):
-        if(type_value == 'true'):
+            exit_none_var()
+        type1 = get_type_val(type_value)
+    if(type1 == 'bool'):
+        if(type_value == 'true' or type_value == True):
             print("true", end="")
         else:
             print("false", end="")
@@ -806,7 +849,7 @@ def r_Concat(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -814,7 +857,11 @@ def r_Concat(var, type1, value1, type2, value2):
             exit_none_var()
         type2 = get_type_val(value2)    
     if(type1 != 'string' or type2 != 'string'):
-        exit_bad_operand()
+        exit_operands()
+    if(value1 == None):
+        value1 = ""
+    if(value2 == None):
+        value2 = ""
     result = value1 + value2 
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
@@ -824,10 +871,12 @@ def r_Strlen(var, type1, value1):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if(type1 != 'string'):
         exit_operands()
+    if (value1 == None):
+        value1 = ""
     result = len(value1)     
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
@@ -838,7 +887,7 @@ def r_Getchar(var, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -862,7 +911,7 @@ def r_Setchar(var_type, var_value, type1, value1, type2, value2):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
@@ -871,18 +920,18 @@ def r_Setchar(var_type, var_value, type1, value1, type2, value2):
         type2 = get_type_val(value2)
     if(var_type == 'var'):
         var_value_result = symb_from_var(var_value)
-        if(value1 == None):
-            exit_none_var
+        if(var_value_result == None):
+            exit_none_var()
         var_type = get_type_val(var_type)
     else:
         exit_operands()
-    if(type1 != 'int' or type2 != 'string' or var_type != 'string'):
+    if(type1 != 'int' or type2 != 'string' or var_type != 'string' or type(var_value_result) is not str):
             exit_operands()
-    if(var_value == "" or value2 == ""):
+    if(var_value_result == "" or value2 == "" or value2 == None):
         exit_string()
     var_value = interpret_escape(var_value)
     value2 = interpret_escape(value2)
-    if (0<= int(value1) <len(value2)):
+    if (0<= int(value1) <len(var_value_result)):
         result = var_value_result[:int(value1)]+value2[0]+var_value_result[int(value1) + 1:]
     else:
         exit_string()
@@ -893,8 +942,6 @@ def r_Type(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
         value1 = symb_from_var(value1)
-        if(value1 == None):
-            exit_none_var
         type1 = get_type_val(value1)
     if (type1 == 'int'):
         result = 'int'
@@ -904,8 +951,10 @@ def r_Type(var, type1, value1):
         result = 'bool'
     elif(type1 == 'nil'):
         result = 'nil'
+    elif(type1 == None):
+        result = None
     else:
-        exit_operands
+        exit_operands()
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
@@ -923,15 +972,38 @@ def r_Jumpifeq(label, type1, value1, type2, value2, position):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
         if(value2 == None):
             exit_none_var()
         type2 = get_type_val(value2)
+    if(type1 == 'int'):
+        value1 = int(value1)
+    if (type2 == 'int'):
+        value2 = int(value2)
+    if(type1 == 'bool'):
+        if (value1 == 'true'):
+            value1 = True
+        else:
+            value1 = False
+    if(type2 == 'bool'):
+        if (value2 == 'true'):
+            value2 = True
+        else:
+            value2 = False    
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type2 == 'string'):
+        value2 = interpret_escape(value2)
     if label not in labels.keys():
         exit_semantics()
+    if(type1 == 'nil' or type2 == 'nil'):
+        if(value1 == value2):
+            return labels[label]
+        else:
+            return position
     if(type1 == type2):
         if(value1 == value2):
             return labels[label]
@@ -947,15 +1019,38 @@ def r_Jumpifneq(label, type1, value1, type2, value2, position):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if (type2 == 'var'):
         value2 = symb_from_var(value2)
         if(value2 == None):
             exit_none_var()
         type2 = get_type_val(value2)
+    if(type1 == 'int'):
+        value1 = int(value1)
+    if (type2 == 'int'):
+        value2 = int(value2)
+    if(type1 == 'bool'):
+        if (value1 == 'true'):
+            value1 = True
+        else:
+            value1 = False
+    if(type2 == 'bool'):
+        if (value2 == 'true'):
+            value2 = True
+        else:
+            value2 = False   
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type2 == 'string'):
+        value2 = interpret_escape(value2) 
     if label not in labels.keys():
         exit_semantics()
+    if(type1 == 'nil' or type2 == 'nil'):
+        if(value1 != value2):
+            return labels[label]
+        else:
+            return position
     if(type1 == type2):
         if(value1 != value2):
             return labels[label]
@@ -969,7 +1064,7 @@ def r_Dprint(type1, value1):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         sys.stderr.write(value1)
     else:
         sys.stderr.write(value1)
@@ -983,12 +1078,12 @@ def r_Exit(type1, value1):
     if(type1== 'var'):
         value1 = symb_from_var(value1)
         if(value1 == None):
-            exit_none_var
+            exit_none_var()
         type1 = get_type_val(value1)
     if(type1 != 'int'):
         exit_operands()
     if(0 <= int(value1) <= 49):
-        exit(value1)
+        exit(int(value1))
     else:
         exit_bad_operand()
 
@@ -1082,7 +1177,6 @@ def run_instructions(xml):
         elif (opcode == "BREAK"):
             r_Break(position)
         position+=1
-        
 
 arg_input = arg_source = False
 if ('--help' in sys.argv):

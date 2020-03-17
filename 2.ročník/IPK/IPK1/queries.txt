@@ -1,8 +1,3 @@
-ww3.google.sk:A
-www3.picovinask.ek:A
-
-
-
-
-
-ww5.facebook.com:A
+www.google.sk:A
+www.facebook.com:A
+8.8.8.8:PTR
