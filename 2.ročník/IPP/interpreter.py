@@ -798,26 +798,29 @@ def r_Read(var, type1, type_val):
     if not arg_input:
         inputi = input()
     else:
-        inputi = input_f.readline().split("\n")[0]
-    if (len(inputi) <= 0):
-        result = None
-    elif(type_val == 'int'):
-        try:
-            result = int(inputi)
-        except:
-            result = None
-    elif(type_val == 'string'):
-        try:
-            result = str(inputi)
-        except:
-            result = None
-    elif(type_val == 'bool'):
-        if(inputi.upper()!= "TRUE"):
-            result = False
+        inputi = input_f.readline()
+    try:
+        if (inputi[len(inputi)-1] == "\n"):
+            inputi = inputi[:-1]
+        if(type_val == 'int'):
+            try:
+                result = int(inputi)
+            except:
+                result = None
+        elif(type_val == 'string'):
+            try:
+                result = str(inputi)
+            except:
+                result = None
+        elif(type_val == 'bool'):
+            if(inputi.upper()!= "TRUE"):
+                result = False
+            else:
+                result = True    
         else:
-            result = True    
-    else:
-        exit_bad_operand()
+            exit_bad_operand()
+    except:
+            result = None
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
