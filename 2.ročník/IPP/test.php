@@ -88,18 +88,22 @@ function create_missing_files()
             if (!file_exists($dir . "/" . $name . ".in")) {
                 #echo "$dir/$name.in";
                 exec("touch " . $dir . "/" . $name . ".in");
+                array_push($all_tests, $dir . "/" . $name . ".in");
             }
             if (!file_exists($dir . "/" . $name . ".out")) {
                 exec("touch " . $dir . "/" . $name . ".out");
+                array_push($all_tests, $dir . "/" . $name . ".out");
             }
             if (!file_exists($dir . "/" . $name . ".rc")) {
                 exec("touch " . $dir . "/" . $name . ".rc");
                 $rc_file = fopen($dir . "/" . $name . ".rc", "w");
                 fwrite($rc_file, "0");
                 fclose($rc_file);
+                array_push($all_tests, $dir . "/" . $name . ".rc");
             }
         }
     }
+    asort($all_tests);
 }
 
 
