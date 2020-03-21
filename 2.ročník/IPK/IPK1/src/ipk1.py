@@ -83,7 +83,7 @@ def get_request(request):
 # iba biele znaky vraciame 404, ak je celé telo chybné vraciame 400 alebo 404 (ak bolo všetko formálne správne ale nezískali sme odpoved)
 # ak je aspoň 1 riadok formálne správny a aj podarilo nájsť odpoveď vraciame 200 OK + odpoveď v správnom formáte
 def post_request(request, http_v):
-    lines = request.split('\n')
+    lines = request.split('\r\n')
     body = ""
     error = " 404 Not Found\r\n\r\n"
     for line in lines:
@@ -149,7 +149,7 @@ SOCKET.listen()
 while True:
     try:
         connection, address = SOCKET.accept()
-        data = connection.recv(1024)
+        data = connection.recv(2048)
         text = parsedata(data)
         if re.match(is_request, text):
             if re.match(is_get,text):

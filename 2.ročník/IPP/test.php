@@ -449,7 +449,7 @@ if($argc > 1)
     if(!empty($args)) {
         if (array_key_exists("help", $args)) {
             if ($argc == 2) {
-                echo "parser.php\n";
+                echo "test.php\n";
                 echo "Napoveda:\n";
                 echo "Autor: Tomas Duris (xduris05)\n\n";
                 echo "Skript test.php skontroluje správnosť implementácie skriptu parser.php a interpreter.py na zvolenej testovacej sade\n";
