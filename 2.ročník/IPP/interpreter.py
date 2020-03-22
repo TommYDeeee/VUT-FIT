@@ -9,6 +9,7 @@ sym_pattern = re.compile(r'^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^nil@nil$'
 label_pattern = re.compile(r'^[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$')
 escape_pattern = re.compile(r'\\[0-9]{3}')
 invalid_string = re.compile(r'[#\s]')
+insts_count = vars_count = 0
 labels = {}
 functions = []
 data = []
@@ -16,10 +17,10 @@ TF = None
 GF = {}
 LF = []
 
-zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK"]
-one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT"]
+zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK", "CLEARS", "ADDS", "SUBS", "MULS", "DIVS", "IDIVS", "LTS", "GTS", "EQS", "ANDS", "ORS", "NOTS", "STRI2INTS", "INT2CHARS"]
+one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT", "JUMPIFEQS", "JUMPIFNEQS"]
 two_ins = ["MOVE", "INT2CHAR", "READ", "STRLEN", "TYPE", "NOT"]
-three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2INT",
+three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2INT", 
     "CONCAT", "GETCHAR", "SETCHAR", "JUMPIFEQ", "JUMPIFNEQ"]
 
 def exit_xml():
@@ -488,9 +489,10 @@ def r_Defvar(var_value):
     init_var(frame, var_value)
 
 def r_Call(label, position):
-    global functions
+    global functions, insts_count
     if label in labels:
         functions.append(position)
+        insts_count += 1
         return labels.get(label)
     else:
         exit_semantics()
@@ -929,14 +931,15 @@ def r_Type(var, type1, value1):
     save_to_var(frame, var_value, result, get_type_val(result))
 
 def r_Jump(label):
-    global labels
+    global labels, insts_count
     if label not in labels.keys():
         exit_semantics()
     else:
+        insts_count += 1
         return labels[label]
 
 def r_Jumpifeq(label, type1, value1, type2, value2, position):
-    global labels
+    global labels, insts_count
     type1 = get_type(type1)
     type2 = get_type(type2)
     if(type1== 'var'):
@@ -965,11 +968,13 @@ def r_Jumpifeq(label, type1, value1, type2, value2, position):
         exit_semantics()
     if(type1 == 'nil' or type2 == 'nil'):
         if(value1 == value2):
+            insts_count += 1
             return labels[label]
         else:
             return position
     if(type1 == type2):
         if(value1 == value2):
+            insts_count += 1
             return labels[label]
         else:
             return position
@@ -977,7 +982,7 @@ def r_Jumpifeq(label, type1, value1, type2, value2, position):
         exit_operands()
 
 def r_Jumpifneq(label, type1, value1, type2, value2, position):
-    global labels
+    global labels, insts_count
     type1 = get_type(type1)
     type2 = get_type(type2)
     if(type1== 'var'):
@@ -1006,11 +1011,13 @@ def r_Jumpifneq(label, type1, value1, type2, value2, position):
         exit_semantics()
     if(type1 == 'nil' or type2 == 'nil'):
         if(value1 != value2):
+            insts_count += 1
             return labels[label]
         else:
             return position
     if(type1 == type2):
         if(value1 != value2):
+            insts_count += 1
             return labels[label]
         else:
             return position
@@ -1042,7 +1049,367 @@ def r_Exit(type1, value1):
     else:
         exit_bad_operand()
 
+def get_stack_value():
+    if(len(data)!= 0):
+        return data.pop()
+    else:
+        exit_none_var()
+
+def get_stack_types():
+    value2 = get_stack_value()
+    value1 = get_stack_value()
+    type1 = get_type_val(value1)
+    if(type1 == None):
+        type1 = 'nil'
+    type2 = get_type_val(value2)
+    if(type2 == None):
+        type2 ='nil'
+    return(value1, value2, type1, type2)
+
+def r_Clears():
+    global data
+    data = []
+
+def r_Adds():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var(type1, value1)
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)
+    if (type1 != 'int' or type2 != 'int'):
+        exit_operands()
+    result = int(value1) + int(value2)
+    data.append(result)
+
+def r_Subs():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)        
+    if (type1 != 'int' or type2 != 'int'):
+        exit_operands()
+    result = int(value1) - int(value2)
+    data.append(result)
+
+def r_Muls():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var(type1, value1)
+    if (type2 == 'var'):
+        type2, value2 = check_var(type2, value2)
+    if (type1 != 'int' or type2 != 'int'):
+        exit_operands()
+    result = int(value1) * int(value2)
+    data.append(result)
+
+def r_Idivs():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if (type1 != 'int' or type2 != 'int'):
+        exit_operands()
+    if (value2 == "0" or value2 == 0):
+        exit_bad_operand()
+    result = int(value1) // int(value2)
+    data.append(result)
+
+def r_Lts():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if(type1== 'int'):
+        if(type2 == 'int'):
+            if(int(value1) < int(value2)):
+                result = True
+            else:
+                result = False
+        else:
+            exit_operands()
+    elif(type1 == 'bool'):
+        if(type2 == 'bool'):
+            value1, value2 = convert_to_bool(value1,value2)
+            if(value1 == False):
+                if(value2 == True):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+        else:
+            exit_operands()
+    elif(type1 == 'string'):
+        if(type2 ==  'string'):
+            value1 = interpret_escape(value1)
+            value2 = interpret_escape(value2)
+            if(value1 < value2):
+                result = True
+            else:
+                result = False
+        else:
+            exit_operands()
+    else:
+        exit_operands()
+    data.append(result)
+
+def r_Gts():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if(type1 == 'int'):
+        if(type2 == 'int'):
+            if(int(value1) > int(value2)):
+                result = True
+            else:
+                result = False
+        else:
+            exit_operands()
+    elif(type1 == 'bool'):
+        if(type2 == 'bool'):
+            value1, value2 = convert_to_bool(value1,value2)
+            if(value1 == True):
+                if(value2 == False):
+                    result = True
+                else:
+                    result = False
+            else:
+                result = False
+        else:
+            exit_operands()
+    elif(type1 == 'string'):
+        if(type2 ==  'string'):
+            value1 = interpret_escape(value1)
+            value2 = interpret_escape(value2)
+            if(value1 > value2):
+                result = True
+            else:
+                result = False
+        else:
+            exit_operands()
+    else:
+        exit_operands()
+    data.append(result)
+
+
+def r_Eqs():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if(type1 == 'nil' or type2 == 'nil'):
+        if(value1 == value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'int'):
+        if(type2 == 'int'):
+            if(int(value1) == int(value2)):
+                result = True
+            else:
+                result = False
+        else:
+            exit_operands()
+    elif(type1 == 'bool'):
+        if(type2 == 'bool'):
+            value1, value2 = convert_to_bool(value1, value2)
+            if(value1 == value2):
+                result = True
+            else:
+                result = False
+        else:
+            exit_operands()
+    elif(type1 == 'string'):
+        if(type2 ==  'string'):
+            value1 = interpret_escape(value1)
+            value2 = interpret_escape(value2)
+            if(value1 == value2):
+                result = True
+            else:
+                result = False
+        else:
+            exit_operands()
+    else:
+        exit_operands()
+    data.append(result)
+
+def r_Ands():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
+        exit_operands()
+    value1, value2 = convert_to_bool(value1, value2)  
+    result = value1 and value2
+    data.append(result)
+
+def r_Ors():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
+        exit_operands()
+    value1, value2 = convert_to_bool(value1, value2)
+    result = value1 or value2
+    data.append(result)
+
+def r_Nots():
+    global data
+    value1 = get_stack_value()
+    type1 = get_type_val(value1)
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if(type1 not in ['bool', 'var']): 
+        exit_operands()
+    value1, value2 = convert_to_bool(value1, None)
+    if(type(value1) is not bool):
+        exit_operands()
+    result = not value1
+    data.append(result)
+
+def r_Int2chars():
+    global data
+    value1 = get_stack_value()
+    type1 = get_type_val(value1)
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if(type1 not in ['int', 'var']):
+        exit_operands()
+    try:
+        result = chr(int(value1))
+    except:
+        exit_string()
+    data.append(result)
+
+def r_Stri2ints():
+    global data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if(type1 not in ['string', 'var'] or type2 != 'int'):
+        exit_operands()
+    if 0<= int(value2) <len(value1):
+        char_ord = [ord(i) for i in value1]
+        result = char_ord[int(value2)]
+    else:
+        exit_string()        
+    data.append(result)
+
+def r_Jumpifeqs(label, position):
+    global labels, insts_count, data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)   
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)   
+    if(type1 == 'int'):
+        value1 = int(value1)
+    if (type2 == 'int'):
+        value2 = int(value2)
+    if(type1 == 'bool'):
+        if (value1 == 'true'):
+            value1 = True
+        else:
+            value1 = False
+    if(type2 == 'bool'):
+        if (value2 == 'true'):
+            value2 = True
+        else:
+            value2 = False    
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type2 == 'string'):
+        value2 = interpret_escape(value2)
+    if label not in labels.keys():
+        exit_semantics()
+    if(type1 == 'nil' or type2 == 'nil'):
+        if(value1 == value2):
+            insts_count += 1
+            return labels[label]
+        else:
+            return position
+    if(type1 == type2):
+        if(value1 == value2):
+            insts_count += 1
+            return labels[label]
+        else:
+            return position
+    else:
+        exit_operands()
+
+def r_Jumpifneqs(label, position):
+    global labels, insts_count, data
+    value1, value2, type1, type2 = get_stack_types()
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)   
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)   
+    if(type1 == 'int'):
+        value1 = int(value1)
+    if (type2 == 'int'):
+        value2 = int(value2)
+    if(type1 == 'bool'):
+        if (value1 == True or value1 == 'true'):
+            value1 = True
+        else:
+            value1 = False
+    if(type2 == 'bool'):
+        if (value2 == True or value2 == 'true'):
+            value2 = True
+        else:
+            value2 = False   
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type2 == 'string'):
+        value2 = interpret_escape(value2) 
+    if label not in labels.keys():
+        exit_semantics()
+    if(type1 == 'nil' or type2 == 'nil'):
+        if(value1 != value2):
+            insts_count += 1
+            return labels[label]
+        else:
+            return position
+    if(type1 == type2):
+        if(value1 != value2):
+            insts_count += 1
+            return labels[label]
+        else:
+            return position
+    else:
+        exit_operands()
+
+def count_vars():
+    global TF, LF, GF
+    if(TF == None):
+        len_TF = 0
+    else:
+        len_TF = len(TF)
+    return len(GF) + len_TF + len(LF)
+
 def run_instructions(xml):
+    global insts_count, vars_count
     position = 0
     while position < len(xml):
         instruction = xml[position]
@@ -1131,9 +1498,66 @@ def run_instructions(xml):
             r_Dprint(arg1, arg1_text)
         elif (opcode == "BREAK"):
             r_Break(position)
+        elif(opcode == "CLEARS"):
+            r_Clears()
+        elif(opcode == "ADDS"):
+            r_Adds()
+        elif(opcode == "SUBS"):
+            r_Subs()
+        elif(opcode == "MULS"):
+            r_Muls()
+        elif(opcode == "IDIVS"):
+            r_Idivs()
+        elif(opcode == "LTS"):
+            r_Lts()
+        elif(opcode == "GTS"):
+            r_Gts()
+        elif(opcode == "EQS"):
+            r_Eqs()
+        elif(opcode == "ANDS"):
+            r_Ands()
+        elif(opcode == "ORS"):
+            r_Ors()
+        elif(opcode == "NOTS"):
+            r_Nots()
+        elif(opcode == "INT2CHARS"):
+            r_Int2chars()
+        elif(opcode == "STRI2INTS"):
+            r_Stri2ints()
+        elif(opcode == "JUMPIFEQS"):
+            position = r_Jumpifeqs(arg1_text, position)
+        elif(opcode == "JUMPIFNEQS"):
+            position = r_Jumpifneqs(arg1_text, position)
+
+        insts_count+=1
+        old_vars = vars_count
+        vars_count = count_vars()
+        if(vars_count > old_vars):
+            vars_count = vars_count
+        else:
+            vars_count = old_vars
         position+=1
 
-arg_input = arg_source = False
+def print_stats():
+    global insts_count, vars_count, file_stats, arg_insts, arg_vars
+    try:
+        with open(file_stats, "w") as stats_f:
+            for arg in sys.argv:
+                if(arg == "--insts"):
+                    stats_f.write(str(insts_count))
+                    stats_f.write("\n")
+                if(arg == "--vars"):
+                    stats_f.write(str(vars_count))
+                    stats_f.write("\n")
+    except:
+            sys.stderr.write('Cannot open desired file\n')
+            sys.exit(12)
+
+
+
+
+
+arg_input = arg_source = arg_stats = arg_insts = arg_vars = False
 if ('--help' in sys.argv):
     if ((len(sys.argv))!=2):
         sys.stderr.write("Invalid help combination\n")
@@ -1151,9 +1575,22 @@ else:
             file_input = arg.split('=')
             file_input = file_input[1]
             arg_input = True
+        elif(arg.startswith('--stats=')):
+            file_stats = arg.split('=')
+            file_stats = file_stats[1]
+            arg_stats = True
+        elif(arg == '--insts'):
+            arg_insts = True
+        elif(arg == '--vars'):
+            arg_vars = True
         else:
             sys.stderr.write('Invalid argument\n')
             sys.exit(10)
+
+if(arg_insts ==True or arg_vars == True):
+    if(arg_stats == False):
+        sys.stderr.write('you cant have argument --insts or --vars without --stats=file\n')
+        sys.exit(10)
 
 if (arg_input == False and arg_source == False):
     sys.stderr.write('you need to give at least one valid argument\n')
@@ -1192,3 +1629,5 @@ xml = xml_raw.getroot()
 #print(ET.tostring(xml, encoding='utf8').decode('utf8'))
 xml = check_xml_root(xml)
 run_instructions(xml)
+if(arg_stats):
+    print_stats()
