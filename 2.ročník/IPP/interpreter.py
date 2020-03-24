@@ -71,7 +71,7 @@ def print_help():
 def check_xml_root(xml):
     if not 'language' in xml.attrib:
         exit_xml()
-    if (xml.tag != 'program' or xml.attrib['language'] != "IPPcode20"):
+    if (xml.tag != 'program' or xml.attrib['language'] != "IPPcode19"):
         exit_xml()
     for attrib in xml.attrib:
         if(attrib not in ('name', 'language', 'description')):
@@ -1577,12 +1577,10 @@ def r_Div(var, type1, value1, type2, value2):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
+    if (type1 != "float" or type2 != "float"):
         exit_operands()
     if (value2 == "0" or value2 == 0):
         exit_bad_operand()
-    if(type1 == 'int' and type2 == 'int'):
-        result = float(value1) / float(value2)
     elif(type1 == 'float' and type2 == 'float'):
         result = float(value1) / float(value2)
     else:
