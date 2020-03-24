@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 
 pattern = re.compile(r'\s+')
 var_pattern = re.compile(r'^(LF|TF|GF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*?!]*$')
-sym_pattern = re.compile(r'^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^nil@nil$')
+sym_pattern = re.compile(r'^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^nil@nil$|^float@+')
 label_pattern = re.compile(r'^[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*$')
 escape_pattern = re.compile(r'\\[0-9]{3}')
 invalid_string = re.compile(r'[#\s]')
@@ -21,7 +21,7 @@ zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK", "CLEARS",
 one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT", "JUMPIFEQS", "JUMPIFNEQS"]
 two_ins = ["MOVE", "INT2CHAR", "READ", "STRLEN", "TYPE", "NOT"]
 three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2INT", 
-    "CONCAT", "GETCHAR", "SETCHAR", "JUMPIFEQ", "JUMPIFNEQ"]
+    "CONCAT", "GETCHAR", "SETCHAR", "JUMPIFEQ", "JUMPIFNEQ", "DIV"]
 
 def exit_xml():
     sys.stderr.write('xml is invalid\n')
@@ -122,8 +122,6 @@ def check_xml_ins(xml):
         sort_ins.sort()
     except:
         exit_xml()
-    if(sort_ins[0][0] != 1):
-        exit_xml()
     xml[:] = [item[-1] for item in sort_ins]
     execute_ins(xml)
     return xml
@@ -147,16 +145,22 @@ def sym_check(type, text):
             if (len(escape)!= len(backslash)):
                 exit_xml()
     else:
+        value = text
         text = type + '@' + text
         if not (re.match(sym_pattern, text)):
             exit_xml()
+        if(type == "float"):
+            try:
+                float.fromhex(value)
+            except:
+                exit_xml()
 
 def label_check(text):
     if not (re.match(label_pattern, text)):
         exit_xml()
 
 def type_check(text):
-    if not (re.match(r'^int$|^bool$|^string$', text)):
+    if not (re.match(r'^int$|^bool$|^string$|^float$', text)):
         exit_xml()
 
 def zero_arg_check(ins):
@@ -184,7 +188,7 @@ def one_arg_check(ins, i):
         else:
             exit_xml()
     elif ins_name in ["PUSHS","WRITE","EXIT","DPRINT"]:
-        if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil"]):
+        if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil", "float"]):
             sym_check(arg.attrib['type'], arg.text)
         else:
             exit_xml()
@@ -200,8 +204,12 @@ def one_arg_check(ins, i):
             exit_xml()
 
 def two_arg_check(ins):
-    if(ins[0].tag != 'arg1' or ins[1].tag != 'arg2'):
+    if(ins[0].tag not in ['arg1', 'arg2'] or ins[1].tag not in ['arg1', 'arg2']):
         exit_xml()
+    if(ins[0].tag == ins[1].tag):
+        exit_xml()
+    if(ins[0].tag != 'arg1'):
+        ins[0], ins[1] = ins[1], ins[0]
     if(len(ins) != 2):
         exit_xml()
     for arg in ins:
@@ -227,15 +235,26 @@ def two_arg_check(ins):
                 else:
                     exit_xml()
             else:
-                if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil"]):
+                if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil", "float"]):
                     sym_check(arg.attrib['type'], arg.text)
                 else:
                     exit_xml()
 
 
 def three_arg_check(ins):
-    if(ins[0].tag != 'arg1' or ins[1].tag != 'arg2' or ins[2].tag != 'arg3'):
+    if((ins[0].tag == ins[1].tag) or (ins[0].tag == ins[2].tag) or (ins[1].tag == ins[2].tag)):
         exit_xml()
+    if(ins[0].tag == 'arg2' and ins[1].tag == 'arg3' and ins[2].tag == 'arg1'):
+        ins[0], ins[1], ins[2] = ins[2], ins[0], ins[1]
+    if(ins[0].tag == 'arg3' and ins[1].tag == 'arg2' and ins[2].tag == 'arg1'):
+        ins[0], ins[1], ins[2] = ins[2], ins[1], ins[0]
+    if(ins[0].tag == 'arg1' and ins[1].tag == 'arg3' and ins[2].tag == 'arg2'):
+        ins[0], ins[1], ins[2] = ins[0], ins[2], ins[1]
+    if(ins[0].tag == 'arg2' and ins[1].tag == 'arg1' and ins[2].tag == 'arg3'):
+        ins[0], ins[1], ins[2] = ins[1], ins[0], ins[2]
+    if(ins[0].tag == 'arg3' and ins[1].tag == 'arg1' and ins[2].tag == 'arg2'):
+        ins[0], ins[1], ins[2] = ins[1], ins[2], ins[0]
+    
     if(len(ins)!=3):
         exit_xml()
     for arg in ins:
@@ -261,7 +280,7 @@ def three_arg_check(ins):
                 else:
                     exit_xml()
         elif(arg.tag == 'arg2' or arg.tag == 'arg3'):
-            if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil"]):
+            if(arg.attrib['type'] in ["int", "bool", "string", "var", "nil", "float"]):
                 sym_check(arg.attrib['type'], arg.text)
             else:
                     exit_xml()
@@ -308,14 +327,21 @@ def convert_to_bool(value1, value2):
 
 def get_type_val(value1):
     try:
-        if(value1.get('nil') == None):
+        if(value1['nil'] == None):
             return 'nil'
+    except:
+        pass
+    try:
+        if(value1['read']):
+            return 'read'
     except:
         pass
     if type(value1) is bool:
        return 'bool'
     if type(value1) is int:
         return 'int'
+    if(type(value1) is float):
+        return 'float'
     if type(value1) is str:
         return 'string'
 
@@ -330,6 +356,8 @@ def get_type(value):
         return 'var'
     if(value['type'] == 'nil'):
         return 'nil'
+    if(value['type'] == 'float'):
+        return 'float'
 
 def interpret_escape(escape):
     if(escape == None):
@@ -361,6 +389,8 @@ def save_to_var(frame, var , symb, symb_type):
         else:
             if(symb_type == 'int'):
                 TF[var] = int(symb)
+            elif(symb_type == 'float'):
+                TF[var] = float(symb)
             elif(symb_type == 'string'):
                 TF[var] = symb
             elif(symb_type == 'bool'):
@@ -370,6 +400,8 @@ def save_to_var(frame, var , symb, symb_type):
                     TF[var] = False
             elif(symb_type == 'nil'):
                 TF[var] = {'nil': None}
+            elif(symb_type == 'read'):
+                TF[var] = symb
     elif (frame == "LF"):
         if not LF:
             exit_non_frame()
@@ -378,6 +410,8 @@ def save_to_var(frame, var , symb, symb_type):
         else:
             if(symb_type == 'int'):
                 LF[-1][var]  = int(symb)
+            elif(symb_type == 'float'):
+                LF[-1][var]  = float(symb)
             elif(symb_type == 'string'):
                 LF[-1][var]  = symb
             elif(symb_type == 'bool'):
@@ -387,12 +421,16 @@ def save_to_var(frame, var , symb, symb_type):
                     LF[-1][var] = False
             elif(symb_type == 'nil'):
                 LF[-1][var] = {'nil': None}
+            elif(symb_type == 'read'):
+                LF[-1][var] = symb
     else:
         if var not in GF.keys():
             exit_non_var()
         else:
             if(symb_type == 'int'):
                 GF[var] = int(symb)
+            elif(symb_type == 'float'):
+                GF[var] = float(symb)
             elif(symb_type == 'string'):
                 GF[var] = symb
             elif(symb_type == 'bool'):
@@ -402,6 +440,8 @@ def save_to_var(frame, var , symb, symb_type):
                     GF[var] = False
             elif (symb_type == 'nil' or symb_type == None):
                 GF[var] = {'nil': None}
+            elif(symb_type == 'read'):
+                GF[var] = symb
 
 def init_var(frame, var):
     if (frame == "TF"):
@@ -446,6 +486,18 @@ def symb_from_var(symb):
         else:
             return GF.get(var_value)
 
+def read_vs_string(type1, value1, type2, value2):
+
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type2 == 'string'):
+        value2 = interpret_escape(value2)
+    if(type1 == 'read'):
+        value1 = value1.get('read')
+    if(type2 == 'read'):
+        value2 = value2.get('read')
+    return value1, value2    
+
 
 def r_Move(var, symb, var_value, symb_value):
     symb = get_type(symb)
@@ -463,6 +515,8 @@ def r_Move(var, symb, var_value, symb_value):
             symb_value = {'nil': None}
         if (symb == 'int'):
             symb_value = int(symb_value)
+        if (symb == 'float'):
+            symb_value = float.fromhex(symb_value)
     frame, var_value = var_values(var_value)
     save_to_var(frame, var_value, symb_value, get_type_val(symb_value))
 
@@ -510,6 +564,8 @@ def r_Pushs(symb, symb_value):
         symb, symb_value = check_var(symb, symb_value)
     if(symb == 'int'):
         data.append(int(symb_value))
+    elif(symb == 'float'):
+        data.append(float.fromhex(symb_value))
     elif(symb == 'bool'):
         if(symb_value == 'true'):
             data.append(True)
@@ -538,11 +594,16 @@ def r_Add(var, type1, value1, type2, value2):
         type1, value1 = check_var(type1, value1)
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)
-    if (type1 != 'int' or type2 != 'int'):
+    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
         exit_operands()
-    result = int(value1) + int(value2)
+    if(type1 == 'int' and type2 == 'int'):
+        result = int(value1) + int(value2)
+    elif(type1 == 'float' and type2 == 'float'):
+        result = float(value1) + float(value2)
+    else:
+        exit_operands()
     frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, 'int')
+    save_to_var(frame, var_value, result, get_type_val(result))
 
 def r_Sub(var, type1, value1, type2, value2):
     type1 = get_type(type1)
@@ -551,11 +612,16 @@ def r_Sub(var, type1, value1, type2, value2):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)        
-    if (type1 != 'int' or type2 != 'int'):
+    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
         exit_operands()
-    result = int(value1) - int(value2)
+    if(type1 == 'int' and type2 == 'int'):
+        result = int(value1) - int(value2)
+    elif(type1 == 'float' and type2 == 'float'):
+        result = float(value1) + float(value2)
+    else:
+        exit_operands()
     frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, 'int')    
+    save_to_var(frame, var_value, result, get_type_val(result))    
 
 def r_Mul(var, type1, value1, type2, value2):
     type1 = get_type(type1)
@@ -564,11 +630,16 @@ def r_Mul(var, type1, value1, type2, value2):
         type1, value1 = check_var(type1, value1)
     if (type2 == 'var'):
         type2, value2 = check_var(type2, value2)
-    if (type1 != 'int' or type2 != 'int'):
+    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
         exit_operands()
-    result = int(value1) * int(value2)
+    if(type1 == 'int' and type2 == 'int'):
+        result = int(value1) * int(value2)
+    elif(type1 == 'float' and type2 == 'float'):
+        result = float(value1) + float(value2)
+    else:
+        exit_operands()
     frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, 'int')   
+    save_to_var(frame, var_value, result, get_type_val(result))   
 
 def r_Idiv(var, type1, value1, type2, value2):
     type1 = get_type(type1)
@@ -613,15 +684,28 @@ def r_Lt(var, type1, value1, type2, value2):
         else:
             exit_operands()
     elif(type1 == 'string'):
+        value1 = interpret_escape(value1)
         if(type2 ==  'string'):
-            value1 = interpret_escape(value1)
             value2 = interpret_escape(value2)
-            if(value1 < value2):
-                result = True
-            else:
-                result = False
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
         else:
             exit_operands()
+        if(value1 < value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'read'):
+        if(type2 == 'string'):
+            value2 = interpret_escape(value2)
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
+        else:
+            exit_operands()
+        if(value1 < value2):
+            result = True
+        else:
+            result = False
     else:
         exit_operands()
     frame, var_value = var_values(var)
@@ -655,15 +739,28 @@ def r_Gt(var, type1, value1, type2, value2):
         else:
             exit_operands()
     elif(type1 == 'string'):
+        value1 = interpret_escape(value1)
         if(type2 ==  'string'):
-            value1 = interpret_escape(value1)
             value2 = interpret_escape(value2)
-            if(value1 > value2):
-                result = True
-            else:
-                result = False
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
         else:
             exit_operands()
+        if(value1 > value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'read'):
+        if(type2 == 'string'):
+            value2 = interpret_escape(value2)
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
+        else:
+            exit_operands()
+        if(value1 > value2):
+            result = True
+        else:
+            result = False
     else:
         exit_operands()
     frame, var_value = var_values(var)
@@ -700,15 +797,28 @@ def r_Eq(var, type1, value1, type2, value2):
         else:
             exit_operands()
     elif(type1 == 'string'):
+        value1 = interpret_escape(value1)
         if(type2 ==  'string'):
-            value1 = interpret_escape(value1)
             value2 = interpret_escape(value2)
-            if(value1 == value2):
-                result = True
-            else:
-                result = False
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
         else:
             exit_operands()
+        if(value1 == value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'read'):
+        if(type2 == 'string'):
+            value2 = interpret_escape(value2)
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
+        else:
+            exit_operands()
+        if(value1 == value2):
+            result = True
+        else:
+            result = False
     else:
         exit_operands()
     frame, var_value = var_values(var)
@@ -775,8 +885,9 @@ def r_Stri2int(var, type1, value1, type2, value2):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['string', 'var'] or type2 != 'int'):
+    if(type1 not in ['string', 'var', 'read'] or type2 != 'int'):
         exit_operands()
+    value1, unused =  read_vs_string(type1, value1, None, None)
     if 0<= int(value2) <len(value1):
         char_ord = [ord(i) for i in value1]
         result = char_ord[int(value2)]
@@ -798,18 +909,24 @@ def r_Read(var, type1, type_val):
                 result = int(inputi)
             except:
                 result = None
+        elif(type_val == 'float'):
+            try:
+                result = float.fromhex(inputi)
+            except:
+                result = None
         elif(type_val == 'string'):
             try:
                 result = str(inputi)
+                if(result):
+                    result = {'read': result}
             except:
+                print("t")
                 result = None
         elif(type_val == 'bool'):
             if(inputi.upper()!= "TRUE"):
                 result = False
             else:
                 result = True    
-        else:
-            exit_bad_operand()
     except:
         result = None
     frame, var_value = var_values(var)
@@ -818,7 +935,7 @@ def r_Read(var, type1, type_val):
 def r_Write(type1, type_value):
     type1 = get_type(type1)
     if(type1== 'var'):
-        type1, type_value = check_var (type1, type_value)     
+        type1, type_value = check_var (type1, type_value)
     if(type1 == 'bool'):
         type_value, type_value2 = convert_to_bool(type_value, None)
         if(type_value == True):
@@ -827,11 +944,17 @@ def r_Write(type1, type_value):
             print("false", end="")
     elif(type1 == "int"):
         print(int(type_value), end="")
+    elif(type1 == "float"):
+        if(type(type_value)is not float):
+            type_value = float.fromhex(type_value)
+        print(float.hex(type_value), end="")
     elif(type1 == "string"):
         type_value = interpret_escape(type_value)
         print(type_value, end="")
     elif(type1 == "nil"):
         print("", end="")
+    elif(type1 == 'read'):
+        print(type_value.get('read'), end="")
     else:
         exit_bad_operand()
 
@@ -842,25 +965,26 @@ def r_Concat(var, type1, value1, type2, value2):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if(type1 != 'string' or type2 != 'string'):
+    if(type1 not in ['string', 'read'] or type2 not in ['string', 'read']):
         exit_operands()
     if(value1 == None):
         value1 = ""
     if(value2 == None):
         value2 = ""
+    value1, value2 = read_vs_string(type1, value1, type2, value2)
     result = value1 + value2 
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
-    
+
 def r_Strlen(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 != 'string'):
+    if(type1 not in ['string', 'read']):
         exit_operands()
     if (value1 == None):
         value1 = ""
-    value1 = interpret_escape(value1)
+    value1, value2 = read_vs_string(type1, value1, None, None)
     result = len(value1)     
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
@@ -872,8 +996,9 @@ def r_Getchar(var, type1, value1, type2, value2):
         type1, value1 = check_var (type1, value1)    
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)    
-    if(type1 != 'string' or type2 != 'int'):
+    if(type1 not in ['string', 'read'] or type2 != 'int'):
         exit_operands()
+    value1, unused = read_vs_string(type1, value1, None, None)
     if 0 <= int(value2) <len(value1):
         result = list(value1)
         result = result[int(value2)]
@@ -894,15 +1019,14 @@ def r_Setchar(var_type, var_value, type1, value1, type2, value2):
         var_value_result = symb_from_var(var_value)
         if(var_value_result == None):
             exit_none_var()
-        var_type = get_type_val(var_type)
+        var_type = get_type_val(var_value_result)
     else:
         exit_operands()
-    if(type1 != 'int' or type2 != 'string' or var_type != 'string' or type(var_value_result) is not str):
+    if(type1 != 'int' or type2 not in ['string', 'read'] or var_type not in ['string', 'read']):
             exit_operands()
     if(var_value_result == "" or value2 == "" or value2 == None):
         exit_string()
-    var_value = interpret_escape(var_value)
-    value2 = interpret_escape(value2)
+    value2, var_value_result = read_vs_string(type2, value2, var_type, var_value_result)
     if (0<= int(value1) <len(var_value_result)):
         result = var_value_result[:int(value1)]+value2[0]+var_value_result[int(value1) + 1:]
     else:
@@ -917,7 +1041,9 @@ def r_Type(var, type1, value1):
         type1 = get_type_val(value1)
     if (type1 == 'int'):
         result = 'int'
-    elif(type1 == 'string'):
+    elif(type1 == 'float'):
+        result = 'float'
+    elif(type1 == 'string' or type1 == 'read'):
         result = 'string'
     elif(type1 == 'bool'):
         result = 'bool'
@@ -960,10 +1086,11 @@ def r_Jumpifeq(label, type1, value1, type2, value2, position):
             value2 = True
         else:
             value2 = False    
-    if(type1 == 'string'):
-        value1 = interpret_escape(value1)
-    if(type2 == 'string'):
-        value2 = interpret_escape(value2)
+    value1, value2 = read_vs_string(type1, value1, type2, value2)
+    if(type1 == 'read'):
+        type1 = 'string'
+    if(type2 == 'read'):
+        type2 = 'string'
     if label not in labels.keys():
         exit_semantics()
     if(type1 == 'nil' or type2 == 'nil'):
@@ -1003,10 +1130,11 @@ def r_Jumpifneq(label, type1, value1, type2, value2, position):
             value2 = True
         else:
             value2 = False   
-    if(type1 == 'string'):
-        value1 = interpret_escape(value1)
-    if(type2 == 'string'):
-        value2 = interpret_escape(value2) 
+    value1, value2 = read_vs_string(type1, value1, type2, value2)
+    if(type1 == 'read'):
+        type1 = 'string'
+    if(type2 == 'read'):
+        type2 = 'string'
     if label not in labels.keys():
         exit_semantics()
     if(type1 == 'nil' or type2 == 'nil'):
@@ -1148,15 +1276,28 @@ def r_Lts():
         else:
             exit_operands()
     elif(type1 == 'string'):
+        value1 = interpret_escape(value1)
         if(type2 ==  'string'):
-            value1 = interpret_escape(value1)
             value2 = interpret_escape(value2)
-            if(value1 < value2):
-                result = True
-            else:
-                result = False
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
         else:
             exit_operands()
+        if(value1 < value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'read'):
+        if(type2 == 'string'):
+            value2 = interpret_escape(value2)
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
+        else:
+            exit_operands()
+        if(value1 < value2):
+            result = True
+        else:
+            result = False
     else:
         exit_operands()
     data.append(result)
@@ -1189,15 +1330,28 @@ def r_Gts():
         else:
             exit_operands()
     elif(type1 == 'string'):
+        value1 = interpret_escape(value1)
         if(type2 ==  'string'):
-            value1 = interpret_escape(value1)
             value2 = interpret_escape(value2)
-            if(value1 > value2):
-                result = True
-            else:
-                result = False
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
         else:
             exit_operands()
+        if(value1 > value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'read'):
+        if(type2 == 'string'):
+            value2 = interpret_escape(value2)
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
+        else:
+            exit_operands()
+        if(value1 > value2):
+            result = True
+        else:
+            result = False
     else:
         exit_operands()
     data.append(result)
@@ -1233,15 +1387,28 @@ def r_Eqs():
         else:
             exit_operands()
     elif(type1 == 'string'):
+        value1 = interpret_escape(value1)
         if(type2 ==  'string'):
-            value1 = interpret_escape(value1)
             value2 = interpret_escape(value2)
-            if(value1 == value2):
-                result = True
-            else:
-                result = False
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
         else:
             exit_operands()
+        if(value1 == value2):
+            result = True
+        else:
+            result = False
+    elif(type1 == 'read'):
+        if(type2 == 'string'):
+            value2 = interpret_escape(value2)
+        elif(type2 == 'read'):
+            value2 = value2.get('read')
+        else:
+            exit_operands()
+        if(value1 == value2):
+            result = True
+        else:
+            result = False
     else:
         exit_operands()
     data.append(result)
@@ -1307,8 +1474,9 @@ def r_Stri2ints():
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['string', 'var'] or type2 != 'int'):
+    if(type1 not in ['string', 'var', 'read'] or type2 != 'int'):
         exit_operands()
+    value1, unused =  read_vs_string(type1, value1, None, None)
     if 0<= int(value2) <len(value1):
         char_ord = [ord(i) for i in value1]
         result = char_ord[int(value2)]
@@ -1337,10 +1505,11 @@ def r_Jumpifeqs(label, position):
             value2 = True
         else:
             value2 = False    
-    if(type1 == 'string'):
-        value1 = interpret_escape(value1)
-    if(type2 == 'string'):
-        value2 = interpret_escape(value2)
+    value1, value2 = read_vs_string(type1, value1, type2, value2)
+    if(type1 == 'read'):
+        type1 = 'string'
+    if(type2 == 'read'):
+        type2 = 'string'
     if label not in labels.keys():
         exit_semantics()
     if(type1 == 'nil' or type2 == 'nil'):
@@ -1379,10 +1548,11 @@ def r_Jumpifneqs(label, position):
             value2 = True
         else:
             value2 = False   
-    if(type1 == 'string'):
-        value1 = interpret_escape(value1)
-    if(type2 == 'string'):
-        value2 = interpret_escape(value2) 
+    value1, value2 = read_vs_string(type1, value1, type2, value2)
+    if(type1 == 'read'):
+        type1 = 'string'
+    if(type2 == 'read'):
+        type2 = 'string'
     if label not in labels.keys():
         exit_semantics()
     if(type1 == 'nil' or type2 == 'nil'):
@@ -1399,6 +1569,26 @@ def r_Jumpifneqs(label, position):
             return position
     else:
         exit_operands()
+
+def r_Div(var, type1, value1, type2, value2):
+    type1 = get_type(type1)
+    type2 = get_type(type2)
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if (type2 == 'var'):
+        type2, value2 = check_var (type2, value2)     
+    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
+        exit_operands()
+    if (value2 == "0" or value2 == 0):
+        exit_bad_operand()
+    if(type1 == 'int' and type2 == 'int'):
+        result = float(value1) / float(value2)
+    elif(type1 == 'float' and type2 == 'float'):
+        result = float(value1) / float(value2)
+    else:
+        exit_operands()
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, float(result), get_type_val(result))   
 
 def count_vars():
     global TF, LF, GF
@@ -1528,6 +1718,8 @@ def run_instructions(xml):
             position = r_Jumpifeqs(arg1_text, position)
         elif(opcode == "JUMPIFNEQS"):
             position = r_Jumpifneqs(arg1_text, position)
+        elif(opcode == "DIV"):
+            r_Div(arg1_text, arg2, arg2_text, arg3, arg3_text)
 
         insts_count+=1
         old_vars = vars_count
@@ -1552,10 +1744,6 @@ def print_stats():
     except:
             sys.stderr.write('Cannot open desired file\n')
             sys.exit(12)
-
-
-
-
 
 arg_input = arg_source = arg_stats = arg_insts = arg_vars = False
 if ('--help' in sys.argv):
