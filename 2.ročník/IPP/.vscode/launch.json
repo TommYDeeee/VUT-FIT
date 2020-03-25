@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args" : ["--source=./int-only-2019/toast_arg_swap.src"]
+            "args" : ["--source=./int-only-2019/venki_tests/float_tests/float_read_wrongfloat.src"]
         }
     ]
 }

@@ -19,7 +19,7 @@ LF = []
 
 zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK", "CLEARS", "ADDS", "SUBS", "MULS", "DIVS", "IDIVS", "LTS", "GTS", "EQS", "ANDS", "ORS", "NOTS", "STRI2INTS", "INT2CHARS"]
 one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT", "JUMPIFEQS", "JUMPIFNEQS"]
-two_ins = ["MOVE", "INT2CHAR", "READ", "STRLEN", "TYPE", "NOT"]
+two_ins = ["MOVE", "INT2CHAR", "READ", "STRLEN", "TYPE", "NOT", "INT2FLOAT", "FLOAT2INT"]
 three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2INT", 
     "CONCAT", "GETCHAR", "SETCHAR", "JUMPIFEQ", "JUMPIFNEQ", "DIV"]
 
@@ -71,7 +71,7 @@ def print_help():
 def check_xml_root(xml):
     if not 'language' in xml.attrib:
         exit_xml()
-    if (xml.tag != 'program' or xml.attrib['language'] != "IPPcode19"):
+    if (xml.tag != 'program' or xml.attrib['language'] != "IPPcode20"):
         exit_xml()
     for attrib in xml.attrib:
         if(attrib not in ('name', 'language', 'description')):
@@ -617,7 +617,7 @@ def r_Sub(var, type1, value1, type2, value2):
     if(type1 == 'int' and type2 == 'int'):
         result = int(value1) - int(value2)
     elif(type1 == 'float' and type2 == 'float'):
-        result = float(value1) + float(value2)
+        result = float(value1) - float(value2)
     else:
         exit_operands()
     frame, var_value = var_values(var)
@@ -635,7 +635,7 @@ def r_Mul(var, type1, value1, type2, value2):
     if(type1 == 'int' and type2 == 'int'):
         result = int(value1) * int(value2)
     elif(type1 == 'float' and type2 == 'float'):
-        result = float(value1) + float(value2)
+        result = float(value1) * float(value2)
     else:
         exit_operands()
     frame, var_value = var_values(var)
@@ -1588,6 +1588,34 @@ def r_Div(var, type1, value1, type2, value2):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, float(result), get_type_val(result))   
 
+def r_Int2float(var, type1, value1):
+    type1 = get_type(type1)
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if(type1 not in ['int', 'var']):
+        exit_operands()
+    try:
+        result = float(value1)
+    except:
+        exit_operands()
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result, get_type_val(result))
+
+
+def r_Float2int(var, type1, value1):
+    type1 = get_type(type1)
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if(type1 not in ['float', 'var']):
+        exit_operands()
+    try:
+        result = int(value1)
+    except:
+        exit_operands()
+    frame, var_value = var_values(var)
+    save_to_var(frame, var_value, result, get_type_val(result))
+
+
 def count_vars():
     global TF, LF, GF
     if(TF == None):
@@ -1718,6 +1746,10 @@ def run_instructions(xml):
             position = r_Jumpifneqs(arg1_text, position)
         elif(opcode == "DIV"):
             r_Div(arg1_text, arg2, arg2_text, arg3, arg3_text)
+        elif(opcode == "INT2FLOAT"):
+            r_Int2float(arg1_text, arg2, arg2_text)
+        elif(opcode == "FLOAT2INT"):
+            r_Float2int(arg1_text, arg2, arg2_text)
 
         insts_count+=1
         old_vars = vars_count
