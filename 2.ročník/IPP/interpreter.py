@@ -3,6 +3,7 @@ import argparse
 import re
 import xml.etree.ElementTree as ET
 
+#Globalne premenné a regulárne výrazy
 pattern = re.compile(r'\s+')
 var_pattern = re.compile(r'^(LF|TF|GF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*?!]*$')
 sym_pattern = re.compile(r'^int@[-+]?[0-9]+$|^bool@true$|^bool@false$|^nil@nil$|^float@+')
@@ -23,6 +24,7 @@ two_ins = ["MOVE", "INT2CHAR", "READ", "STRLEN", "TYPE", "NOT", "INT2FLOAT", "FL
 three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2INT", 
     "CONCAT", "GETCHAR", "SETCHAR", "JUMPIFEQ", "JUMPIFNEQ", "DIV"]
 
+#Funkcie na vracanie chyboivej návratovej hodnoty
 def exit_xml():
     sys.stderr.write('xml is invalid\n')
     sys.exit(32)     
@@ -55,6 +57,7 @@ def exit_string():
     sys.stderr.write("String error\n")
     sys.exit(58)
 
+#Vypísanie nápovedy
 def print_help():
     print("interpreter.py")
     print("Napoveda:")
@@ -68,6 +71,7 @@ def print_help():
     print("Musi byt zadany aspoň jeden z parametrov --source=file, --input=file inak chyba! Ak jeden chyba, zodpovedajuce data su nacitane zo standardneho vstupu")
     sys.exit(0)
 
+#Kontrola XML hlavičky a jej atribútov, kontrola nadbytočné textu v elementoch a odstránenie bielych znakov
 def check_xml_root(xml):
     if not 'language' in xml.attrib:
         exit_xml()
@@ -93,6 +97,7 @@ def check_xml_root(xml):
     xml = check_xml_ins(xml)
     return xml
 
+#Prechod XML inštrukciami, kontrola ich atribútov a ich vzostupné zoradenie na základe "opcode order" (nemusí byť súvislá postupnosť)
 def check_xml_ins(xml):
     order = 0
     sort_ins = []
@@ -126,10 +131,12 @@ def check_xml_ins(xml):
     execute_ins(xml)
     return xml
 
+#Kontrola premennej
 def var_check(text):
     if not (re.match(var_pattern, text)):
         exit_xml()
 
+#Kontrola konštant a escape sekvencii pri konštante string
 def sym_check(type, text):
     if (type == 'var'):
         if not (re.match(var_pattern, text)):
@@ -155,18 +162,22 @@ def sym_check(type, text):
             except:
                 exit_xml()
 
+#Kontrola návestí
 def label_check(text):
     if not (re.match(label_pattern, text)):
         exit_xml()
 
+#Kontrola typov
 def type_check(text):
     if not (re.match(r'^int$|^bool$|^string$|^float$', text)):
         exit_xml()
 
+#Kontrola inštrukcii s 0 argumentmi
 def zero_arg_check(ins):
     if(len(ins) != 0):
         exit_xml()
 
+#Kontrola inštrukcii s 1 argumentom a pokiaľ sa jedná o inštrukciu LABEL, uloženie definovaných návestí aj s poradím skoku
 def one_arg_check(ins, i):
     if(len(ins) != 1):
         exit_xml()
@@ -203,6 +214,7 @@ def one_arg_check(ins, i):
         else:
             exit_xml()
 
+#Kontrola inštrukcii s 2 argumentmi
 def two_arg_check(ins):
     if(ins[0].tag not in ['arg1', 'arg2'] or ins[1].tag not in ['arg1', 'arg2']):
         exit_xml()
@@ -240,7 +252,7 @@ def two_arg_check(ins):
                 else:
                     exit_xml()
 
-
+#Kontrola inštrukcii s 3 argumentmi, kontrola všetkých možných kombinácii poradia argumentov a ich zoradenie 
 def three_arg_check(ins):
     if((ins[0].tag == ins[1].tag) or (ins[0].tag == ins[2].tag) or (ins[1].tag == ins[2].tag)):
         exit_xml()
@@ -254,7 +266,6 @@ def three_arg_check(ins):
         ins[0], ins[1], ins[2] = ins[1], ins[0], ins[2]
     if(ins[0].tag == 'arg3' and ins[1].tag == 'arg1' and ins[2].tag == 'arg2'):
         ins[0], ins[1], ins[2] = ins[1], ins[2], ins[0]
-    
     if(len(ins)!=3):
         exit_xml()
     for arg in ins:
@@ -285,8 +296,7 @@ def three_arg_check(ins):
             else:
                     exit_xml()
 
-
-
+#Cyklus cez všetky inštrukcie a kontrola argumentov na základe očakávaného počtu argumentov
 def execute_ins(xml):
     i = 0
     for ins in xml:
@@ -302,6 +312,7 @@ def execute_ins(xml):
             three_arg_check(ins)
         i+=1
 
+#Zistenie očakávaného počtu argumentov
 def get_args(ins):
     if ins in zero_ins:
         return 0
@@ -314,6 +325,7 @@ def get_args(ins):
     else:
         exit_xml()
 
+#Prevod bool stringu na bool
 def convert_to_bool(value1, value2):
     if(value1 == 'true' or value1 == True):
         value1 = True
@@ -325,6 +337,7 @@ def convert_to_bool(value1, value2):
         value2 = False
     return value1, value2
 
+#Zistenie hodnoty typu
 def get_type_val(value1):
     try:
         if(value1['nil'] == None):
@@ -345,6 +358,7 @@ def get_type_val(value1):
     if type(value1) is str:
         return 'string'
 
+#Zistenie typu zo vstupu
 def get_type(value):
     if(value['type'] == 'int'):
         return 'int'
@@ -359,6 +373,7 @@ def get_type(value):
     if(value['type'] == 'float'):
         return 'float'
 
+#Prevod escape sekvencie na string 
 def interpret_escape(escape):
     if(escape == None):
         return ""
@@ -367,10 +382,12 @@ def interpret_escape(escape):
     escape = re.sub(escape_pattern, replace, escape)
     return escape
 
+#Odelenie typu rámca od názvu rámca
 def var_values(var):
     frame, var_value = var.split("@", 1)
     return frame, var_value
 
+#Kontrola premennej, získanie hodnoty a typu
 def check_var(type1, value1):
     value1 = symb_from_var(value1)
     if(value1 == None):
@@ -378,6 +395,7 @@ def check_var(type1, value1):
     type1 = get_type_val(value1)
     return(type1, value1)
 
+#Uloženie hodnoty do rámca
 def save_to_var(frame, var , symb, symb_type):
     if(symb_type == 'str'):
         symb_type == 'string'
@@ -443,6 +461,7 @@ def save_to_var(frame, var , symb, symb_type):
             elif(symb_type == 'read'):
                 GF[var] = symb
 
+#Vytvorenie premennej v rámci
 def init_var(frame, var):
     if (frame == "TF"):
         if TF == None:
@@ -464,6 +483,7 @@ def init_var(frame, var):
         else:
             GF[var] = None
 
+#Získanie hodnoty z rámca
 def symb_from_var(symb):
     frame, var_value = var_values(symb)
     if(frame == "TF"):
@@ -486,8 +506,8 @@ def symb_from_var(symb):
         else:
             return GF.get(var_value)
 
+#Oddelenie string hodnoty od string hodnoty načítanej prostredníctvom READ (pri READ neprevádzame escape sekvencie)
 def read_vs_string(type1, value1, type2, value2):
-
     if(type1 == 'string'):
         value1 = interpret_escape(value1)
     if(type2 == 'string'):
@@ -498,7 +518,8 @@ def read_vs_string(type1, value1, type2, value2):
         value2 = value2.get('read')
     return value1, value2    
 
-
+#INŠTRUKCIE
+#Inštrukcia MOVE, uloženie hodnoty do premennej
 def r_Move(var, symb, var_value, symb_value):
     symb = get_type(symb)
     if (symb == 'var'):
@@ -520,10 +541,12 @@ def r_Move(var, symb, var_value, symb_value):
     frame, var_value = var_values(var_value)
     save_to_var(frame, var_value, symb_value, get_type_val(symb_value))
 
+#Inštrukcia CREATEFRAME, vytvorenie dočasného rámca (TF)
 def r_Createframe():
     global TF
     TF = {}
 
+#Inštrukcia PUSHFRAME, presunutie hodnoty dočasného rámca (TF) do lokálneho rámca (LF), ak TF existuje
 def r_Pushframe():
     global TF, LF
     if TF == None:
@@ -531,6 +554,7 @@ def r_Pushframe():
     LF.append(TF)
     TF = None
 
+#Inštrukcia POPFRAME, presunutie hodnoty lokálneho rámca (LF) do dočasného rámca (TF)
 def r_Popframe():
     global TF, LF
     try:
@@ -538,10 +562,12 @@ def r_Popframe():
     except:
         exit_non_frame()
 
+#inštrukcia DEFVAR, vytvorenie premennej v rámci
 def r_Defvar(var_value):
     frame, var_value = var_values(var_value)
     init_var(frame, var_value)
 
+#Inštrukcia CALL, kontrola návestia, prevedenie skoku na existujúce návestie (uloženie aktuálnej pozície pre návrat z funkcie)
 def r_Call(label, position):
     global functions, insts_count
     if label in labels:
@@ -551,12 +577,14 @@ def r_Call(label, position):
     else:
         exit_semantics()
 
+#Inštrukcia RETURN, Návrat z funkcie
 def r_Return(position):
     global functions
     if not functions:
         exit_none_var()
     return functions.pop()
 
+#Inštrukcia PUSHS, uloženie hodnoty na zásobník
 def r_Pushs(symb, symb_value):
     global data
     symb = get_type(symb)
@@ -576,7 +604,7 @@ def r_Pushs(symb, symb_value):
     else:
         data.append(symb_value)
 
-
+#Inštrukcia POPS, uloženie hodnoty zo zásobníka do definovanej premennej
 def r_Pops(var, var_value):
     global data
     if(len(data) == 0):
@@ -587,7 +615,8 @@ def r_Pops(var, var_value):
     frame, var_value = var_values(var_value)
     save_to_var(frame, var_value, value, get_type_val(value))
 
-def r_Add(var, type1, value1, type2, value2):
+#Aritmetické inštrukcie ADD, SUB, MUL, IDIV a DIV (rozšírenie FLOAT), kontrola typov a uloženie výsledku operácie
+def r_Arithmetics(var, type1, value1, type2, value2, sign):
     type1 = get_type(type1)
     type2 = get_type(type2)
     if(type1== 'var'):
@@ -597,234 +626,119 @@ def r_Add(var, type1, value1, type2, value2):
     if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
         exit_operands()
     if(type1 == 'int' and type2 == 'int'):
-        result = int(value1) + int(value2)
+        value1 = int(value1)
+        value2 = int(value2)
     elif(type1 == 'float' and type2 == 'float'):
-        result = float(value1) + float(value2)
+        value1 == float(value1)
+        value2 == float(value2)
     else:
         exit_operands()
+    if(sign == '+'):
+        result = value1 + value2
+    elif(sign == '-'):
+        result = value1 - value2
+    elif(sign == '*'):
+        result = value1 * value2
+    elif(sign == '//'):
+        if(type1 != 'int' and type2 != 'int'):
+            exit_operands()
+        if (value2 == "0" or value2 == 0):
+            exit_bad_operand()
+        result = value1 // value2
+    elif(sign == '/'):
+        if(type1 != 'float' and type2 != 'float'):
+            exit_operands()
+        if (value2 == "0" or value2 == 0):
+            exit_bad_operand()
+        result = value1 / value2
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
-def r_Sub(var, type1, value1, type2, value2):
+#Relačné inštrukcie LT,GT,EQ, kontrola typov, prevedenie inštrukcií a uloženie výsledku operácie
+def r_Relational_op(var, type1, value1, type2, value2, op):
     type1 = get_type(type1)
     type2 = get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)        
-    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
-        exit_operands()
-    if(type1 == 'int' and type2 == 'int'):
-        result = int(value1) - int(value2)
-    elif(type1 == 'float' and type2 == 'float'):
-        result = float(value1) - float(value2)
-    else:
-        exit_operands()
-    frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, get_type_val(result))    
-
-def r_Mul(var, type1, value1, type2, value2):
-    type1 = get_type(type1)
-    type2 = get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var(type1, value1)
-    if (type2 == 'var'):
-        type2, value2 = check_var(type2, value2)
-    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
-        exit_operands()
-    if(type1 == 'int' and type2 == 'int'):
-        result = int(value1) * int(value2)
-    elif(type1 == 'float' and type2 == 'float'):
-        result = float(value1) * float(value2)
-    else:
-        exit_operands()
-    frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, get_type_val(result))   
-
-def r_Idiv(var, type1, value1, type2, value2):
-    type1 = get_type(type1)
-    type2 = get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if (type1 != 'int' or type2 != 'int'):
-        exit_operands()
-    if (value2 == "0" or value2 == 0):
-        exit_bad_operand()
-    result = int(value1) // int(value2)
-    frame, var_value = var_values(var)
-    save_to_var(frame, var_value, int(result), 'int')   
-
-def r_Lt(var, type1, value1, type2, value2):
-    type1 = get_type(type1)
-    type2 = get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if(type1== 'int'):
-        if(type2 == 'int'):
-            if(int(value1) < int(value2)):
-                result = True
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'bool'):
-        if(type2 == 'bool'):
-            value1, value2 = convert_to_bool(value1,value2)
-            if(value1 == False):
-                if(value2 == True):
-                    result = True
-                else:
-                    result = False
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'string'):
-        value1 = interpret_escape(value1)
-        if(type2 ==  'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 < value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'read'):
-        if(type2 == 'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 < value2):
-            result = True
-        else:
-            result = False
-    else:
-        exit_operands()
-    frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, get_type_val(result))
-
-def r_Gt(var, type1, value1, type2, value2):
-    type1 = get_type(type1)
-    type2 = get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if(type1 == 'int'):
-        if(type2 == 'int'):
-            if(int(value1) > int(value2)):
-                result = True
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'bool'):
-        if(type2 == 'bool'):
-            value1, value2 = convert_to_bool(value1,value2)
-            if(value1 == True):
-                if(value2 == False):
-                    result = True
-                else:
-                    result = False
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'string'):
-        value1 = interpret_escape(value1)
-        if(type2 ==  'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 > value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'read'):
-        if(type2 == 'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 > value2):
-            result = True
-        else:
-            result = False
-    else:
-        exit_operands()
-    frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, get_type_val(result))
-
-
-def r_Eq(var, type1, value1, type2, value2):
-    type1 = get_type(type1)
-    type2= get_type(type2)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
     if(type1 == 'nil' or type2 == 'nil'):
-        if(value1 == value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'int'):
-        if(type2 == 'int'):
-            if(int(value1) == int(value2)):
-                result = True
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'bool'):
-        if(type2 == 'bool'):
-            value1, value2 = convert_to_bool(value1, value2)
+        if(op == "=="):
             if(value1 == value2):
                 result = True
             else:
                 result = False
         else:
             exit_operands()
-    elif(type1 == 'string'):
-        value1 = interpret_escape(value1)
-        if(type2 ==  'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
+    elif(type1== 'int'):
+        if(type2 == 'int'):
+            if(op == "<"):
+                if(int(value1) < int(value2)):
+                    result = True
+                else:
+                    result = False
+            elif(op == ">"):
+                if(int(value1) > int(value2)):
+                    result = True
+                else:
+                    result = False
+            else:
+                if(int(value1) == int(value2)):
+                    result = True
+                else:
+                    result = False
         else:
             exit_operands()
-        if(value1 == value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'read'):
-        if(type2 == 'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
+    elif(type1 == 'bool'):
+        if(type2 == 'bool'):
+            value1, value2 = convert_to_bool(value1,value2)
+            if(op == "<"):
+                if(value1 == False):
+                    if(value2 == True):
+                        result = True
+                    else:
+                        result = False
+                else:
+                    result = False
+            elif(op == ">"):
+                if(value1 == True):
+                    if(value2 == False):
+                        result = True
+                    else:
+                        result = False
+                else:
+                    result = False      
+            else:
+                if(value1 == value2):
+                    result = True
+                else:
+                    result = False                      
         else:
             exit_operands()
-        if(value1 == value2):
-            result = True
+    elif(type1 in ['string', 'read'] and type2 in ['string', 'read'] ):
+        value1, value2 = read_vs_string(type1, value1, type2, value2)
+        if(op == "<"):
+            if(value1 < value2):
+                result = True
+            else:
+                result = False
+        elif(op == ">"):
+            if(value1 > value2):
+                result = True
+            else:
+                result = False
         else:
-            result = False
+            if(value1 == value2):
+                result = True
+            else:
+                result = False        
     else:
         exit_operands()
     frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, get_type_val(result))
+    save_to_var(frame, var_value, result, get_type_val(result))  
 
-def r_And(var, type1, value1, type2, value2):
+#Logické inštrukcie AND a OR, kontrola typov, prevedenie inštrukcie a uloženie výsledku do definovanej premennej
+def r_Logical_op(var, type1, value1, type2, value2, op):
     type1 = get_type(type1)
     type2= get_type(type2)
     if(type1== 'var'):
@@ -834,24 +748,14 @@ def r_And(var, type1, value1, type2, value2):
     if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
         exit_operands()
     value1, value2 = convert_to_bool(value1, value2)  
-    result = value1 and value2
+    if(op == "&&"):
+        result = value1 and value2
+    elif(op == "||"):
+        result = value1 or value2
     frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, get_type_val(result))
+    save_to_var(frame, var_value, result, get_type_val(result))  
 
-def r_Or(var, type1, value1, type2, value2):
-    type1 = get_type(type1)
-    type2= get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
-        exit_operands()
-    value1, value2 = convert_to_bool(value1, value2)
-    result = value1 or value2
-    frame, var_value = var_values(var)
-    save_to_var(frame, var_value, result, get_type_val(result))    
-
+#Inštrukcia NOT, kontrola typu, prevedenie inštrukcie a uloženie výsledku do definovanej premennej
 def r_Not(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -865,6 +769,7 @@ def r_Not(var, type1, value1):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
+#Inštrukcia INT2CHAR, prevedenie čísla do jeho jednoznakovej podoby (podla UNICODE) a uloženie do premennej
 def r_Int2char(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -878,6 +783,7 @@ def r_Int2char(var, type1, value1):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
+#uloženie ordinálnej hodnoty znaku v reťazci value1, na pozícii value2 do premennej var
 def r_Stri2int(var, type1, value1, type2, value2):
     type1 = get_type(type1)
     type2= get_type(type2)
@@ -896,6 +802,7 @@ def r_Stri2int(var, type1, value1, type2, value2):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
+#Inštrukcia READ, načítanie hodnoty na základe definovaného typu a uloženie do premennej. Použitie vstavanej funkcie input()
 def r_Read(var, type1, type_val):
     if not arg_input:
         inputi = input()
@@ -932,6 +839,7 @@ def r_Read(var, type1, type_val):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
+#Inštrukcia WRITE,  vypísanie hodnoty na STDOUT, využitie doplňujúceho parametra end="", kvôli zamedzaniu odriadkovania
 def r_Write(type1, type_value):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -958,6 +866,7 @@ def r_Write(type1, type_value):
     else:
         exit_bad_operand()
 
+#Inštrukcia CONCAT, spojenie 2 reťazcov a uloženie do definovanej premennej
 def r_Concat(var, type1, value1, type2, value2):
     type1 = get_type(type1)
     type2 = get_type(type2)
@@ -976,6 +885,7 @@ def r_Concat(var, type1, value1, type2, value2):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
+#Inštrukcia STRLEN, zistenie počtu znakov v reťazci a uloženie výsledku (celé číslo) do definovanej premennej
 def r_Strlen(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -988,7 +898,8 @@ def r_Strlen(var, type1, value1):
     result = len(value1)     
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
-    
+
+#Inštrukcia GETCHAR, uloženie jednoznakového reťazca v reťazci value1 na pozícii value2 do definovanej premennej
 def r_Getchar(var, type1, value1, type2, value2):
     type1 = get_type(type1)
     type2 = get_type(type2)
@@ -1006,7 +917,8 @@ def r_Getchar(var, type1, value1, type2, value2):
         exit_string()
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
-      
+
+#Inštrukcia SETCHAR, modifikovanie znaku reťazca var_value, na pozícii value1 na znak v reťazci value2 (ak obsahuje viac znakov, tak prvý znak) a uloženie do definovanej premennej
 def r_Setchar(var_type, var_value, type1, value1, type2, value2):
     type1 = get_type(type1)
     type2 = get_type(type2)
@@ -1034,6 +946,7 @@ def r_Setchar(var_type, var_value, type1, value1, type2, value2):
     frame, var_value = var_values(var_value)
     save_to_var(frame, var_value, result, get_type_val(result))
 
+#Inštrukcia TYPE, zistenie typu symbolu a uloženie výsledného reťazca do definovanej premennej
 def r_Type(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -1056,6 +969,7 @@ def r_Type(var, type1, value1):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
+#Inštrukcia JUMP, prevedenie skoku na existujúce návestie
 def r_Jump(label):
     global labels, insts_count
     if label not in labels.keys():
@@ -1064,51 +978,8 @@ def r_Jump(label):
         insts_count += 1
         return labels[label]
 
-def r_Jumpifeq(label, type1, value1, type2, value2, position):
-    global labels, insts_count
-    type1 = get_type(type1)
-    type2 = get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)   
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)   
-    if(type1 == 'int'):
-        value1 = int(value1)
-    if (type2 == 'int'):
-        value2 = int(value2)
-    if(type1 == 'bool'):
-        if (value1 == 'true'):
-            value1 = True
-        else:
-            value1 = False
-    if(type2 == 'bool'):
-        if (value2 == 'true'):
-            value2 = True
-        else:
-            value2 = False    
-    value1, value2 = read_vs_string(type1, value1, type2, value2)
-    if(type1 == 'read'):
-        type1 = 'string'
-    if(type2 == 'read'):
-        type2 = 'string'
-    if label not in labels.keys():
-        exit_semantics()
-    if(type1 == 'nil' or type2 == 'nil'):
-        if(value1 == value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
-    if(type1 == type2):
-        if(value1 == value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
-    else:
-        exit_operands()
-
-def r_Jumpifneq(label, type1, value1, type2, value2, position):
+#Relačné inštrukcie skoku JUMPIFEQ a JUMPIFNEQ, zistenie typu, vyhodnotenie podmienky a následné prevedenie/neprevedenie skoku
+def r_Relational_jumps(label, type1, value1, type2, value2, position, op):
     global labels, insts_count
     type1 = get_type(type1)
     type2 = get_type(type2)
@@ -1137,21 +1008,23 @@ def r_Jumpifneq(label, type1, value1, type2, value2, position):
         type2 = 'string'
     if label not in labels.keys():
         exit_semantics()
-    if(type1 == 'nil' or type2 == 'nil'):
-        if(value1 != value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
-    if(type1 == type2):
-        if(value1 != value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
+    if((type1 == 'nil' or type2 == 'nil') or (type1 == type2)):
+        if(op == "=="):
+            if(value1 == value2):
+                insts_count += 1
+                return labels[label]
+            else:
+                return position
+        elif(op == "!="):
+            if(value1 != value2):
+                insts_count += 1
+                return labels[label]
+            else:
+                return position
     else:
         exit_operands()
 
+#Inštrukcia DPRINT, vypísanie zadanej hodnoty na STDERR
 def r_Dprint(type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -1162,10 +1035,12 @@ def r_Dprint(type1, value1):
     else:
         sys.stderr.write(value1)
 
+#Inštrukcia BREAK, vypísanie stavu interpreteru (pozícia v kóde, obsah rámcov) na STDERR
 def r_Break(position):
     global LF, TF, GF
     sys.stderr.write("\nPozicia:{0}\nLF:{1}\nTF:{2}\nGF:{3}\n".format(position+1, LF, TF, GF))
 
+#Inštrukcia EXIT, ukončenie vykonávania programu a ukončenie interpretera  so zadaným návratovým kódom (od 0 do 49)
 def r_Exit(type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -1176,13 +1051,16 @@ def r_Exit(type1, value1):
         exit(int(value1))
     else:
         exit_bad_operand()
-
+ 
+ #ROZŠÍRENIE STACK
+ #Získanie hodnoty z vrcholu zásobníka
 def get_stack_value():
     if(len(data)!= 0):
         return data.pop()
     else:
         exit_none_var()
 
+#Získanie typu hodnoty z vrcholu zásobníka
 def get_stack_types():
     value2 = get_stack_value()
     value1 = get_stack_value()
@@ -1194,11 +1072,13 @@ def get_stack_types():
         type2 ='nil'
     return(value1, value2, type1, type2)
 
+#Inštrukcia CLEARS, vyčistenie zásobníka
 def r_Clears():
     global data
     data = []
 
-def r_Adds():
+#Verzia aritmetických inštrukcii pre prácu so zásobníkom
+def r_Arithmetics_S(sign):
     global data
     value1, value2, type1, type2 = get_stack_types()
     if(type1== 'var'):
@@ -1207,157 +1087,22 @@ def r_Adds():
         type2, value2 = check_var (type2, value2)
     if (type1 != 'int' or type2 != 'int'):
         exit_operands()
-    result = int(value1) + int(value2)
-    data.append(result)
+    value1 = int(value1)
+    value2 = int(value2)
+    if(sign == '+'):
+        result = value1 + value2
+    elif(sign == '-'):
+        result = value1 - value2
+    elif(sign == '*'):
+        result = value1 * value2
+    elif(sign == '//'):
+        if (value2 == "0" or value2 == 0):
+            exit_bad_operand()
+        result = value1 // value2
+    data.append(result)    
 
-def r_Subs():
-    global data
-    value1, value2, type1, type2 = get_stack_types()
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)        
-    if (type1 != 'int' or type2 != 'int'):
-        exit_operands()
-    result = int(value1) - int(value2)
-    data.append(result)
-
-def r_Muls():
-    global data
-    value1, value2, type1, type2 = get_stack_types()
-    if(type1== 'var'):
-        type1, value1 = check_var(type1, value1)
-    if (type2 == 'var'):
-        type2, value2 = check_var(type2, value2)
-    if (type1 != 'int' or type2 != 'int'):
-        exit_operands()
-    result = int(value1) * int(value2)
-    data.append(result)
-
-def r_Idivs():
-    global data
-    value1, value2, type1, type2 = get_stack_types()
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if (type1 != 'int' or type2 != 'int'):
-        exit_operands()
-    if (value2 == "0" or value2 == 0):
-        exit_bad_operand()
-    result = int(value1) // int(value2)
-    data.append(result)
-
-def r_Lts():
-    global data
-    value1, value2, type1, type2 = get_stack_types()
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if(type1== 'int'):
-        if(type2 == 'int'):
-            if(int(value1) < int(value2)):
-                result = True
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'bool'):
-        if(type2 == 'bool'):
-            value1, value2 = convert_to_bool(value1,value2)
-            if(value1 == False):
-                if(value2 == True):
-                    result = True
-                else:
-                    result = False
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'string'):
-        value1 = interpret_escape(value1)
-        if(type2 ==  'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 < value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'read'):
-        if(type2 == 'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 < value2):
-            result = True
-        else:
-            result = False
-    else:
-        exit_operands()
-    data.append(result)
-
-def r_Gts():
-    global data
-    value1, value2, type1, type2 = get_stack_types()
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if(type1 == 'int'):
-        if(type2 == 'int'):
-            if(int(value1) > int(value2)):
-                result = True
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'bool'):
-        if(type2 == 'bool'):
-            value1, value2 = convert_to_bool(value1,value2)
-            if(value1 == True):
-                if(value2 == False):
-                    result = True
-                else:
-                    result = False
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'string'):
-        value1 = interpret_escape(value1)
-        if(type2 ==  'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 > value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'read'):
-        if(type2 == 'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
-        else:
-            exit_operands()
-        if(value1 > value2):
-            result = True
-        else:
-            result = False
-    else:
-        exit_operands()
-    data.append(result)
-
-
-def r_Eqs():
+#Verzia relačných inštrukcií pre prácu so zásobníkom
+def r_Relational_op_S(op):
     global data
     value1, value2, type1, type2 = get_stack_types()
     if(type1== 'var'):
@@ -1365,55 +1110,81 @@ def r_Eqs():
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
     if(type1 == 'nil' or type2 == 'nil'):
-        if(value1 == value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'int'):
-        if(type2 == 'int'):
-            if(int(value1) == int(value2)):
-                result = True
-            else:
-                result = False
-        else:
-            exit_operands()
-    elif(type1 == 'bool'):
-        if(type2 == 'bool'):
-            value1, value2 = convert_to_bool(value1, value2)
+        if(op == "=="):
             if(value1 == value2):
                 result = True
             else:
                 result = False
         else:
             exit_operands()
-    elif(type1 == 'string'):
-        value1 = interpret_escape(value1)
-        if(type2 ==  'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
+    elif(type1== 'int'):
+        if(type2 == 'int'):
+            if(op == "<"):
+                if(int(value1) < int(value2)):
+                    result = True
+                else:
+                    result = False
+            elif(op == ">"):
+                if(int(value1) > int(value2)):
+                    result = True
+                else:
+                    result = False
+            else:
+                if(int(value1) == int(value2)):
+                    result = True
+                else:
+                    result = False
         else:
             exit_operands()
-        if(value1 == value2):
-            result = True
-        else:
-            result = False
-    elif(type1 == 'read'):
-        if(type2 == 'string'):
-            value2 = interpret_escape(value2)
-        elif(type2 == 'read'):
-            value2 = value2.get('read')
+    elif(type1 == 'bool'):
+        if(type2 == 'bool'):
+            value1, value2 = convert_to_bool(value1,value2)
+            if(op == "<"):
+                if(value1 == False):
+                    if(value2 == True):
+                        result = True
+                    else:
+                        result = False
+                else:
+                    result = False
+            elif(op == ">"):
+                if(value1 == True):
+                    if(value2 == False):
+                        result = True
+                    else:
+                        result = False
+                else:
+                    result = False      
+            else:
+                if(value1 == value2):
+                    result = True
+                else:
+                    result = False                      
         else:
             exit_operands()
-        if(value1 == value2):
-            result = True
+    elif(type1 in ['string', 'read'] and type2 in ['string', 'read'] ):
+        value1, value2 = read_vs_string(type1, value1, type2, value2)
+        if(op == "<"):
+            if(value1 < value2):
+                result = True
+            else:
+                result = False
+        elif(op == ">"):
+            if(value1 > value2):
+                result = True
+            else:
+                result = False
         else:
-            result = False
+            if(value1 == value2):
+                result = True
+            else:
+                result = False        
     else:
         exit_operands()
     data.append(result)
 
-def r_Ands():
+#Verzia logických inštrukcii pre prácu so zásobníkom
+def r_Logical_op_S(op):
     global data
     value1, value2, type1, type2 = get_stack_types()
     if(type1== 'var'):
@@ -1423,22 +1194,13 @@ def r_Ands():
     if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
         exit_operands()
     value1, value2 = convert_to_bool(value1, value2)  
-    result = value1 and value2
+    if(op == "&&"):
+        result = value1 and value2
+    elif(op == "||"):
+        result = value1 or value2
     data.append(result)
 
-def r_Ors():
-    global data
-    value1, value2, type1, type2 = get_stack_types()
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
-        exit_operands()
-    value1, value2 = convert_to_bool(value1, value2)
-    result = value1 or value2
-    data.append(result)
-
+#Inštrukcia NOTS, verzia inštrukcie NOT pre prácu so zásobníkom
 def r_Nots():
     global data
     value1 = get_stack_value()
@@ -1453,6 +1215,7 @@ def r_Nots():
     result = not value1
     data.append(result)
 
+#Inštrukcia INT2CHARS, verzia inštrukcie INT2CHAR pre prácu so zásobníkom
 def r_Int2chars():
     global data
     value1 = get_stack_value()
@@ -1467,6 +1230,7 @@ def r_Int2chars():
         exit_string()
     data.append(result)
 
+#Inštrukcia STRI2INTS, verzia inštrukcie STRI2INT pre prácu so zásobníkom
 def r_Stri2ints():
     global data
     value1, value2, type1, type2 = get_stack_types()
@@ -1484,50 +1248,8 @@ def r_Stri2ints():
         exit_string()        
     data.append(result)
 
-def r_Jumpifeqs(label, position):
-    global labels, insts_count, data
-    value1, value2, type1, type2 = get_stack_types()
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)   
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)   
-    if(type1 == 'int'):
-        value1 = int(value1)
-    if (type2 == 'int'):
-        value2 = int(value2)
-    if(type1 == 'bool'):
-        if (value1 == 'true'):
-            value1 = True
-        else:
-            value1 = False
-    if(type2 == 'bool'):
-        if (value2 == 'true'):
-            value2 = True
-        else:
-            value2 = False    
-    value1, value2 = read_vs_string(type1, value1, type2, value2)
-    if(type1 == 'read'):
-        type1 = 'string'
-    if(type2 == 'read'):
-        type2 = 'string'
-    if label not in labels.keys():
-        exit_semantics()
-    if(type1 == 'nil' or type2 == 'nil'):
-        if(value1 == value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
-    if(type1 == type2):
-        if(value1 == value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
-    else:
-        exit_operands()
-
-def r_Jumpifneqs(label, position):
+#Verzia relačných inštrukcií skoku pre prácu so zásobníkom
+def r_Relational_jumps_S(label, position, op):
     global labels, insts_count, data
     value1, value2, type1, type2 = get_stack_types()
     if(type1== 'var'):
@@ -1555,39 +1277,24 @@ def r_Jumpifneqs(label, position):
         type2 = 'string'
     if label not in labels.keys():
         exit_semantics()
-    if(type1 == 'nil' or type2 == 'nil'):
-        if(value1 != value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
-    if(type1 == type2):
-        if(value1 != value2):
-            insts_count += 1
-            return labels[label]
-        else:
-            return position
+    if((type1 == 'nil' or type2 == 'nil') or (type1 == type2)):
+        if(op == "=="):
+            if(value1 == value2):
+                insts_count += 1
+                return labels[label]
+            else:
+                return position
+        elif(op == "!="):
+            if(value1 != value2):
+                insts_count += 1
+                return labels[label]
+            else:
+                return position
     else:
         exit_operands()
 
-def r_Div(var, type1, value1, type2, value2):
-    type1 = get_type(type1)
-    type2 = get_type(type2)
-    if(type1== 'var'):
-        type1, value1 = check_var (type1, value1)     
-    if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
-    if (type1 != "float" or type2 != "float"):
-        exit_operands()
-    if (value2 == "0" or value2 == 0):
-        exit_bad_operand()
-    elif(type1 == 'float' and type2 == 'float'):
-        result = float(value1) / float(value2)
-    else:
-        exit_operands()
-    frame, var_value = var_values(var)
-    save_to_var(frame, var_value, float(result), get_type_val(result))   
-
+#Rozšírenie FLOAT
+#Inštrukcia INT2FLOAT, prevedenie int hodnoty na hodnotu float, kontrola typov a uloženie výsledku do definovanej premennej
 def r_Int2float(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -1601,7 +1308,7 @@ def r_Int2float(var, type1, value1):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
-
+#Inštrukcia FLOAT2INT, prevedenie float hodnoty na hodnotu int, kontrola typov a uloženie výsledku do definovanej premennej
 def r_Float2int(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
@@ -1615,7 +1322,8 @@ def r_Float2int(var, type1, value1):
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
 
-
+#Rozšírenie STATI
+#Spočítanie premenných v rámcoch
 def count_vars():
     global TF, LF, GF
     if(TF == None):
@@ -1624,6 +1332,7 @@ def count_vars():
         len_TF = len(TF)
     return len(GF) + len_TF + len(LF)
 
+#Cyklus cez všetky "OPCODE" (Inštrukcie), uloženie argumentov a zavolanie príslušných funkcií
 def run_instructions(xml):
     global insts_count, vars_count
     position = 0
@@ -1667,23 +1376,23 @@ def run_instructions(xml):
         elif (opcode == "POPS"):
             r_Pops(arg1,arg1_text)
         elif (opcode == "ADD"):
-            r_Add(arg1_text, arg2, arg2_text, arg3,  arg3_text)
+            r_Arithmetics(arg1_text, arg2, arg2_text, arg3,  arg3_text, '+')
         elif (opcode == "SUB"):
-            r_Sub(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Arithmetics(arg1_text, arg2, arg2_text, arg3, arg3_text, '-')
         elif (opcode == "MUL"):
-            r_Mul(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Arithmetics(arg1_text, arg2, arg2_text, arg3, arg3_text, '*')
         elif (opcode == "IDIV"):
-            r_Idiv(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Arithmetics(arg1_text, arg2, arg2_text, arg3, arg3_text, '//')
         elif (opcode == "LT"):
-            r_Lt(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Relational_op(arg1_text, arg2, arg2_text, arg3, arg3_text, "<")
         elif (opcode == "GT"):
-            r_Gt(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Relational_op(arg1_text, arg2, arg2_text, arg3, arg3_text, ">")
         elif (opcode == "EQ"):
-            r_Eq(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Relational_op(arg1_text, arg2, arg2_text, arg3, arg3_text, "==")
         elif (opcode == "AND"):
-            r_And(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Logical_op(arg1_text, arg2, arg2_text, arg3, arg3_text, "&&")
         elif (opcode == "OR"):
-            r_Or(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Logical_op(arg1_text, arg2, arg2_text, arg3, arg3_text, "||")
         elif (opcode == "NOT"):
             r_Not(arg1_text, arg2, arg2_text)
         elif (opcode == "INT2CHAR"):
@@ -1707,9 +1416,9 @@ def run_instructions(xml):
         elif (opcode == "JUMP"):
             position = r_Jump(arg1_text)
         elif (opcode == "JUMPIFEQ"):
-            position = r_Jumpifeq(arg1_text, arg2, arg2_text, arg3, arg3_text, position)
+            position = r_Relational_jumps(arg1_text, arg2, arg2_text, arg3, arg3_text, position, "==")
         elif (opcode == "JUMPIFNEQ"):
-            position = r_Jumpifneq(arg1_text, arg2, arg2_text, arg3, arg3_text, position)
+            position = r_Relational_jumps(arg1_text, arg2, arg2_text, arg3, arg3_text, position, "!=")
         elif (opcode == "DPRINT"):
             r_Dprint(arg1, arg1_text)
         elif (opcode == "BREAK"):
@@ -1717,23 +1426,23 @@ def run_instructions(xml):
         elif(opcode == "CLEARS"):
             r_Clears()
         elif(opcode == "ADDS"):
-            r_Adds()
+            r_Arithmetics_S("+")
         elif(opcode == "SUBS"):
-            r_Subs()
+            r_Arithmetics_S("-")
         elif(opcode == "MULS"):
-            r_Muls()
+            r_Arithmetics_S("*")
         elif(opcode == "IDIVS"):
-            r_Idivs()
+            r_Arithmetics_S("//")
         elif(opcode == "LTS"):
-            r_Lts()
+            r_Relational_op_S("<")
         elif(opcode == "GTS"):
-            r_Gts()
+            r_Relational_op_S(">")
         elif(opcode == "EQS"):
-            r_Eqs()
+            r_Relational_op_S("==")
         elif(opcode == "ANDS"):
-            r_Ands()
+            r_Logical_op_S("&&")
         elif(opcode == "ORS"):
-            r_Ors()
+            r_Logical_op_S("||")
         elif(opcode == "NOTS"):
             r_Nots()
         elif(opcode == "INT2CHARS"):
@@ -1741,16 +1450,16 @@ def run_instructions(xml):
         elif(opcode == "STRI2INTS"):
             r_Stri2ints()
         elif(opcode == "JUMPIFEQS"):
-            position = r_Jumpifeqs(arg1_text, position)
+            position = r_Relational_jumps_S(arg1_text, position, "==")
         elif(opcode == "JUMPIFNEQS"):
-            position = r_Jumpifneqs(arg1_text, position)
+            position = r_Relational_jumps_S(arg1_text, position, "!=")
         elif(opcode == "DIV"):
-            r_Div(arg1_text, arg2, arg2_text, arg3, arg3_text)
+            r_Arithmetics(arg1_text, arg2, arg2_text, arg3, arg3_text, "/")
         elif(opcode == "INT2FLOAT"):
             r_Int2float(arg1_text, arg2, arg2_text)
         elif(opcode == "FLOAT2INT"):
             r_Float2int(arg1_text, arg2, arg2_text)
-
+        #počítanie inštrukcií pre rozšírenie STATI, a ukladanie maximálneho počtu definovaných premenných v rámcoch
         insts_count+=1
         old_vars = vars_count
         vars_count = count_vars()
@@ -1760,6 +1469,7 @@ def run_instructions(xml):
             vars_count = old_vars
         position+=1
 
+#Vypísanie štatistík (rozšírenie STATI) do zadaného súboru, každé na nový riadok (vždy len 1 číslo)
 def print_stats():
     global insts_count, vars_count, file_stats, arg_insts, arg_vars
     try:
@@ -1775,6 +1485,7 @@ def print_stats():
             sys.stderr.write('Cannot open desired file\n')
             sys.exit(12)
 
+#Kontrola argumentov skriptu, uloženie príslušných súborov
 arg_input = arg_source = arg_stats = arg_insts = arg_vars = False
 if ('--help' in sys.argv):
     if ((len(sys.argv))!=2):
@@ -1805,11 +1516,13 @@ else:
             sys.stderr.write('Invalid argument\n')
             sys.exit(10)
 
+#Argument pre počet inštrukcii a pre počet premenných bol zadaný bez argumentu pre výstupný súbor (STATI)
 if(arg_insts ==True or arg_vars == True):
     if(arg_stats == False):
         sys.stderr.write('you cant have argument --insts or --vars without --stats=file\n')
         sys.exit(10)
 
+#Argument pre vstup a ani pre výstup nebol zadaný -> chyba, inak otvorenie a kontrola zadaných vstupov, parsovanie XML na vstupe
 if (arg_input == False and arg_source == False):
     sys.stderr.write('you need to give at least one valid argument\n')
     sys.exit(10)
@@ -1844,7 +1557,6 @@ else:
             sys.exit(31)
 
 xml = xml_raw.getroot()
-#print(ET.tostring(xml, encoding='utf8').decode('utf8'))
 xml = check_xml_root(xml)
 run_instructions(xml)
 if(arg_stats):

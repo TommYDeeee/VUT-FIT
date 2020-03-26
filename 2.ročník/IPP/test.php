@@ -264,27 +264,39 @@ function run_tests()
                     <td>" . $test_info . pathinfo($test, PATHINFO_DIRNAME) . "/" . pathinfo($test, PATHINFO_FILENAME) . "</td>
                     <td ";
                 exec("php " . $file_p . " <" . $name . ".src > ./tmp 2>/dev/null", $output, $return);
-                exec("python3 " . $file_i . " --source=./tmp" . " --input=" . $name . ".in" . " > ./tmp_both 2>/dev/null", $output, $return);
-                if ($return == $rc)
+                if($return == "0")
                 {
-                    if ($rc == "0")
+                    exec("python3 " . $file_i . " --source=./tmp" . " --input=" . $name . ".in" . " > ./tmp_both 2>/dev/null", $output, $return);
+                    if ($return == $rc)
                     {
-                        exec("diff ./tmp_both " . $name . ".out", $output, $return);
-                        if ($return == "0")
+                        if ($rc == "0")
+                        {
+                            exec("diff ./tmp_both " . $name . ".out", $output, $return);
+                            if ($return == "0")
+                            {
+                                echo "class='ok'>OK!";
+                                $count_passed++;
+                            }
+                            else
+                            {
+                                echo "class='failed'>FAILED!<span>&nbsp(diff match failed)</span>";
+                            }
+                        }
+                        else
                         {
                             echo "class='ok'>OK!";
                             $count_passed++;
                         }
-                        else
-                        {
-                            echo "class='failed'>FAILED!<span>&nbsp(diff match failed)</span>";
-                        }
                     }
                     else
                     {
-                        echo "class='ok'>OK!";
-                        $count_passed++;
+                        echo "class='failed'>FAILED!<span>&nbsp(expected rc: $rc, got: $return)</span>"; 
                     }
+                }
+                elseif($return == $rc)
+                {
+                    echo "class='ok'>OK!";
+                    $count_passed++;
                 }
                 else
                 {

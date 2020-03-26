@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args" : ["--source=./int-only-2019/venki_tests/float_tests/float_read_wrongfloat.src"]
+            "args" : ["--source=./int-only-2019/venki_tests/test_eq_differenttype_nil.src"]
         }
     ]
 }
