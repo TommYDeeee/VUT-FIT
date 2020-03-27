@@ -575,7 +575,6 @@ def r_Call(label, position):
     global functions, insts_count
     if label in labels:
         functions.append(position)
-        insts_count += 1
         return labels.get(label)
     else:
         exit_semantics()
@@ -1091,12 +1090,16 @@ def r_Break(position):
 
 #Inštrukcia EXIT, ukončenie vykonávania programu a ukončenie interpretera  so zadaným návratovým kódom (od 0 do 49)
 def r_Exit(type1, value1):
+    global insts_count
     type1 = get_type(type1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)   
     if(type1 != 'int'):
         exit_operands()
     if(0 <= int(value1) <= 49):
+        insts_count = insts_count + 1
+        if(arg_stats):
+            print_stats()
         exit(int(value1))
     else:
         exit_bad_operand()
