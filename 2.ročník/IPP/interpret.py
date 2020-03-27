@@ -537,7 +537,10 @@ def r_Move(var, symb, var_value, symb_value):
         if (symb == 'int'):
             symb_value = int(symb_value)
         if (symb == 'float'):
-            symb_value = float.fromhex(symb_value)
+            try:
+                symb_value = float.fromhex(symb_value)
+            except:
+                symb_value = float(symb_value)
     frame, var_value = var_values(var_value)
     save_to_var(frame, var_value, symb_value, get_type_val(symb_value))
 
@@ -593,7 +596,10 @@ def r_Pushs(symb, symb_value):
     if(symb == 'int'):
         data.append(int(symb_value))
     elif(symb == 'float'):
-        data.append(float.fromhex(symb_value))
+        try:
+            data.append(float.fromhex(symb_value))
+        except:
+            data.append(symb_value)
     elif(symb == 'bool'):
         if(symb_value == 'true'):
             data.append(True)
@@ -629,8 +635,14 @@ def r_Arithmetics(var, type1, value1, type2, value2, sign):
         value1 = int(value1)
         value2 = int(value2)
     elif(type1 == 'float' and type2 == 'float'):
-        value1 == float(value1)
-        value2 == float(value2)
+        try:
+            value1 = float.fromhex(value1)
+        except:
+            pass
+        try:
+            value2 = float.fromhex(value2)
+        except:
+            pass
     else:
         exit_operands()
     if(sign == '+'):
@@ -689,6 +701,33 @@ def r_Relational_op(var, type1, value1, type2, value2, op):
                     result = False
         else:
             exit_operands()
+    elif(type1 == 'float'):
+        if(type2 == 'float'):
+            if(op == "<"):
+                try:
+                    value1 = float.fromhex(value1)
+                except:
+                    pass
+                try:
+                    value2 = float.fromhex(value2)
+                except:
+                    pass
+                if(value1 < value2):
+                    result = True
+                else:
+                    result = False
+            elif(op == ">"):
+                if(value1 > value2):
+                    result = True
+                else:
+                    result = False
+            else:
+                if(value1 == value2):
+                    result = True
+                else:
+                    result = False
+        else:
+            exit_operands()    
     elif(type1 == 'bool'):
         if(type2 == 'bool'):
             value1, value2 = convert_to_bool(value1,value2)
@@ -991,6 +1030,16 @@ def r_Relational_jumps(label, type1, value1, type2, value2, position, op):
         value1 = int(value1)
     if (type2 == 'int'):
         value2 = int(value2)
+    if(type1 == 'float'):
+        try:
+            value1 = float.fromhex(value1)
+        except:
+            pass
+    if(type2 == 'float'):
+        try:
+            value2 = float.fromhex(value2)
+        except:
+            pass
     if(type1 == 'bool'):
         if (value1 == True or value1 == 'true'):
             value1 = True
@@ -1085,10 +1134,22 @@ def r_Arithmetics_S(sign):
         type1, value1 = check_var(type1, value1)
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)
-    if (type1 != 'int' or type2 != 'int'):
+    if (type1 not in ['int', 'float'] or type2 not in ['int', 'float']):
         exit_operands()
-    value1 = int(value1)
-    value2 = int(value2)
+    if(type1 == 'int' and type2 == 'int'):
+        value1 = int(value1)
+        value2 = int(value2)
+    elif(type1 == 'float' and type2 == 'float'):
+        try:
+            value1 = float.fromhex(value1)
+        except:
+            pass
+        try:
+            value2 = float.fromhex(value2)
+        except:
+            pass
+    else:
+        exit_operands()
     if(sign == '+'):
         result = value1 + value2
     elif(sign == '-'):
@@ -1096,9 +1157,17 @@ def r_Arithmetics_S(sign):
     elif(sign == '*'):
         result = value1 * value2
     elif(sign == '//'):
+        if(type1 != 'int' and type2 != 'int'):
+            exit_operands()
         if (value2 == "0" or value2 == 0):
             exit_bad_operand()
         result = value1 // value2
+    elif(sign == '/'):
+        if(type1 != 'float' and type2 != 'float'):
+            exit_operands()
+        if (value2 == "0" or value2 == 0):
+            exit_bad_operand()
+        result = value1 / value2
     data.append(result)    
 
 #Verzia relačných inštrukcií pre prácu so zásobníkom
@@ -1136,6 +1205,33 @@ def r_Relational_op_S(op):
                     result = False
         else:
             exit_operands()
+    elif(type1 == 'float'):
+        if(type2 == 'float'):
+            if(op == "<"):
+                try:
+                    value1 = float.fromhex(value1)
+                except:
+                    pass
+                try:
+                    value2 = float.fromhex(value2)
+                except:
+                    pass
+                if(value1 < value2):
+                    result = True
+                else:
+                    result = False
+            elif(op == ">"):
+                if(value1 > value2):
+                    result = True
+                else:
+                    result = False
+            else:
+                if(value1 == value2):
+                    result = True
+                else:
+                    result = False
+        else:
+            exit_operands()    
     elif(type1 == 'bool'):
         if(type2 == 'bool'):
             value1, value2 = convert_to_bool(value1,value2)
@@ -1260,6 +1356,16 @@ def r_Relational_jumps_S(label, position, op):
         value1 = int(value1)
     if (type2 == 'int'):
         value2 = int(value2)
+    if(type1 == 'float'):
+        try:
+            value1 = float.fromhex(value1)
+        except:
+            pass
+    if(type2 == 'float'):
+        try:
+            value2 = float.fromhex(value2)
+        except:
+            pass
     if(type1 == 'bool'):
         if (value1 == True or value1 == 'true'):
             value1 = True

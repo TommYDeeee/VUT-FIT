@@ -35,7 +35,7 @@ function check_files($file_p, $file_i, $file_j, $path)
     }
     if (!file_exists($file_i))
     {
-        fwrite(STDERR, "ERROR, file interpreter.py doesnt exist!\n");
+        fwrite(STDERR, "ERROR, file interpret.py doesnt exist!\n");
         exit(10);
     }
     if (!file_exists($file_j))
@@ -447,7 +447,7 @@ $directory_arg = $recursive_arg = $parse_script_arg = $int_script_arg = $parse_o
 $path = getcwd();
 $path = $path . '/';
 $file_p = realpath("./parse.php");
-$file_i = realpath("./interpreter.py");
+$file_i = realpath("./interpret.py");
 $file_j = realpath("/pub/courses/ipp/jexamxml/jexamxml.jar");
 
 if((count(array_unique($argv))-1) != count($args))
@@ -464,7 +464,7 @@ if($argc > 1)
                 echo "test.php\n";
                 echo "Napoveda:\n";
                 echo "Autor: Tomas Duris (xduris05)\n\n";
-                echo "Skript test.php skontroluje správnosť implementácie skriptu parser.php a interpreter.py na zvolenej testovacej sade\n";
+                echo "Skript test.php skontroluje správnosť implementácie skriptu parser.php a interpret.py na zvolenej testovacej sade\n";
                 echo "Vystupom je HTML5 reprezentacia výsledkov\n";
                 echo "--------------------------------------------------------------------------------------------------------\n";
                 echo "Pouzitie:\n";
