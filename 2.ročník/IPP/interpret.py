@@ -122,6 +122,8 @@ def check_xml_ins(xml):
         if ('order' not in ins.attrib or 'opcode' not in ins.attrib):
             exit_xml()
         order = int(ins.attrib['order'])
+        if(order < 0):
+            exit_xml()
         sort_ins.append((order,ins))
     try:
         sort_ins.sort()
