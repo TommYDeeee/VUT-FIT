@@ -1437,11 +1437,17 @@ def r_Float2int(var, type1, value1):
 #Spočítanie premenných v rámcoch
 def count_vars():
     global TF, LF, GF
+    len_LF = 0
+    
     if(TF == None):
         len_TF = 0
     else:
         len_TF = len(TF)
-    return len(GF) + len_TF + len(LF)
+
+    for i in LF:
+        len_LF += len(i)
+
+    return len(GF) + len_TF + len_LF
 
 #Cyklus cez všetky "OPCODE" (Inštrukcie), uloženie argumentov a zavolanie príslušných funkcií
 def run_instructions(xml):
