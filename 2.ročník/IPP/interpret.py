@@ -18,7 +18,7 @@ TF = None
 GF = {}
 LF = []
 
-zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK", "CLEARS", "ADDS", "SUBS", "MULS", "DIVS", "IDIVS", "LTS", "GTS", "EQS", "ANDS", "ORS", "NOTS", "STRI2INTS", "INT2CHARS"]
+zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK", "CLEARS", "ADDS", "SUBS", "MULS", "DIVS", "IDIVS", "LTS", "GTS", "EQS", "ANDS", "ORS", "NOTS", "STRI2INTS", "INT2CHARS", "INT2FLOATS", "FLOAT2INTS"]
 one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT", "JUMPIFEQS", "JUMPIFNEQS"]
 two_ins = ["MOVE", "INT2CHAR", "READ", "STRLEN", "TYPE", "NOT", "INT2FLOAT", "FLOAT2INT"]
 three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2INT", 
@@ -121,8 +121,11 @@ def check_xml_ins(xml):
                 exit_xml()
         if ('order' not in ins.attrib or 'opcode' not in ins.attrib):
             exit_xml()
-        order = int(ins.attrib['order'])
-        if(order < 0):
+        try:
+            order = int(ins.attrib['order'])
+        except:
+            exit_xml()
+        if(order <= 0):
             exit_xml()
         sort_ins.append((order,ins))
     try:
@@ -218,14 +221,14 @@ def one_arg_check(ins, i):
 
 #Kontrola inštrukcii s 2 argumentmi
 def two_arg_check(ins):
+    if(len(ins) != 2):
+        exit_xml()
     if(ins[0].tag not in ['arg1', 'arg2'] or ins[1].tag not in ['arg1', 'arg2']):
         exit_xml()
     if(ins[0].tag == ins[1].tag):
         exit_xml()
     if(ins[0].tag != 'arg1'):
         ins[0], ins[1] = ins[1], ins[0]
-    if(len(ins) != 2):
-        exit_xml()
     for arg in ins:
         try:
             arg.tail = re.sub(pattern, '', arg.tail)
@@ -256,6 +259,8 @@ def two_arg_check(ins):
 
 #Kontrola inštrukcii s 3 argumentmi, kontrola všetkých možných kombinácii poradia argumentov a ich zoradenie 
 def three_arg_check(ins):
+    if(len(ins)!=3):
+        exit_xml()
     if((ins[0].tag == ins[1].tag) or (ins[0].tag == ins[2].tag) or (ins[1].tag == ins[2].tag)):
         exit_xml()
     if(ins[0].tag == 'arg2' and ins[1].tag == 'arg3' and ins[2].tag == 'arg1'):
@@ -268,8 +273,6 @@ def three_arg_check(ins):
         ins[0], ins[1], ins[2] = ins[1], ins[0], ins[2]
     if(ins[0].tag == 'arg3' and ins[1].tag == 'arg1' and ins[2].tag == 'arg2'):
         ins[0], ins[1], ins[2] = ins[1], ins[2], ins[0]
-    if(len(ins)!=3):
-        exit_xml()
     for arg in ins:
         try:
             arg.tail = re.sub(pattern, '', arg.tail)
@@ -602,7 +605,8 @@ def r_Pushs(symb, symb_value):
         except:
             data.append(symb_value)
     elif(symb == 'bool'):
-        if(symb_value == 'true'):
+        symb_value, redundant = convert_to_bool(symb_value, None)
+        if(symb_value == True):
             data.append(True)
         else:
             data.append(False)
@@ -867,7 +871,6 @@ def r_Read(var, type1, type_val):
                 if(result):
                     result = {'read': result}
             except:
-                print("t")
                 result = None
         elif(type_val == 'bool'):
             if(inputi.upper()!= "TRUE"):
@@ -1182,7 +1185,7 @@ def r_Relational_op_S(op):
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)     
+        type2, value2 = check_var (type2, value2)
     if(type1 == 'nil' or type2 == 'nil'):
         if(op == "=="):
             if(value1 == value2):
@@ -1356,7 +1359,7 @@ def r_Relational_jumps_S(label, position, op):
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)   
     if (type2 == 'var'):
-        type2, value2 = check_var (type2, value2)   
+        type2, value2 = check_var (type2, value2)  
     if(type1 == 'int'):
         value1 = int(value1)
     if (type2 == 'int'):
@@ -1403,6 +1406,36 @@ def r_Relational_jumps_S(label, position, op):
                 return position
     else:
         exit_operands()
+
+#Inštrukcia INT2FLOATS, zásobníková verzia prevedenia int hodnoty na hodnotu float, kontrola typov a uloženie výsledku do definovanej premennej
+def r_Int2floats():
+    global data
+    value1 = get_stack_value()
+    type1 = get_type_val(value1)
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if(type1 not in ['int', 'var']):
+        exit_operands()
+    try:
+        result = float(value1)
+    except:
+        exit_operands()
+    data.append(result)
+
+#Inštrukcia FLOAT2INTS, zásobníkova verzia prevedenieafloat hodnoty na hodnotu int, kontrola typov a uloženie výsledku do definovanej premennej
+def r_Float2ints():
+    global data
+    value1 = get_stack_value()
+    type1 = get_type_val(value1)
+    if(type1== 'var'):
+        type1, value1 = check_var (type1, value1)     
+    if(type1 not in ['float', 'var']):
+        exit_operands()
+    try:
+        result = int(value1)
+    except:
+        exit_operands()
+    data.append(result)
 
 #Rozšírenie FLOAT
 #Inštrukcia INT2FLOAT, prevedenie int hodnoty na hodnotu float, kontrola typov a uloženie výsledku do definovanej premennej
@@ -1572,6 +1605,10 @@ def run_instructions(xml):
             position = r_Relational_jumps_S(arg1_text, position, "!=")
         elif(opcode == "DIV"):
             r_Arithmetics(arg1_text, arg2, arg2_text, arg3, arg3_text, "/")
+        elif(opcode == "INT2FLOATS"):
+            r_Int2floats()
+        elif(opcode == "FLOAT2INTS"):
+            r_Float2ints()
         elif(opcode == "INT2FLOAT"):
             r_Int2float(arg1_text, arg2, arg2_text)
         elif(opcode == "FLOAT2INT"):
