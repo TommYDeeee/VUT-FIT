@@ -1084,9 +1084,9 @@ def r_Dprint(type1, value1):
         value1 = symb_from_var(value1)
         if(value1 == None):
             exit_none_var()
-        sys.stderr.write(value1)
+        sys.stderr.write(str(value1))
     else:
-        sys.stderr.write(value1)
+        sys.stderr.write(str(value1))
 
 #Inštrukcia BREAK, vypísanie stavu interpreteru (pozícia v kóde, obsah rámcov) na STDERR
 def r_Break(position):
