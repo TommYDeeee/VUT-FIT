@@ -43,7 +43,7 @@ CREATE TABLE TIKET
     ID NUMBER GENERATED AS IDENTITY(START with 1 INCREMENT by 1) PRIMARY KEY,
     PROGRAMATOR_ID NUMBER NOT NULL,
     UZIVATEL_ID NUMBER NOT NULL,
-    TYP VARCHAR(255),
+    TYPE VARCHAR(255),
     INIT_DATE DATE NOT NULL,
     COMPLETED NUMBER(1) NOT NULL,
     CHECK ( COMPLETED in (0,1) )
@@ -209,10 +209,10 @@ INSERT INTO BUG(MODUL_ID, PATCH_ID, DESCRIPTION) VALUES (4, 3, 'Aplikacia presta
 INSERT INTO BUG(MODUL_ID, PATCH_ID, DESCRIPTION) VALUES (3, 4, 'Pre serverovy counter ukazuje cudzie hodnoty');
 INSERT INTO BUG(MODUL_ID, PATCH_ID, DESCRIPTION) VALUES (3, 4, 'Po automatickom odhlaseni bez refreshu stale ukazuje data zo serverov');
 
-INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYP, INIT_DATE, COMPLETED) VALUES (1, 4, 'Po zacati pouzivania aplikacie sme narazili na par problemov. Prosim pozrite sa na to.', DATE '2019-8-4', 1);
-INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYP, INIT_DATE, COMPLETED) VALUES (2, 5, 'Nas zamestnanec ma problem s pouzivanim vasho produktu, prosime o co najskorsiu napravu', DATE '2019-8-25', 1);
-INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYP, INIT_DATE, COMPLETED) VALUES (2, 5, 'Posielam vam par bugov, aplikacia je pre mna v momentalnom stave nepouzitelna.', DATE '2019-9-3', 1);
-INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYP, INIT_DATE, COMPLETED) VALUES (2, 5, 'Zdravim, nasiel som nejake chyby v programe', DATE '2019-10-1', 0);
+INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYPE, INIT_DATE, COMPLETED) VALUES (1, 4, 'Po zacati pouzivania aplikacie sme narazili na par problemov. Prosim pozrite sa na to.', DATE '2019-8-4', 1);
+INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYPE, INIT_DATE, COMPLETED) VALUES (2, 5, 'Nas zamestnanec ma problem s pouzivanim vasho produktu, prosime o co najskorsiu napravu', DATE '2019-8-25', 1);
+INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYPE, INIT_DATE, COMPLETED) VALUES (2, 5, 'Posielam vam par bugov, aplikacia je pre mna v momentalnom stave nepouzitelna.', DATE '2019-9-3', 1);
+INSERT INTO TIKET(PROGRAMATOR_ID, UZIVATEL_ID, TYPE, INIT_DATE, COMPLETED) VALUES (2, 5, 'Zdravim, nasiel som nejake chyby v programe', DATE '2019-10-1', 0);
 
 INSERT INTO ZRANITELNOST(BUG_ID, SECURITY) VALUES (6, 'nekriticka');
 INSERT INTO ZRANITELNOST(BUG_ID, SECURITY) VALUES (8, 'kriticka');
@@ -228,4 +228,48 @@ INSERT INTO CHYBA(BUG_ID, TIKET_ID) VALUES (7, 4);
 INSERT INTO CHYBA(BUG_ID, TIKET_ID) VALUES (8, 4);
 INSERT INTO CHYBA(BUG_ID, TIKET_ID) VALUES (9, 4);
 
-COMMIT
+COMMIT;
+
+
+------------------------------------------------------------------------------------------------------
+--Zistí, ktorý užívateľ napísal aký tiket
+SELECT UZIVATEL.NAME as MENO_UZIVATELA,  T.TYPE as TYP_TIKETU
+       FROM UZIVATEL
+            JOIN TIKET T on UZIVATEL.ID = T.UZIVATEL_ID;
+
+--Zisté zapezpečenie konkrétneho bugu
+SELECT BUG.DESCRIPTION as SPECIFIKACIA_BUGU, Z.SECURITY as ZABEZPECENIE_BUGU
+       FROM BUG
+            JOIN ZRANITELNOST Z on BUG.ID = Z.BUG_ID;
+
+-- Zistí, ktorý patch bol použitý opravuje bug týkajúci sa určitého modulu
+SELECT BUG.DESCRIPTION as SPECIFIKACIA_BUGU, P.ID as ID_PATCHU, M.NAME as MODUL
+       FROM BUG
+        JOIN PATCH P on BUG.PATCH_ID = P.ID
+        JOIN MODUL M on BUG.MODUL_ID = M.ID;
+
+--Počet modulov v danom jazyku
+SELECT COUNT(MODUL.NAME) as POCET_MODULOV, J.NAME as MENO_JAZYKA
+    FROM MODUL
+        JOIN JAZYK J on MODUL.JAZYK_ID = J.ID
+GROUP BY J.NAME
+ORDER BY J.NAME;
+
+--Koľko odmien získal daný užívateľ, zoradí od najväčšieho čísla
+SELECT UZIVATEL.NAME as MENO_UZIVATELA, COUNT(O.ID) as ODMENA
+    FROM UZIVATEL
+        JOIN ODMENA O on UZIVATEL.ID = O.UZIVATEL_ID
+GROUP BY UZIVATEL.NAME
+ORDER BY COUNT(O.ID) DESC;
+
+--Ukáže popis bugov, kde je zraniteľnosť kritická
+SELECT BUG.DESCRIPTION as SPECIFIKACIA_BUGU
+    FROM BUG
+    WHERE BUG.ID IN
+    (SELECT  ZRANITELNOST.BUG_ID
+        FROM ZRANITELNOST WHERE ZRANITELNOST.SECURITY = 'kriticka');
+
+--Ukáže všetkých programátorov, ktorí majú zabraný nejaký tiket
+SELECT NAME as MENO
+    FROM UZIVATEL
+    WHERE EXISTS (SELECT ID FROM TIKET WHERE TIKET.PROGRAMATOR_ID = UZIVATEL.ID)

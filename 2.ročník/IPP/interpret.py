@@ -1,5 +1,4 @@
 import sys
-import argparse
 import re
 import xml.etree.ElementTree as ET
 
@@ -605,11 +604,10 @@ def r_Pushs(symb, symb_value):
         except:
             data.append(symb_value)
     elif(symb == 'bool'):
-        symb_value, redundant = convert_to_bool(symb_value, None)
-        if(symb_value == True):
+        if(symb_value == 'true' or symb_value == True):
             data.append(True)
         else:
-            data.append(False)
+            data.append(False)       
     elif(symb == 'nil'):
         data.append(None)
     else:
@@ -789,7 +787,7 @@ def r_Logical_op(var, type1, value1, type2, value2, op):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
+    if(type1!= 'bool' or type2 != 'bool'): 
         exit_operands()
     value1, value2 = convert_to_bool(value1, value2)  
     if(op == "&&"):
@@ -804,9 +802,12 @@ def r_Not(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['bool', 'var']): 
+    if(type1 != 'bool'): 
         exit_operands()
-    value1, value2 = convert_to_bool(value1, None)
+    if(value1 == 'true' or value1 == True):
+        value1 = True
+    else:
+        value1= False
     if(type(value1) is not bool):
         exit_operands()
     result = not value1
@@ -818,7 +819,7 @@ def r_Int2char(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['int', 'var']):
+    if(type1 != 'int'):
         exit_operands()
     try:
         result = chr(int(value1))
@@ -835,9 +836,12 @@ def r_Stri2int(var, type1, value1, type2, value2):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['string', 'var', 'read'] or type2 != 'int'):
+    if(type1 not in ['string', 'read'] or type2 != 'int'):
         exit_operands()
-    value1, unused =  read_vs_string(type1, value1, None, None)
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type1 == 'read'):
+        value1 = value1.get('read')
     if 0<= int(value2) <len(value1):
         char_ord = [ord(i) for i in value1]
         result = char_ord[int(value2)]
@@ -888,8 +892,7 @@ def r_Write(type1, type_value):
     if(type1== 'var'):
         type1, type_value = check_var (type1, type_value)
     if(type1 == 'bool'):
-        type_value, type_value2 = convert_to_bool(type_value, None)
-        if(type_value == True):
+        if(type_value == 'true' or type_value == True):
             print("true", end="")
         else:
             print("false", end="")
@@ -937,7 +940,10 @@ def r_Strlen(var, type1, value1):
         exit_operands()
     if (value1 == None):
         value1 = ""
-    value1, value2 = read_vs_string(type1, value1, None, None)
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type1 == 'read'):
+        value1 = value1.get('read')
     result = len(value1)     
     frame, var_value = var_values(var)
     save_to_var(frame, var_value, result, get_type_val(result))
@@ -952,7 +958,10 @@ def r_Getchar(var, type1, value1, type2, value2):
         type2, value2 = check_var (type2, value2)    
     if(type1 not in ['string', 'read'] or type2 != 'int'):
         exit_operands()
-    value1, unused = read_vs_string(type1, value1, None, None)
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type1 == 'read'):
+        value1 = value1.get('read')
     if 0 <= int(value2) <len(value1):
         result = list(value1)
         result = result[int(value2)]
@@ -1081,12 +1090,12 @@ def r_Relational_jumps(label, type1, value1, type2, value2, position, op):
 def r_Dprint(type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
-        value1 = symb_from_var(value1)
-        if(value1 == None):
-            exit_none_var()
-        sys.stderr.write(str(value1))
+        type1, value1 = check_var(type1, value1)
+        result = str(type1) + ":" + str(value1)
+        sys.stderr.write(result)
     else:
-        sys.stderr.write(str(value1))
+        result = str(type1) + ":" + str(value1)
+        sys.stderr.write(result)
 
 #Inštrukcia BREAK, vypísanie stavu interpreteru (pozícia v kóde, obsah rámcov) na STDERR
 def r_Break(position):
@@ -1295,7 +1304,7 @@ def r_Logical_op_S(op):
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['bool', 'var'] or type2 not in ['bool', 'var']): 
+    if(type1 != 'bool' or type2 != 'bool'): 
         exit_operands()
     value1, value2 = convert_to_bool(value1, value2)  
     if(op == "&&"):
@@ -1311,9 +1320,12 @@ def r_Nots():
     type1 = get_type_val(value1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['bool', 'var']): 
+    if(type1 != 'bool'): 
         exit_operands()
-    value1, value2 = convert_to_bool(value1, None)
+    if(value1 == 'true' or value1 == True):
+        value1 = True
+    else:
+        value1= False
     if(type(value1) is not bool):
         exit_operands()
     result = not value1
@@ -1326,7 +1338,7 @@ def r_Int2chars():
     type1 = get_type_val(value1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['int', 'var']):
+    if(type1 != 'int'):
         exit_operands()
     try:
         result = chr(int(value1))
@@ -1342,9 +1354,12 @@ def r_Stri2ints():
         type1, value1 = check_var (type1, value1)     
     if (type2 == 'var'):
         type2, value2 = check_var (type2, value2)     
-    if(type1 not in ['string', 'var', 'read'] or type2 != 'int'):
+    if(type1 not in ['string', 'read'] or type2 != 'int'):
         exit_operands()
-    value1, unused =  read_vs_string(type1, value1, None, None)
+    if(type1 == 'string'):
+        value1 = interpret_escape(value1)
+    if(type1 == 'read'):
+        value1 = value1.get('read')
     if 0<= int(value2) <len(value1):
         char_ord = [ord(i) for i in value1]
         result = char_ord[int(value2)]
@@ -1414,7 +1429,7 @@ def r_Int2floats():
     type1 = get_type_val(value1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['int', 'var']):
+    if(type1 != 'int'):
         exit_operands()
     try:
         result = float(value1)
@@ -1429,7 +1444,7 @@ def r_Float2ints():
     type1 = get_type_val(value1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['float', 'var']):
+    if(type1 != 'float'):
         exit_operands()
     try:
         result = int(value1)
@@ -1443,7 +1458,7 @@ def r_Int2float(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['int', 'var']):
+    if(type1 != 'int'):
         exit_operands()
     try:
         result = float(value1)
@@ -1457,7 +1472,7 @@ def r_Float2int(var, type1, value1):
     type1 = get_type(type1)
     if(type1== 'var'):
         type1, value1 = check_var (type1, value1)     
-    if(type1 not in ['float', 'var']):
+    if(type1 != 'float'):
         exit_operands()
     try:
         result = int(value1)
