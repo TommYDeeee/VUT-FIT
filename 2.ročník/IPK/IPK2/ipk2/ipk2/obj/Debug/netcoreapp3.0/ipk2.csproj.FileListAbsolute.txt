@@ -1,0 +1,15 @@
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/ipk2
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/ipk2.deps.json
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/ipk2.runtimeconfig.json
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/ipk2.runtimeconfig.dev.json
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/ipk2.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/ipk2.pdb
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/PacketDotNet.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/SharpPcap.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/obj/Debug/netcoreapp3.0/ipk2.csprojAssemblyReference.cache
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/obj/Debug/netcoreapp3.0/ipk2.AssemblyInfoInputs.cache
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/obj/Debug/netcoreapp3.0/ipk2.AssemblyInfo.cs
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/obj/Debug/netcoreapp3.0/ipk2.csproj.CopyComplete
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/obj/Debug/netcoreapp3.0/ipk2.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/obj/Debug/netcoreapp3.0/ipk2.pdb
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/bin/Debug/netcoreapp3.0/CommandLine.dll
