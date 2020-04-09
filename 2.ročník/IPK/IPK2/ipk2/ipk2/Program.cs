@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CommandLine;
 using CommandLine.Text;
+using static System.Int32;
 
 class Program
 {
@@ -11,14 +12,22 @@ class Program
     {
         bool tcp = false, udp = false, n_val = false, i_val = false, p_val = false;
         bool have_n = false, have_i = false, have_p = false;
-        int n = 1, p = 0;
-        string i = "all";
+        int? p = null;
+        int n = 1;
+        string i = null;
         
         foreach (var arg in args)
         {
             if(p_val)
             {
-                p = Int32.Parse(arg);
+                try
+                {
+                    p = Parse(arg);
+                }
+                catch
+                {
+                    Exit();
+                }
                 have_p = true;
                 p_val = false;
                 continue;
@@ -34,7 +43,7 @@ class Program
             {
                 try
                 {
-                    n = Int32.Parse(arg);
+                    n = Parse(arg);
                 }
                 catch (Exception)
                 {
@@ -85,21 +94,28 @@ class Program
             }
         }
 
-        if (tcp)
-        {
-            Console.WriteLine("tcp");
-        }
-
-        if (udp)
-        {
-            Console.WriteLine("udp");
-        }
-
-        if (!tcp & !udp)
+        if ((!tcp & !udp) | tcp & udp)
         {
             Console.WriteLine("TCP&UDP");
         }
-        Console.WriteLine(i);
+        else if(tcp)
+        {
+            Console.WriteLine("tcp");
+        }
+        else
+        {
+            Console.WriteLine("udp");
+
+        }
+
+        if (i == null)
+        {
+            Console.WriteLine("ALL INTERFACES");
+        }
+        else
+        {
+            Console.WriteLine(i);
+        }
         Console.WriteLine(n);
 
 
