@@ -334,14 +334,12 @@ function html_header()
             h2
             {
                 text-align: center;
-                padding-bottom: 5%; 
                 font-size: 200%;
                 color: #27e8a7; 
             }
             h3
             {
                 text-align: center;
-                padding-bottom: 5%; 
                 font-size: 200%;
                 color: #cc0000; 
             }
@@ -419,11 +417,14 @@ function html_header()
 function html_footer($count_passed)
 {
     if($count_passed[1] != 0) {
-        if ($count_passed[0] / $count_passed[1] >= 0.5) {
+        $passed_percentage = ($count_passed[0] / $count_passed[1] * 100);
+        $passed_percentage = round($passed_percentage, 2);
+        if ($passed_percentage >= 50) {
             echo
             "
                 </table>
                 <h2>PASSED TESTS: $count_passed[0] / $count_passed[1]</h2>
+                <h2>$passed_percentage%</h2>
             </div>
         </body>
     </html>
@@ -433,6 +434,7 @@ function html_footer($count_passed)
             "
                 </table>
                 <h3>PASSED TESTS: $count_passed[0] / $count_passed[1]</h3>
+                <h3>$passed_percentage%</h3>
             </div>
         </body>
     </html>
