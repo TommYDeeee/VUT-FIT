@@ -1,23 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using CommandLine;
-using CommandLine.Text;
-using ipk2;
-using static System.Int32;
-using SharpPcap;
-using SharpPcap.LibPcap;
-using SharpPcap.Npcap;
-using PacketDotNet;
-using SharpPcap.WinPcap;
-
-class Program
+﻿namespace ipk2
 {
-
-    public static void Main(string[] args)
+    internal static class Program
     {
-        main test = new main();
-        test.Main(args);
+        //Process arguments and main loop over packets
+        public static void Main(string[] args)
+        {
+            var process = new Args();
+            process.Main(args);
+        }
     }
 }
