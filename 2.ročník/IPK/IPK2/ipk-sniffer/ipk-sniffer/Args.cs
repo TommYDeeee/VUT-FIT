@@ -9,15 +9,16 @@ using SharpPcap;
 namespace ipk2
 
 {
+    //argument parsing and loop over acquired packets
     public class Args
     {
         private int _n = 1;
         private ICaptureDevice _device;
         
-        //Arguments processing
+        //arguments processing
         public void Main(IEnumerable<string> args)
         {
-            //Bool variables and default values initialized for further use
+            //bool variables and default values initialized for further use
             bool tcp = false, udp = false, nVal = false, iVal = false, pVal = false;
             bool haveN = false, haveI = false, haveP = false;
             int? p = null;
@@ -107,8 +108,8 @@ namespace ipk2
                 }
             }
 
-            //If either both or none of tcp/udp are provided, no filter is required for packet protocols. 
-            //If they are then filter is used
+            //if either both or none of tcp/udp are provided, no filter is required for packet protocols. 
+            //if they are then filter is used
             if ((!tcp & !udp) | tcp & udp)
             {
                 filter += "";
@@ -123,7 +124,7 @@ namespace ipk2
 
             }
 
-            //Filter for port number if required
+            //filter for port number if required
             if (p == null)
             {
                 filter += "";
@@ -133,7 +134,7 @@ namespace ipk2
                 filter += $"port {p}";
             }
             
-            //If no interface provided, list of active devices is print. Otherwise  provided device is initialized for further use
+            //if no interface provided, list of active devices is print. Otherwise  provided device is initialized for further use
             if (i == null)
             {
                 Console.WriteLine("\nAVAILABLE INTERFACES:");
@@ -155,7 +156,7 @@ namespace ipk2
                 }
             }
 
-            //Device opening, filter application and main loop over acquired
+            //device opening, filter application and main loop over acquired packets
             const int readtime = 1000;
             _device.Open(DeviceMode.Normal, readtime);
             _device.Filter = filter;
@@ -166,6 +167,7 @@ namespace ipk2
             }
         }
 
+        //help for users with all necessary info
         private static string Help()
         {
             const string help = "\nINFO:\n" +
@@ -184,7 +186,7 @@ namespace ipk2
             return help;
         }
 
-        //Exit on error
+        //exit on error
         private static void Exit(string message)
         {
             var e = Console.Error;
