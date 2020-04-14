@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using CommandLine.Text;
 using static System.Int32;
 using SharpPcap;
 
@@ -30,10 +32,14 @@ namespace ipk2
                     try
                     {
                         p = Parse(arg);
+                        if(p <= 0 || p > 65535)
+                        {
+                            Exit("Port number not in valid range 1-65535");
+                        }
                     }
                     catch
                     {
-                        Exit();
+                        Exit("Invalid port number");
                     }
                     haveP = true;
                     pVal = false;
@@ -50,11 +56,11 @@ namespace ipk2
                 {
                     try
                     {
-                        this._n = Parse(arg);
+                        _n = Parse(arg);
                     }
                     catch
                     {
-                        Exit();
+                        Exit("Invalid number of packets provided");
                     }
                     haveN = true;
                     nVal = false;
@@ -65,21 +71,21 @@ namespace ipk2
                     case "-i":
                         if (haveI)
                         {
-                            Exit();
+                            Exit("Multiple interface arguments");
                         }
                         iVal = true;
                         continue;
                     case "-p":
                         if (haveP)
                         {
-                            Exit();
+                            Exit("Multiple port arguments");
                         }
                         pVal = true;
                         continue;
                     case "-n":
                         if (haveN)
                         {
-                            Exit();
+                            Exit("Multiple number of packets arguments");
                         }
                         nVal = true;
                         continue;
@@ -96,7 +102,7 @@ namespace ipk2
                         tcp = true;
                         continue;
                     default:
-                        Exit();
+                        Exit("Invalid argument");
                         break;
                 }
             }
@@ -130,9 +136,10 @@ namespace ipk2
             //If no interface provided, list of active devices is print. Otherwise  provided device is initialized for further use
             if (i == null)
             {
+                Console.WriteLine("\nAVAILABLE INTERFACES:");
                 foreach (var dev in CaptureDeviceList.Instance)
                 {
-                    Console.WriteLine(dev.Name);
+                    Console.WriteLine($"{dev.Name}: {dev.Description}");
                 }
                 return;
             }
@@ -144,7 +151,7 @@ namespace ipk2
                 }
                 catch
                 {
-                    Exit();
+                    Exit("Invalid interface name");
                 }
             }
 
@@ -152,16 +159,37 @@ namespace ipk2
             const int readtime = 1000;
             _device.Open(DeviceMode.Normal, readtime);
             _device.Filter = filter;
-            for (var j = 0; j < this._n; j++)
+            for (var j = 0; j < _n; j++)
             {
                 var packet = _device.GetNextPacket();
                 PacketProcessing.device_OnPacketArrival(packet);
             }
         }
 
-        //Exit on error
-        private static void Exit()
+        private static string Help()
         {
+            const string help = "\nINFO:\n" +
+                                "simple C# script for sniffing, parsing and visualizing TCP or UDP packets\n" +
+                                "Author: Tomáš Ďuriš (xduris05)\n" +
+                                "FIT VUT, 17.4.2020\n\n" +
+                                "USAGE:\n" +
+                                "./ipk-sniffer -i interface [-p port] [--tcp|-t] [--udp|-u] [-n num]\n\n" +
+                                "ARGUMENTS:\n" +
+                                "-i : interface must be a valid interface, to see valid interfaces please use script without this argument, INTERFACE on which packets are being sniffed\n" +
+                                "-p : port must be a valid number in range 0 - 65535, PORT on which are packets being sniffed\n" +
+                                "-t|--tcp : only tcp packets are being showed\n" +
+                                "-u|--udp : only udp packets are being showed\n" +
+                                "if both -t|--tcp and -u|--udp or none are present, both tcp and udp packets are processed\n" +
+                                "-n : number must be an integer, NUMBER of packets that are processed\n";
+            return help;
+        }
+
+        //Exit on error
+        private static void Exit(string message)
+        {
+            var e = Console.Error;
+            e.WriteLine($"\nERROR: {message}");
+            e.WriteLine(Help());
             Environment.Exit(1);
         }
     }

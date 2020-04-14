@@ -132,11 +132,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/ipk2.csproj",
-      "projectName": "ipk2",
-      "projectPath": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/ipk2.csproj",
+      "projectUniqueName": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/ipk-sniffer.csproj",
+      "projectName": "ipk-sniffer",
+      "projectPath": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/ipk-sniffer.csproj",
       "packagesPath": "/home/tomas/.nuget/packages/",
-      "outputPath": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk2/ipk2/obj/",
+      "outputPath": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/tomas/.config/NuGet/NuGet.Config"

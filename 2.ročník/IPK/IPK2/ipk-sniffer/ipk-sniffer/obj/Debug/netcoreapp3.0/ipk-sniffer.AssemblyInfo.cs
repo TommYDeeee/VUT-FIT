@@ -7,10 +7,10 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("ipk2")]
-[assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("ipk-sniffer")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
-[assembly: System.Reflection.AssemblyProductAttribute("ipk2")]
-[assembly: System.Reflection.AssemblyTitleAttribute("ipk2")]
+[assembly: System.Reflection.AssemblyProductAttribute("ipk-sniffer")]
+[assembly: System.Reflection.AssemblyTitleAttribute("ipk-sniffer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,15 @@
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/ipk-sniffer
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/ipk-sniffer.deps.json
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/ipk-sniffer.runtimeconfig.json
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/ipk-sniffer.runtimeconfig.dev.json
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/ipk-sniffer.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/ipk-sniffer.pdb
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/CommandLine.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/PacketDotNet.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/bin/Debug/netcoreapp3.0/SharpPcap.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/Debug/netcoreapp3.0/ipk-sniffer.csprojAssemblyReference.cache
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/Debug/netcoreapp3.0/ipk-sniffer.AssemblyInfoInputs.cache
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/Debug/netcoreapp3.0/ipk-sniffer.AssemblyInfo.cs
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/Debug/netcoreapp3.0/ipk-sniffer.csproj.CopyComplete
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/Debug/netcoreapp3.0/ipk-sniffer.dll
+/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/Debug/netcoreapp3.0/ipk-sniffer.pdb

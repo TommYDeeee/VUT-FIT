@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using PacketDotNet;
 using SharpPcap;
 
@@ -54,7 +56,7 @@ namespace ipk2
                 Console.WriteLine();
 
                 //process tcp packet
-                PacketsBytesProcess(tcp);
+                PacketsBytesProcess(tcp.ParentPacket);
             }
             
             //extraction of UDP packet
@@ -95,7 +97,7 @@ namespace ipk2
                 Console.WriteLine();
                 
                 //process UDP packet
-                PacketsBytesProcess(udp);
+                PacketsBytesProcess(udp.ParentPacket);
             }
         }
 
@@ -117,7 +119,7 @@ namespace ipk2
                 //every 16 bytes write output line with necessary info and clear values
                 if ((data10 % 16 == 0) && data10 != 0)
                 {
-                    WriteString(index, text, hex);
+                    WriteString(index, text, hex, data10);
                     text = "";
                     hex = "";
                     index += 16;
@@ -142,7 +144,7 @@ namespace ipk2
                 //if last line was process, don't forget to print it
                 if (data10 == packet.Bytes.Length)
                 {
-                    WriteString(index, text, hex);
+                    WriteString(index, text, hex, data10);
                     text = "";
                     hex = "";
                 }
@@ -150,10 +152,18 @@ namespace ipk2
             Console.Write("\n");
         }
         
-        //append provided info to one string and print it on output
-        private static void WriteString(int data, string text, string hex)
+        //append provided info to one string and print it on output. If needed, generate necessary alignment for better readability
+        private static void WriteString(int data, string text, string hex, int index)
         {
-            var dataCount = "0x" + data.ToString("X4")+ ": " + hex + text;
+            var alignment = "";
+            if (index % 16 != 0)
+            {
+                for (var i = 0; i < 16 - (index % 16); i++)
+                {
+                    alignment += "   ";
+                }
+            }
+            var dataCount = "0x" + data.ToString("X4")+ ": " + hex + alignment + text;
             Console.WriteLine(dataCount);
         }
     }
