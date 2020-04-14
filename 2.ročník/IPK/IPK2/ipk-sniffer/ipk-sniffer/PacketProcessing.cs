@@ -15,10 +15,10 @@ namespace ipk2
             //default values initialized
             var time = packet.Timeval.Date;
             var len = packet.Data.Length;
-            
+
             //parse raw packet
             var e = Packet.ParsePacket(packet.LinkLayerType, packet.Data);
-            
+
             //extraction of TCP packet
             var tcp = e.Extract<PacketDotNet.TcpPacket>();
             if (tcp != null)
@@ -56,7 +56,7 @@ namespace ipk2
                 Console.WriteLine();
 
                 //process tcp packet
-                PacketsBytesProcess(tcp.ParentPacket);
+                PacketsBytesProcess(e);
             }
             
             //extraction of UDP packet
@@ -97,7 +97,7 @@ namespace ipk2
                 Console.WriteLine();
                 
                 //process UDP packet
-                PacketsBytesProcess(udp.ParentPacket);
+                PacketsBytesProcess(e);
             }
         }
 
