@@ -10,11 +10,11 @@
         "projectUniqueName": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/ipk-sniffer.csproj",
         "projectName": "ipk-sniffer",
         "projectPath": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/ipk-sniffer.csproj",
-        "packagesPath": "/home/tomas/.nuget/packages/",
+        "packagesPath": "/root/.nuget/packages/",
         "outputPath": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/ipk-sniffer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/tomas/.config/NuGet/NuGet.Config"
+          "/root/.config/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp3.0"

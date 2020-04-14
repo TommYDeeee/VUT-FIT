@@ -3,8 +3,11 @@
  * author: Tomáš Ďuriš (xduris05)
  * 2020
  */
+
+ //Pole pre všetky testy
 $all_tests = array();
 
+//Funkcia na overenie správnosti kombinácie argumentov
 function check_arg_validity()
 {
     global $int_only_arg, $parse_only_arg, $int_script_arg, $parse_script_arg;
@@ -26,6 +29,7 @@ function check_arg_validity()
     }
 }
 
+//Funkcia na overenie existencie zadaných súborov (ciest k súborom)
 function check_files($file_p, $file_i, $file_j, $path)
 {
     if (!file_exists($file_p))
@@ -50,6 +54,7 @@ function check_files($file_p, $file_i, $file_j, $path)
     }
 }
 
+//funkcia na nájdenie všetkých testov rekurzívnym prechodom a ich uloženie do pola
 function find_files($path)
 {
     global $recursive_arg, $all_tests;
@@ -76,6 +81,7 @@ function find_files($path)
     }
 }
 
+//Funkcia na dogenerovanie prípadných chýbajúcich súborov .in, .out, .rc, zoradenie kompletných testov podľa abecedy
 function create_missing_files()
 {
     global $all_tests;
@@ -106,7 +112,10 @@ function create_missing_files()
     asort($all_tests);
 }
 
-
+/*Hlavná funkcia na vykonanie testovania, prejdenie cez pole testov, podľa argumentu na vstupe sa vykoná test parse.php alebo interpret.py prípade obidvoch
+/*Návratový kód jednotlivých skriptov sa porovná s očakávaným návratovým kódom, v prípade úspechu nasleduje porovnanie cez JEXAMXML, prípade DIFF
+/*Počas testovania sa generuje HTML výstup rpe každý test
+*/
 function run_tests()
 {
     global $all_tests, $parse_only_arg, $int_only_arg, $file_p, $file_i, $file_j;
@@ -126,8 +135,10 @@ function run_tests()
         {
             $rc = fgets(fopen($test, "r"));
         }
+        //vykonanie testu parse.php
         if($parse_only_arg)
         {
+            //ak sa jedná o iný priečinok, oddelíme testy
             if(pathinfo($test, PATHINFO_DIRNAME) != $last_dir)
             {
                 $dir = pathinfo($test, PATHINFO_DIRNAME);
@@ -141,6 +152,7 @@ function run_tests()
                 ";
             }
             $test_info = "<b>PARSE ONLY:&nbsp&nbsp</b>";
+            //testujeme iba súbory s príponou .src
             if (pathinfo($test, PATHINFO_EXTENSION) == "src")
             {
                 echo
@@ -149,9 +161,11 @@ function run_tests()
                     <td class='number'>".$count."</td>
                     <td>".$test_info.pathinfo($test, PATHINFO_DIRNAME)."/".pathinfo($test, PATHINFO_FILENAME)."</td>
                     <td ";
+                //spustenie testov a porovnanie návratového kódu
                 exec("php ".$file_p." <".$name.".src > ./tmp 2>/dev/null", $output, $return);
                 if ($return == $rc)
                 {
+                    //v prípade úspechu porovnanie cez nástroj jexamxml
                     if($rc == "0")
                     {
                         $command = "java -jar ".$file_j." tmp ".$name.".out tmp_diff /D options";
@@ -184,6 +198,7 @@ function run_tests()
                 $count++;
             }
         }
+        //testovanie interpret.py
         elseif ($int_only_arg)
         {
             if(pathinfo($test, PATHINFO_DIRNAME) != $last_dir)
@@ -207,7 +222,7 @@ function run_tests()
                     <td class='number'>" . $count . "</td>
                     <td>" . $test_info . pathinfo($test, PATHINFO_DIRNAME) . "/" . pathinfo($test, PATHINFO_FILENAME) . "</td>
                     <td ";
-                exec("python3 " . $file_i . " --source=" . $name . ".src" . " --input=" . $name . ".in" . " > ./tmp 2>/dev/null", $output, $return);
+                exec("python " . $file_i . " --source=" . $name . ".src" . " --input=" . $name . ".in" . " > ./tmp 2>/dev/null", $output, $return);
                 if ($return == $rc)
                 {
                     if ($rc == "0")
@@ -240,6 +255,7 @@ function run_tests()
                 $count++;
             }
         }
+        //testovanie parse.php a následne výstup posielame na testovanie interpret.py
         else
         {
             if(pathinfo($test, PATHINFO_DIRNAME) != $last_dir)
@@ -266,7 +282,8 @@ function run_tests()
                 exec("php " . $file_p . " <" . $name . ".src > ./tmp 2>/dev/null", $output, $return);
                 if($return == "0")
                 {
-                    exec("python3 " . $file_i . " --source=./tmp" . " --input=" . $name . ".in" . " > ./tmp_both 2>/dev/null", $output, $return);
+                    //testovanie výstupu parse.php
+                    exec("python " . $file_i . " --source=./tmp" . " --input=" . $name . ".in" . " > ./tmp_both 2>/dev/null", $output, $return);
                     if ($return == $rc)
                     {
                         if ($rc == "0")
@@ -311,9 +328,11 @@ function run_tests()
         }
         $last_dir = pathinfo($test, PATHINFO_DIRNAME);
     }
+    //vrátime počet úspešných a počet celkových testov
     return array($count_passed, $count);
 }
 
+//generujeme hlavičku HTML a štýľ jednoltivých elementov, celkový vzhľad
 function html_header()
 {
     echo
@@ -414,6 +433,7 @@ function html_header()
         </tr>";
 }
 
+//generovanie HTML zápätia s počtom úspešných / počtom celkových testov a percentuálnou úspešnosťou
 function html_footer($count_passed)
 {
     if($count_passed[1] != 0) {
@@ -443,6 +463,7 @@ function html_footer($count_passed)
     }
 }
 
+//Globálne premenné pre spracovanie argumentov a predvolené hodnoty
 $options = array("help", "directory", "recursive", "parse-script", "int-script", "parse-only", "int-only", "jexamxml");
 $args = getopt("", $options);
 $directory_arg = $recursive_arg = $parse_script_arg = $int_script_arg = $parse_only_arg = $int_only_arg = $jexamxml_arg = false;
@@ -452,6 +473,10 @@ $file_p = realpath("./parse.php");
 $file_i = realpath("./interpret.py");
 $file_j = realpath("/pub/courses/ipp/jexamxml/jexamxml.jar");
 
+/*Spracovanie argumentov
+/*Výpis nápovedy ak je zadaný argument
+/*Uloženie zadaných hodnôt argumentov
+*/
 if((count(array_unique($argv))-1) != count($args))
 {
     fwrite(STDERR, "ERROR, bad argument\n");
@@ -556,6 +581,7 @@ find_files($path);
 create_missing_files();
 $count_passed = run_tests();
 html_footer($count_passed);
+//Odstránenie dočasných súborov
 exec("rm -rf tmp_diff");
 exec("rm -rf tmp");
 exec("rm -rf tmp_both");

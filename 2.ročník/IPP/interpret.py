@@ -1,3 +1,7 @@
+# IPP parser for IPPcode20
+# author: Tomáš Ďuriš (xduris05)
+# 2020
+
 import sys
 import re
 import xml.etree.ElementTree as ET
@@ -17,6 +21,7 @@ TF = None
 GF = {}
 LF = []
 
+#Zoznam inštrukcií, rozdelený podľa počtu argumentov
 zero_ins = ["CREATEFRAME", "PUSHFRAME", "POPFRAME", "RETURN", "BREAK", "CLEARS", "ADDS", "SUBS", "MULS", "DIVS", "IDIVS", "LTS", "GTS", "EQS", "ANDS", "ORS", "NOTS", "STRI2INTS", "INT2CHARS", "INT2FLOATS", "FLOAT2INTS"]
 one_ins = ["DEFVAR", "CALL", "PUSHS", "POPS", "WRITE", "LABEL", "JUMP", "EXIT", "DPRINT", "JUMPIFEQS", "JUMPIFNEQS"]
 two_ins = ["MOVE", "INT2CHAR", "READ", "STRLEN", "TYPE", "NOT", "INT2FLOAT", "FLOAT2INT"]
@@ -24,39 +29,47 @@ three_ins = ["ADD", "SUB", "MUL", "IDIV", "LT", "GT", "EQ", "AND", "OR", "STRI2I
     "CONCAT", "GETCHAR", "SETCHAR", "JUMPIFEQ", "JUMPIFNEQ", "DIV"]
 
 #Funkcie na vracanie chyboivej návratovej hodnoty
+#XML formát nesplňuje špecifikáciu v zadaní
 def exit_xml():
     sys.stderr.write('xml is invalid\n')
     sys.exit(32)     
 
+#Sémantická chyba
 def exit_semantics():
     sys.stderr.write('Semantic error\n')
     sys.exit(52)
 
+#Chyba nekompatibility operandov
 def exit_operands():
     sys.stderr.write('Wrong operands\n')
     sys.exit(53)
 
+#Prístup k neexistujucej premennej
 def exit_non_var():
     sys.stderr.write('Variable is not existing!\n')
     sys.exit(54)    
 
+#Prístup k neexistujúcemu rámcu
 def exit_non_frame():
     sys.stderr.write('Frame is not existing!\n')
     sys.exit(55)    
 
+#Prístup k premennej bez hodnoty
 def exit_none_var():
     sys.stderr.write('Missing variable value\n')
     sys.exit(56)
 
+#zlá hodnota operandu (delenie 0, zlý návratový kód u funkcie EXIT)
 def exit_bad_operand():
     sys.stderr.write("Bad operand given\n")
     sys.exit(57)
 
+#Zlá práca s reťazcom
 def exit_string():
     sys.stderr.write("String error\n")
     sys.exit(58)
 
-#Vypísanie nápovedy
+#Vypísanie nápovedy a ukončenie skriptu s návratovou hodnotou 0
 def print_help():
     print("interpreter.py")
     print("Napoveda:")
@@ -1728,5 +1741,6 @@ else:
 xml = xml_raw.getroot()
 xml = check_xml_root(xml)
 run_instructions(xml)
+#Vypísanie štatistík pre rozšírenie STATI, ak bol zadaný argument
 if(arg_stats):
     print_stats()
