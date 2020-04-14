@@ -68,6 +68,10 @@ namespace ipk2
                 }
                 switch (arg)
                 {
+                    case "-h":
+                    case "--help":
+                        Console.WriteLine(Help());
+                        return;
                     case "-i":
                         if (haveI)
                         {
@@ -90,14 +94,10 @@ namespace ipk2
                         nVal = true;
                         continue;
                     case "-u":
-                        udp = true;
-                        continue;
                     case "--udp":
                         udp = true;
                         continue;
                     case "-t":
-                        tcp = true;
-                        continue;
                     case "--tcp":
                         tcp = true;
                         continue;

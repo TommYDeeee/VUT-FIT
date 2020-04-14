@@ -39,7 +39,7 @@ namespace ipk2
 
                 try
                 {
-                    dstIp = Dns.GetHostEntry(srcIp).HostName;
+                    dstIp = Dns.GetHostEntry(dstIp).HostName;
                 }
                 catch
                 {
