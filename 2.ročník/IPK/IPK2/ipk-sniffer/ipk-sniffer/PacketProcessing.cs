@@ -5,57 +5,60 @@ using System.Runtime.InteropServices;
 using PacketDotNet;
 using SharpPcap;
 
+
 namespace ipk2
 {
-    public static class PacketProcessing
+    public class PacketProcessing
     {
+        private DateTime _time;
+        private int _len = 0, _srcPort = 0, _dstPort = 0;
+        private string _srcIp = "", _dstIp = "";
+
         //arrival packet processing
-        public static void device_OnPacketArrival(RawCapture packet)
+        public void device_OnPacketArrival(RawCapture packet)
         {
             //default values initialized
-            var time = packet.Timeval.Date;
-            var len = packet.Data.Length;
+            _time = packet.Timeval.Date;
+            _len = packet.Data.Length;
 
             //parse raw packet
             var e = Packet.ParsePacket(packet.LinkLayerType, packet.Data);
+            //get IP addresses of (IP layer) packet
+            var ipPacket = e.Extract<PacketDotNet.IPPacket>();
+            _srcIp = ipPacket.SourceAddress.ToString();
+            _dstIp = ipPacket.DestinationAddress.ToString();
+            
+            //try to resolve hostname, if not found use IP address
+            try
+            {
+                _srcIp = Dns.GetHostEntry(_srcIp).HostName;
+            }
+            catch
+            {
+                // ignored
+            }
+
+            try
+            {
+                _dstIp = Dns.GetHostEntry(_dstIp).HostName;
+            }
+            catch
+            {
+                // ignored
+            }
 
             //extraction of TCP packet
             var tcp = e.Extract<PacketDotNet.TcpPacket>();
             if (tcp != null)
             {
-                //get IP addresses of parent (IP layer) packet
-                var ipPacket = (PacketDotNet.IPPacket)tcp.ParentPacket;
-                var srcIp = ipPacket.SourceAddress.ToString();
-                var dstIp = ipPacket.DestinationAddress.ToString();
-                //try to resolve hostname, if not found use IP address, get source and destination ports
-                try
-                {
-                    srcIp = Dns.GetHostEntry(srcIp).HostName;
-                }
-                catch
-                {
-                    // ignored
-                }
-
-                try
-                {
-                    dstIp = Dns.GetHostEntry(dstIp).HostName;
-                }
-                catch
-                {
-                    // ignored
-                }
+                //get source and destination ports for tcp packet
+                _srcPort = tcp.SourcePort;
+                _dstPort = tcp.DestinationPort;
                 
-                int srcPort = tcp.SourcePort;
-                int dstPort = tcp.DestinationPort;
-
-                //write output message header in correct format
-                Console.WriteLine("{0}:{1}:{2}.{3} {5}:{6} > {7}:{8}",
-                    time.Hour, time.Minute, time.Second, time.Millisecond, len,
-                    srcIp, srcPort, dstIp, dstPort);
-                Console.WriteLine();
-
-                //process tcp packet
+                //write header with necessary info
+                WriteHeader();
+                
+                //process whole TCP packet
                 PacketsBytesProcess(e);
             }
             
@@ -63,46 +66,29 @@ namespace ipk2
             var udp = e.Extract<PacketDotNet.UdpPacket>();
             if (udp != null)
             {
-                //get IP addresses of parent (IP layer) packet
-                var ipPacket = (PacketDotNet.IPPacket)udp.ParentPacket;
-                var srcIp = ipPacket.SourceAddress.ToString();
-                var dstIp = ipPacket.DestinationAddress.ToString();
-                
-                //try to resolve hostname, if not found use IP address, get source and destination ports
-                try
-                {
-                    srcIp = Dns.GetHostEntry(srcIp).HostName;
-                }
-                catch
-                {
-                    // ignored
-                }
-
-                try
-                {
-                    dstIp = Dns.GetHostEntry(srcIp).HostName;
-                }
-                catch
-                {
-                    // ignored
-                }
-
+                //get source and destination ports for udp packet
                 int srcPort = udp.SourcePort;
                 int dstPort = udp.DestinationPort;
                 
-                //write output message header in correct format
-                Console.WriteLine("{0}:{1}:{2}.{3} {5}:{6} > {7}:{8}",
-                    time.Hour, time.Minute, time.Second, time.Millisecond, len,
-                    srcIp, srcPort, dstIp, dstPort);
-                Console.WriteLine();
+                //write header with necessary info
+                WriteHeader();
                 
-                //process UDP packet
+                //process whole UDP packet
                 PacketsBytesProcess(e);
             }
         }
 
+        //write output message header in correct format
+        private void WriteHeader()
+        {
+            Console.WriteLine("{0}:{1}:{2}.{3} {5}:{6} > {7}:{8}",
+                _time.Hour, _time.Minute, _time.Second, _time.Millisecond, _len,
+                _srcIp, _srcPort, _dstIp, _dstPort);
+            Console.WriteLine();
+        }
+        
         //process packet bytes
-        private static void PacketsBytesProcess(Packet packet)
+        private void PacketsBytesProcess(Packet packet)
         {
             //default values initialized
             var data10 = 0;
@@ -152,7 +138,7 @@ namespace ipk2
         }
         
         //append provided info to one string and print it on output. If needed, generate necessary alignment for better readability
-        private static void WriteString(int data, string text, string hex, int index)
+        private void WriteString(int data, string text, string hex, int index)
         {
             var alignment = "";
             if (index % 16 != 0)

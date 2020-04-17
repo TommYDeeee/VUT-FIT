@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using CommandLine.Text;
 using static System.Int32;
 using SharpPcap;
@@ -22,18 +25,18 @@ namespace ipk2
             bool tcp = false, udp = false, nVal = false, iVal = false, pVal = false;
             bool haveN = false, haveI = false, haveP = false;
             int? p = null;
-            string i = null; 
+            string i = null;
             var filter = "";
-            
+
             //loop over arguments and parsing them, catching errors
             foreach (var arg in args)
             {
-                if(pVal)
+                if (pVal)
                 {
                     try
                     {
                         p = Parse(arg);
-                        if(p <= 0 || p > 65535)
+                        if (p <= 0 || p > 65535)
                         {
                             Exit("Port number not in valid range 1-65535");
                         }
@@ -42,18 +45,21 @@ namespace ipk2
                     {
                         Exit("Invalid port number");
                     }
+
                     haveP = true;
                     pVal = false;
                     continue;
                 }
-                if(iVal)
+
+                if (iVal)
                 {
                     i = arg;
                     haveI = true;
                     iVal = false;
                     continue;
                 }
-                if(nVal)
+
+                if (nVal)
                 {
                     try
                     {
@@ -63,10 +69,12 @@ namespace ipk2
                     {
                         Exit("Invalid number of packets provided");
                     }
+
                     haveN = true;
                     nVal = false;
                     continue;
                 }
+
                 switch (arg)
                 {
                     case "-h":
@@ -78,6 +86,7 @@ namespace ipk2
                         {
                             Exit("Multiple interface arguments");
                         }
+
                         iVal = true;
                         continue;
                     case "-p":
@@ -85,6 +94,7 @@ namespace ipk2
                         {
                             Exit("Multiple port arguments");
                         }
+
                         pVal = true;
                         continue;
                     case "-n":
@@ -92,6 +102,7 @@ namespace ipk2
                         {
                             Exit("Multiple number of packets arguments");
                         }
+
                         nVal = true;
                         continue;
                     case "-u":
@@ -114,7 +125,7 @@ namespace ipk2
             {
                 filter += "(tcp or udp)";
             }
-            else if(tcp)
+            else if (tcp)
             {
                 filter += "tcp";
             }
@@ -133,7 +144,7 @@ namespace ipk2
             {
                 filter += $" and port {p}";
             }
-            
+
             //if no interface provided, list of active devices is print. Otherwise  provided device is initialized for further use
             if (i == null)
             {
@@ -142,6 +153,7 @@ namespace ipk2
                 {
                     Console.WriteLine($"{dev.Name}: {dev.Description}");
                 }
+
                 return;
             }
             else
@@ -162,8 +174,21 @@ namespace ipk2
             _device.Filter = filter;
             for (var j = 0; j < _n; j++)
             {
-                var packet = _device.GetNextPacket();
-                PacketProcessing.device_OnPacketArrival(packet);
+                //we make "timer" to ensure we would not wait longer than 10sec for packet, if packet won't arrive, we close connection
+                RawCapture GetPacket() => _device.GetNextPacket();
+                var task = new Task<RawCapture>(GetPacket);
+                task.Start();
+                if (task.Wait(10 * 1000))
+                {
+                    task.Dispose();
+                    var packetProcess = new PacketProcessing();
+                    packetProcess.device_OnPacketArrival(task.Result);
+                }
+                else
+                {
+                    _device.Close();
+                    break;
+                }
             }
             _device.Close();
         }
