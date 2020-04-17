@@ -108,19 +108,19 @@ namespace ipk2
                 }
             }
 
-            //if either both or none of tcp/udp are provided, no filter is required for packet protocols. 
-            //if they are then filter is used
+            //if either both or none of tcp/udp are provided, combined filter for processing TCP or UDP packets is used 
+            //if they are then specific filter is used
             if ((!tcp & !udp) | tcp & udp)
             {
-                filter += "";
+                filter += "(tcp or udp)";
             }
             else if(tcp)
             {
-                filter += "tcp ";
+                filter += "tcp";
             }
             else
             {
-                filter += "udp ";
+                filter += "udp";
 
             }
 
@@ -131,7 +131,7 @@ namespace ipk2
             }
             else
             {
-                filter += $"port {p}";
+                filter += $" and port {p}";
             }
             
             //if no interface provided, list of active devices is print. Otherwise  provided device is initialized for further use
@@ -158,13 +158,14 @@ namespace ipk2
 
             //device opening, filter application and main loop over acquired packets
             const int readtime = 1000;
-            _device.Open(DeviceMode.Normal, readtime);
+            _device.Open(DeviceMode.Promiscuous, readtime);
             _device.Filter = filter;
             for (var j = 0; j < _n; j++)
             {
                 var packet = _device.GetNextPacket();
                 PacketProcessing.device_OnPacketArrival(packet);
             }
+            _device.Close();
         }
 
         //help for users with all necessary info

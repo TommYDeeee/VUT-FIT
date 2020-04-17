@@ -115,8 +115,7 @@ namespace ipk2
             {
                 //convert to hex format
                 var data = dataToPrint.ToString("X2");
-                
-                //every 16 bytes write output line with necessary info and clear values
+                    //every 16 bytes write output line with necessary info and clear values
                 if ((data10 % 16 == 0) && data10 != 0)
                 {
                     WriteString(index, text, hex, data10);
