@@ -174,21 +174,9 @@ namespace ipk2
             _device.Filter = filter;
             for (var j = 0; j < _n; j++)
             {
-                //we make "timer" to ensure we would not wait longer than 10sec for packet, if packet won't arrive, we close connection
-                RawCapture GetPacket() => _device.GetNextPacket();
-                var task = new Task<RawCapture>(GetPacket);
-                task.Start();
-                if (task.Wait(10 * 1000))
-                {
-                    task.Dispose();
-                    var packetProcess = new PacketProcessing();
-                    packetProcess.device_OnPacketArrival(task.Result);
-                }
-                else
-                {
-                    _device.Close();
-                    break;
-                }
+                var packet = _device.GetNextPacket();
+                var packetProcess = new PacketProcessing();
+                packetProcess.device_OnPacketArrival(packet);
             }
             _device.Close();
         }
