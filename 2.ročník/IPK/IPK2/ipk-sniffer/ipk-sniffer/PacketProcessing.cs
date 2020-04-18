@@ -111,6 +111,11 @@ namespace ipk2
                 }
                 
                 //append hex bytes into string
+                if (data10 % 8 == 0)
+                {
+                    hex += " ";
+                    text += " ";
+                }
                 hex = hex + data + " ";
                 
                 //try to convert hex to ASCII, non-printable chars exchange for "."
@@ -129,6 +134,11 @@ namespace ipk2
                 //if last line was process, don't forget to print it
                 if (data10 == packet.Bytes.Length)
                 {
+                    //generated alignment for last row of data (if number of bytes is <= 8 in that row)
+                    if ((((data10 / 8) % 2 == 0)  || (data10 % 8 == 0)) && data10 %16 != 0)
+                    {
+                        hex += " ";
+                    }
                     WriteString(index, text, hex, data10);
                     text = "";
                     hex = "";
