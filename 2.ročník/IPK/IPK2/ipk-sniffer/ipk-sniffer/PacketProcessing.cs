@@ -59,7 +59,8 @@ namespace ipk2
                 WriteHeader();
                 
                 //process whole TCP packet
-                PacketsBytesProcess(e);
+                var headerLength = (e.Bytes.Length - tcp.PayloadData.Length);
+                PacketsBytesProcess(e, headerLength);
             }
             
             //extraction of UDP packet
@@ -67,39 +68,41 @@ namespace ipk2
             if (udp != null)
             {
                 //get source and destination ports for udp packet
-                int srcPort = udp.SourcePort;
-                int dstPort = udp.DestinationPort;
+                _srcPort = udp.SourcePort;
+                _dstPort = udp.DestinationPort;
                 
                 //write header with necessary info
                 WriteHeader();
                 
                 //process whole UDP packet
-                PacketsBytesProcess(e);
+                var headerLength = (e.Bytes.Length - udp.PayloadData.Length);
+                PacketsBytesProcess(e, headerLength);
             }
+            
         }
 
         //write output message header in correct format
         private void WriteHeader()
         {
-            Console.WriteLine("{0}:{1}:{2}.{3} {5}:{6} > {7}:{8}",
-                _time.Hour, _time.Minute, _time.Second, _time.Millisecond, _len,
+            Console.WriteLine("{0:00}:{1:00}:{2:00}.{3} {5} : {6} > {7} : {8}", _time.Hour, _time.Minute, _time.Second, _time.Millisecond, _len,
                 _srcIp, _srcPort, _dstIp, _dstPort);
             Console.WriteLine();
         }
         
         //process packet bytes
-        private void PacketsBytesProcess(Packet packet)
+        private void PacketsBytesProcess(Packet packet, int headerLength)
         {
             //default values initialized
             var data10 = 0;
             var text = "";
             var hex = "";
             var index = 0;
-            
+            var header = false;
             //loop over individual bytes
             foreach (var dataToPrint in packet.Bytes)
             {
                 //convert to hex format
+
                 var data = dataToPrint.ToString("X2");
                     //every 16 bytes write output line with necessary info and clear values
                 if ((data10 % 16 == 0) && data10 != 0)
@@ -119,7 +122,7 @@ namespace ipk2
                 hex = hex + data + " ";
                 
                 //try to convert hex to ASCII, non-printable chars exchange for "."
-                if (Convert.ToInt32(data, 16) > 127 || Convert.ToInt32(data, 16) < 32)
+                if (Convert.ToInt32(data, 16) >= 127 || Convert.ToInt32(data, 16) < 32)
                 {
                     text += ".";
                 }
@@ -128,14 +131,37 @@ namespace ipk2
                     text += (char) Convert.ToInt32(data, 16);
                 }
 
+
                 //increment line counter
                 data10++;
+                if ((headerLength == data10) && (header == false))
+                {
+                    //generated alignment for header (if number of bytes is <= 8 in that row)
+                    if ((((data10 / 8) % 2 == 0) || (data10 % 8 == 0)) && data10 % 16 != 0)
+                    {
+                        hex += " ";
+                    }
+                    WriteString(index, text, hex, data10);
+                    text = "";
+                    hex = "";
+                    data10 = 0;
+                    index = headerLength;
+                    header = true;
+                    if(packet.Bytes.Length != headerLength)
+                    {
+                        Console.WriteLine();
+                    }
+                }
 
                 //if last line was process, don't forget to print it
-                if (data10 == packet.Bytes.Length)
+                if ((data10 + headerLength == packet.Bytes.Length) && header)
                 {
+                    if (hex == "")
+                    {
+                        continue;
+                    }
                     //generated alignment for last row of data (if number of bytes is <= 8 in that row)
-                    if ((((data10 / 8) % 2 == 0)  || (data10 % 8 == 0)) && data10 %16 != 0)
+                    if ((((data10 / 8) % 2 == 0)  || (data10 % 8 == 0)) && data10 % 16 != 0)
                     {
                         hex += " ";
                     }
