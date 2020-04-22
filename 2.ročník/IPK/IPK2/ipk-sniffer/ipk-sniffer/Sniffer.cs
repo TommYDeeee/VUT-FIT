@@ -1,4 +1,5 @@
-﻿using SharpPcap;
+﻿using System;
+using SharpPcap;
 
 namespace ipk2
 {
@@ -20,6 +21,7 @@ namespace ipk2
             //device opening, filter application and main loop over acquired packets, buffer time is set to 1s
             const int readtime = 1000;
             process.Device.Open(DeviceMode.Promiscuous, readtime);
+            Console.WriteLine(filter);
             process.Device.Filter = filter;
             for (var j = 0; j < process.N; j++)
             {

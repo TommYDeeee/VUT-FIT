@@ -163,29 +163,36 @@ namespace ipk2
             {
                 var igmpIcmpFilter = "";
                 var icmpFilter = "";
-                
+                if (!udp && !tcp)
+                {
+                    if (p != null)
+                    {
+                        Exit("You cant have port number filter just on igmp/icmp/icmpv6 packet");
+                    }
+                    igmpIcmpFilter += "(";
+                }
                 if (icmp || icmp6)
                 {
-                    if (icmp && igmp)
+                    if (icmp && icmp6)
                     {
-                        icmpFilter = "(icmp or icmp6";
+                        icmpFilter += "(icmp or icmp6";
                     }
                     else if (icmp)
                     {
-                        icmpFilter = "(icmp";
+                        icmpFilter += "(icmp";
                     }
                     else
                     {
-                        icmpFilter = "(icmp6";
+                        icmpFilter += "(icmp6";
                     }
                 }
                 if((icmp || icmp6) && igmp)
                 {
-                    igmpIcmpFilter = icmpFilter + " or igmp";
+                    igmpIcmpFilter += icmpFilter + " or igmp";
                 }
                 else if(igmp)
                 {
-                    igmpIcmpFilter = "(igmp";
+                    igmpIcmpFilter += "(igmp";
                 }
                 else
                 {
@@ -194,21 +201,21 @@ namespace ipk2
                 
                 if (!tcp && !udp)
                 {
-                    filter = igmpIcmpFilter + ""; 
+                    filter += igmpIcmpFilter + ""; 
                 }
                 else
                 {
-                    if (tcp)
+                    if (tcp && udp)
                     {
-                        filter += igmpIcmpFilter + " or (tcp)";
+                        filter += igmpIcmpFilter + " or ((tcp or udp)";
                     }
                     else if (udp)
                     {
-                        filter += igmpIcmpFilter + " or (udp)";
+                        filter += igmpIcmpFilter + " or (udp";
                     }
                     else
                     {
-                        filter += igmpIcmpFilter + " or (tcp or udp)";
+                        filter += igmpIcmpFilter + " or (tcp";
                     }
                 }
             }
@@ -218,26 +225,26 @@ namespace ipk2
             {
                 if ((!tcp & !udp) | tcp & udp)
                 {
-                    filter += "((tcp or udp)";
+                    filter += "(((tcp or udp)";
                 }
                 else if (tcp)
                 {
-                    filter += "(tcp";
+                    filter += "((tcp";
                 }
                 else if(udp)
                 {
-                    filter += "(udp";
+                    filter += "((udp";
                 }
             }
             
             //filter for port number if required
             if (p == null)
             {
-                filter += ")";
+                filter += "))";
             }
             else
             {
-                filter += $" and port {p})";
+                filter += $" and port {p}))";
             }
 
             //if no interface provided, list of active devices is print. Otherwise  provided device is initialized for further use
