@@ -1,4 +1,6 @@
-﻿namespace ipk2
+﻿using SharpPcap;
+
+namespace ipk2
 {
     /*
      simple C# script for sniffing, parsing and visualizing TCP or UDP packets
@@ -8,11 +10,24 @@
     
     internal static class Sniffer
     {
+
         //process arguments and main loop over packets
         public static void Main(string[] args)
         {
             var process = new Args();
-            process.Main(args);
+            var filter  = process.Main(args);
+            
+            //device opening, filter application and main loop over acquired packets, buffer time is set to 1s
+            const int readtime = 1000;
+            process.Device.Open(DeviceMode.Promiscuous, readtime);
+            process.Device.Filter = filter;
+            for (var j = 0; j < process.N; j++)
+            {
+                var packet = process.Device.GetNextPacket();
+                var packetProcess = new PacketProcessing();
+                packetProcess.device_OnPacketArrival(packet);
+            }
+            process.Device.Close();
         }
     }
 }

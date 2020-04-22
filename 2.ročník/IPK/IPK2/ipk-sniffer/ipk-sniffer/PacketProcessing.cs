@@ -1,7 +1,5 @@
 using System;
-using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
 using PacketDotNet;
 using SharpPcap;
 
@@ -12,7 +10,7 @@ namespace ipk2
     {
         private DateTime _time;
         private int _len = 0, _srcPort = 0, _dstPort = 0;
-        private string _srcIp = "", _dstIp = "";
+        private string _srcIp = "", _dstIp = "", _text = "", _hex = "";
 
         //arrival packet processing
         public void device_OnPacketArrival(RawCapture packet)
@@ -20,14 +18,13 @@ namespace ipk2
             //default values initialized
             _time = packet.Timeval.Date;
             _len = packet.Data.Length;
-
             //parse raw packet
             var e = Packet.ParsePacket(packet.LinkLayerType, packet.Data);
             //get IP addresses of (IP layer) packet
             var ipPacket = e.Extract<PacketDotNet.IPPacket>();
             _srcIp = ipPacket.SourceAddress.ToString();
             _dstIp = ipPacket.DestinationAddress.ToString();
-            
+
             //try to resolve hostname, if not found use IP address
             try
             {
@@ -54,15 +51,13 @@ namespace ipk2
                 //get source and destination ports for tcp packet
                 _srcPort = tcp.SourcePort;
                 _dstPort = tcp.DestinationPort;
-                
                 //write header with necessary info
                 WriteHeader();
-                
                 //process whole TCP packet
-                var headerLength = (e.Bytes.Length - tcp.PayloadData.Length);
-                PacketsBytesProcess(e, headerLength);
+                var headerLength = (packet.Data.Length - tcp.PayloadData.Length);
+                PacketsBytesProcess(packet, headerLength);
             }
-            
+
             //extraction of UDP packet
             var udp = e.Extract<PacketDotNet.UdpPacket>();
             if (udp != null)
@@ -70,111 +65,136 @@ namespace ipk2
                 //get source and destination ports for udp packet
                 _srcPort = udp.SourcePort;
                 _dstPort = udp.DestinationPort;
-                
                 //write header with necessary info
                 WriteHeader();
-                
                 //process whole UDP packet
-                var headerLength = (e.Bytes.Length - udp.PayloadData.Length);
-                PacketsBytesProcess(e, headerLength);
+                var headerLength = (packet.Data.Length - udp.PayloadData.Length);
+                PacketsBytesProcess(packet, headerLength);
             }
             
+            //Additional part for IGMP/ICMP/ICMPv6 packet processing
+            //for IGMP/ICMP/ICMPv6 packets we use default 0 port, because they dont work with port numbers
+            //IGMP packet processing
+            var igmp = e.Extract<PacketDotNet.IgmpV2Packet>();
+            if (igmp != null)
+            {
+                //write header with necessary info
+                WriteHeader();
+                //process whole IGMP packet
+                var headerLength = (packet.Data.Length - igmp.Bytes.Length);
+                PacketsBytesProcess(packet, headerLength);
+            }
+            
+            //ICMP packet processing
+            var icmp = e.Extract<PacketDotNet.IcmpV4Packet>();
+            if (icmp != null)
+            {
+                //write header with necessary info
+                WriteHeader();
+                //process whole ICMP packet
+                var headerLength = (packet.Data.Length - icmp.Bytes.Length);
+                PacketsBytesProcess(packet, headerLength);
+            }
+
+            //ICMPv6 packet processing
+            var icmp6 = e.Extract<PacketDotNet.IcmpV6Packet>();
+            if (icmp6 != null)
+            {
+                //write header with necessary info
+                WriteHeader();
+                //process whole ICMP6 packet
+                var headerLength = (packet.Data.Length - icmp6.Bytes.Length);    
+                PacketsBytesProcess(packet, headerLength);
+            }
+
         }
 
         //write output message header in correct format
         private void WriteHeader()
         {
-            Console.WriteLine("{0:00}:{1:00}:{2:00}.{3} {5} : {6} > {7} : {8}", _time.Hour, _time.Minute, _time.Second, _time.Millisecond, _len,
+            Console.WriteLine("{0:00}:{1:00}:{2:00}.{3} {5} : {6} > {7} : {8}", _time.Hour, _time.Minute, _time.Second,
+                _time.Millisecond, _len,
                 _srcIp, _srcPort, _dstIp, _dstPort);
             Console.WriteLine();
         }
-        
+
         //process packet bytes
-        private void PacketsBytesProcess(Packet packet, int headerLength)
+        private void PacketsBytesProcess(RawCapture packet, int headerLength)
         {
             //default values initialized
             var data10 = 0;
-            var text = "";
-            var hex = "";
             var index = 0;
             var header = false;
             //loop over individual bytes
-            foreach (var dataToPrint in packet.Bytes)
+            foreach (var dataToPrint in packet.Data)
             {
                 //convert to hex format
-
                 var data = dataToPrint.ToString("X2");
-                    //every 16 bytes write output line with necessary info and clear values
+                //every 16 bytes write output line with necessary info and clear values
                 if ((data10 % 16 == 0) && data10 != 0)
                 {
-                    WriteString(index, text, hex, data10);
-                    text = "";
-                    hex = "";
+                    WriteString(index, data10);
+                    _hex = "";
                     index += 16;
                 }
-                
                 //append hex bytes into string
                 if (data10 % 8 == 0)
                 {
-                    hex += " ";
-                    text += " ";
+                    _hex += " ";
+                    _text += " ";
                 }
-                hex = hex + data + " ";
-                
+                _hex = _hex + data + " ";
                 //try to convert hex to ASCII, non-printable chars exchange for "."
                 if (Convert.ToInt32(data, 16) >= 127 || Convert.ToInt32(data, 16) < 32)
                 {
-                    text += ".";
+                    _text += ".";
                 }
                 else
                 {
-                    text += (char) Convert.ToInt32(data, 16);
+                    _text += (char) Convert.ToInt32(data, 16);
                 }
-
-
                 //increment line counter
                 data10++;
+                //process last line of header
                 if ((headerLength == data10) && (header == false))
                 {
-                    //generated alignment for header (if number of bytes is <= 8 in that row)
-                    if ((((data10 / 8) % 2 == 0) || (data10 % 8 == 0)) && data10 % 16 != 0)
-                    {
-                        hex += " ";
-                    }
-                    WriteString(index, text, hex, data10);
-                    text = "";
-                    hex = "";
+                    AlignGenerate(data10, index);
                     data10 = 0;
                     index = headerLength;
                     header = true;
-                    if(packet.Bytes.Length != headerLength)
+                    //if packet contains more then just a header, print newline to differentiate parts
+                    if (packet.Data.Length != headerLength)
                     {
                         Console.WriteLine();
                     }
                 }
 
                 //if last line was process, don't forget to print it
-                if ((data10 + headerLength == packet.Bytes.Length) && header)
+                if ((data10 + headerLength == packet.Data.Length) && header)
                 {
-                    if (hex == "")
+                    if (_hex == "")
                     {
                         continue;
                     }
-                    //generated alignment for last row of data (if number of bytes is <= 8 in that row)
-                    if ((((data10 / 8) % 2 == 0)  || (data10 % 8 == 0)) && data10 % 16 != 0)
-                    {
-                        hex += " ";
-                    }
-                    WriteString(index, text, hex, data10);
-                    text = "";
-                    hex = "";
+                    AlignGenerate(data10, index);
                 }
             }
             Console.Write("\n");
         }
+
+        //Alignment generation for last line in header segment or body segment
+        private void AlignGenerate(int data, int index)
+        {
+            //generated alignment for header (if number of bytes is <= 8 in that row)
+            if ((((data / 8) % 2 == 0) || (data % 8 == 0)) && data % 16 != 0)
+            {
+                _hex += " ";
+            }
+            WriteString(index, data);
+        }
         
         //append provided info to one string and print it on output. If needed, generate necessary alignment for better readability
-        private void WriteString(int data, string text, string hex, int index)
+        private void WriteString(int data, int index)
         {
             var alignment = "";
             if (index % 16 != 0)
@@ -184,8 +204,10 @@ namespace ipk2
                     alignment += "   ";
                 }
             }
-            var dataCount = "0x" + data.ToString("X4")+ ": " + hex + alignment + text;
+            var dataCount = "0x" + data.ToString("X4") + ": " + _hex + alignment + _text;
             Console.WriteLine(dataCount);
+            _text = "";
+            _hex = "";
         }
     }
 }
