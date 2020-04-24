@@ -279,10 +279,10 @@ namespace ipk2
                                 "Author: Tomáš Ďuriš (xduris05)\n" +
                                 "FIT VUT, 17.4.2020\n\n" +
                                 "USAGE:\n" +
-                                "./ipk-sniffer -i interface [-p port] [--tcp|-t] [--udp|-u] [-n num] [--icmp|-ic] [--icmp6|-ic6] [--igmp|-ig]\n\n" +
+                                "./ipk-sniffer -i interface [-p port] [--tcp|-t] [--udp|-u] [-n num] [--icmp|-ic] [--icmp6|-ic6] [--igmp|-ig] [-h|--help]\n\n" +
                                 "ARGUMENTS:\n" +
                                 "-i : interface must be a valid interface, to see valid interfaces please use script without this argument, INTERFACE on which packets are being sniffed\n" +
-                                "-p : port must be a valid number in range 0 - 65535, PORT on which are packets being sniffed\n" +
+                                "-p : port must be a valid number in range 1 - 65535, PORT on which are packets being sniffed\n" +
                                 "-t|--tcp : only tcp packets are being shown\n" +
                                 "-u|--udp : only udp packets are being shown\n" +
                                 "if both -t|--tcp and -u|--udp or none are present, both tcp and udp packets are processed\n" +

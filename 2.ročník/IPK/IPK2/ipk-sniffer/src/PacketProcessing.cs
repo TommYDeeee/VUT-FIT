@@ -129,7 +129,7 @@ namespace ipk2
             foreach (var dataToPrint in packet.Data)
             {
                 //convert to hex format
-                var data = dataToPrint.ToString("X2");
+                var data = dataToPrint.ToString("X2").ToLower();
                 //every 16 bytes write output line with necessary info and clear values
                 if ((data10 % 16 == 0) && data10 != 0)
                 {

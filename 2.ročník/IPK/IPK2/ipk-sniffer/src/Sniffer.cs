@@ -24,6 +24,12 @@ namespace ipk2
             for (var j = 0; j < process.N; j++)
             {
                 var packet = process.Device.GetNextPacket();
+                //acquired packet is not compatible type of packet
+                if (packet == null)
+                { 
+                    j--; 
+                    continue; 
+                }
                 var packetProcess = new PacketProcessing();
                 packetProcess.device_OnPacketArrival(packet);
             }
