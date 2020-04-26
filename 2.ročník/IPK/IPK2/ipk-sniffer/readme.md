@@ -16,7 +16,7 @@ Program je nutné spúštať s oprávnením správcu
 
 #### Spustenie
 Preklad skriptu prebieha pomocou Makefile, 
-```make build"```, Následne je možné skript spustiť príkazom
+```make build"``` alebo ```make``` preloží projekt do publikovatelnej verzie. Je využíty prepínač dotnet publish s parametrom PublishSingeFile nastaveným na true. Výsledkom je jeden sebestačný spustitelný súbor pre OS Linux uložený do koreňového adresára (aktuálny adresár so súborom Makefile). Následne je možné skript spustiť príkazom
 ```./ipk-sniffer <args>```, kde args sú argumenty skriptu.
 Príklad spustenia:
 ```./ipk-sniffer -i interface [-p port] [--tcp|-t] [--udp|-u] [-n num] [--icmp|-ic] [--icmp6|-ic6] [--igmp|-ig] [-h|--help]```
@@ -53,16 +53,15 @@ Bonusové parametry sú plne kompatibilné so základnými parametrami a a filtr
 
 **Výstup**
 ``` 
-0x0000:  50 eb 71 5b b6 4d 34 ba  9a 53 24 73 08 00 45 00  P.q[.M4. .S$s..E.
-0x0010:  00 68 fb 69 40 00 fc 06  16 de 34 16 77 7b c0 a8  .h.i@... ..4.w{..
-0x0020:  00 0e 01 bb dd 4e 80 34  fc 7f e0 eb ca f8 80 18  .....N.4 ........
-0x0030:  02 d0 a2 85 00 00 01 01  08 0a ad 31 25 80 52 4b  ........ ...1%.RK
-0x0040:  cd 81                                             ..
+21:11:47.688 archlinux : 50131 > _gateway : 53
 
-0x0042:  17 03 03 00 2f 8b 95 90  23 c6 45 85 12 98 91 2e  ..../... #.E.....
-0x0052:  f1 57 53 81 6a 3d a4 1a  bf b6 6f 59 c3 39 0c dc  .WS.j=.. ..oY.9..
-0x0062:  f6 e9 2d 69 75 87 19 dc  91 72 62 8b 97 0b 12 ed  ..-iu... .rb.....
-0x0072:  47 b2 92 da                                       G...
+0x0000:  18 d6 c7 38 2c f4 50 eb  71 5b b6 4d 08 00 45 00  ...8,.P. q[.M..E.
+0x0010:  00 41 fa cd 40 00 40 11  be 20 c0 a8 00 6c c0 a8  .A..@.@. . ...l..
+0x0020:  00 01 c3 d3 00 35 00 2d  81 fc                    .....5.- ..
+
+0x002A:  28 60 01 00 00 01 00 00  00 00 00 00 08 63 6c 69  (`...... .....cli
+0x003A:  65 6e 74 73 34 06 67 6f  6f 67 6c 65 03 63 6f 6d  ents4.go ogle.com
+0x004A:  00 00 01 00 01                                    .....
 ```
 #### Formát výstupu
 Vypísaný je celý paket, riadok výpisu obsahuje:
@@ -70,8 +69,9 @@ Vypísaný je celý paket, riadok výpisu obsahuje:
 - index prvého čísla v riadku
 - jednotlivé bajty v hexadecimálnej reprezentácii
 - ich prevod do ASCII hodnoty, pričom netlačiteľné znaky sú nahradené ".".
+- výpísané sú všetky bajty paketu (napríklad vo vyššie spomenutom pakete: Ethernetový rámec, IP rámec, UDP hlavička a DNS dáta, (prípadný Ethernet padding taktiež).
 ```
-V pakete je oddelené hlavička od tela správy, ako hlavičku považujem všetko čo niesu TCP/UDP dáta. V prípade IGMP/ICMP správ, všetko čo nieje ich súčasťou. Jednoltivé časti sú zarovnané a je zaistená maximálna užívateľská prívetivosť a jednoznačnosť.
+V pakete je oddelené hlavička od tela správy, ako hlavičku považujem všetko čo nie sú TCP/UDP dáta. V prípade IGMP/ICMP správ, všetko čo nieje ich súčasťou. Jednoltivé časti sú zarovnané a je zaistená maximálna užívateľská prívetivosť a jednoznačnosť.
 
 
 

@@ -288,6 +288,7 @@ namespace ipk2
                                 "if both -t|--tcp and -u|--udp or none are present, both tcp and udp packets are processed\n" +
                                 "-n : number must be an integer, NUMBER of packets that are processed\n\n" +
                                 "*ADDITIONAL (BONUS) ASSIGNMENT*\n" +
+                                "-h|--help : help with basic info\n" +
                                 "-ig|--igmp : additional igmp packets are being shown\n" +
                                 "-ic|--icmp : additional icmp packets are being shown\n" +
                                 "-ic6|--icmp6 : additional icmp6 packets are being shown\n" +
