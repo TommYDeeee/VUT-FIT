@@ -10,6 +10,7 @@ namespace ipk2
     //argument parsing, filter setting, help and exit methods
     public class Args
     {
+        //default values
         public int N = 1;
         public ICaptureDevice Device;
         
@@ -71,7 +72,8 @@ namespace ipk2
                     nVal = false;
                     continue;
                 }
-
+                
+                //switch for given argument to determine, which information was given on input
                 switch (arg)
                 {
                     case "-h":
@@ -297,7 +299,7 @@ namespace ipk2
             return help;
         }
 
-        //exit on error
+        //write short exit message and exit on error with return code 1
         private static void Exit(string message)
         {
             var e = Console.Error;

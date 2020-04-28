@@ -6,22 +6,27 @@ using SharpPcap;
 
 namespace ipk2
 {
+    //processing arrived packets, getting source/ destination IP address, port number and all necessary info
+    //each layer is extracted to get important info. Data from raw packets are then being handled to further process
+    //! https://github.com/chmorgan/sharppcap/blob/master/Examples/Example6.DumpTCP/Example6.DumpTCP.cs !
+    //! while writing this part, i was inspired this official example from documentation. I did not just copy any part of that, by there could be some 
+    // similarity, it helped me to understand how this should be done. !
     public class PacketProcessing
     {
+        //default values
         private DateTime _time;
-        private int _len = 0, _srcPort = 0, _dstPort = 0;
+        private int _srcPort = 0, _dstPort = 0;
         private string _srcIp = "", _dstIp = "", _text = "", _hex = "";
 
         //arrival packet processing
         public void device_OnPacketArrival(RawCapture packet)
         {
-            //default values initialized
+            //time value get from packet
             _time = packet.Timeval.Date;
-            _len = packet.Data.Length;
             //parse raw packet
-            var e = Packet.ParsePacket(packet.LinkLayerType, packet.Data);
+            var parsedRawPacked = Packet.ParsePacket(packet.LinkLayerType, packet.Data);
             //get IP addresses of (IP layer) packet
-            var ipPacket = e.Extract<PacketDotNet.IPPacket>();
+            var ipPacket = parsedRawPacked.Extract<PacketDotNet.IPPacket>();
             _srcIp = ipPacket.SourceAddress.ToString();
             _dstIp = ipPacket.DestinationAddress.ToString();
 
@@ -45,7 +50,7 @@ namespace ipk2
             }
 
             //extraction of TCP packet
-            var tcp = e.Extract<PacketDotNet.TcpPacket>();
+            var tcp = parsedRawPacked.Extract<PacketDotNet.TcpPacket>();
             if (tcp != null)
             {
                 //get source and destination ports for tcp packet
@@ -59,7 +64,7 @@ namespace ipk2
             }
 
             //extraction of UDP packet
-            var udp = e.Extract<PacketDotNet.UdpPacket>();
+            var udp = parsedRawPacked.Extract<PacketDotNet.UdpPacket>();
             if (udp != null)
             {
                 //get source and destination ports for udp packet
@@ -75,7 +80,7 @@ namespace ipk2
             //Additional part for IGMP/ICMP/ICMPv6 packet processing
             //for IGMP/ICMP/ICMPv6 packets we use default 0 port, because they dont work with port numbers
             //IGMP packet processing
-            var igmp = e.Extract<PacketDotNet.IgmpV2Packet>();
+            var igmp = parsedRawPacked.Extract<PacketDotNet.IgmpV2Packet>();
             if (igmp != null)
             {
                 //write header with necessary info
@@ -86,7 +91,7 @@ namespace ipk2
             }
             
             //ICMP packet processing
-            var icmp = e.Extract<PacketDotNet.IcmpV4Packet>();
+            var icmp = parsedRawPacked.Extract<PacketDotNet.IcmpV4Packet>();
             if (icmp != null)
             {
                 //write header with necessary info
@@ -97,7 +102,7 @@ namespace ipk2
             }
 
             //ICMPv6 packet processing
-            var icmp6 = e.Extract<PacketDotNet.IcmpV6Packet>();
+            var icmp6 = parsedRawPacked.Extract<PacketDotNet.IcmpV6Packet>();
             if (icmp6 != null)
             {
                 //write header with necessary info
@@ -112,8 +117,8 @@ namespace ipk2
         //write output message header in correct format
         private void WriteHeader()
         {
-            Console.WriteLine("{0:00}:{1:00}:{2:00}.{3} {5} : {6} > {7} : {8}", _time.Hour, _time.Minute, _time.Second,
-                _time.Millisecond, _len,
+            Console.WriteLine("{0:00}:{1:00}:{2:00}.{3} {4} : {5} > {6} : {7}", _time.Hour, _time.Minute, _time.Second,
+                _time.Millisecond,
                 _srcIp, _srcPort, _dstIp, _dstPort);
             Console.WriteLine();
         }
@@ -121,8 +126,8 @@ namespace ipk2
         //process packet bytes
         private void PacketsBytesProcess(RawCapture packet, int headerLength)
         {
-            //default values initialized
-            var data10 = 0;
+            //default values initialized for counters and header bool value
+            var counterHex16 = 0;
             var index = 0;
             var header = false;
             //loop over individual bytes
@@ -131,14 +136,14 @@ namespace ipk2
                 //convert to hex format
                 var data = dataToPrint.ToString("X2").ToLower();
                 //every 16 bytes write output line with necessary info and clear values
-                if ((data10 % 16 == 0) && data10 != 0)
+                if ((counterHex16 % 16 == 0) && counterHex16 != 0)
                 {
-                    WriteString(index, data10);
+                    WriteString(index, counterHex16);
                     _hex = "";
                     index += 16;
                 }
                 //append hex bytes into string
-                if (data10 % 8 == 0)
+                if (counterHex16 % 8 == 0)
                 {
                     _hex += " ";
                     _text += " ";
@@ -154,12 +159,12 @@ namespace ipk2
                     _text += (char) Convert.ToInt32(data, 16);
                 }
                 //increment line counter
-                data10++;
+                counterHex16++;
                 //process last line of header
-                if ((headerLength == data10) && (header == false))
+                if ((headerLength == counterHex16) && (header == false))
                 {
-                    AlignGenerate(data10, index);
-                    data10 = 0;
+                    AlignGenerate(counterHex16, index);
+                    counterHex16 = 0;
                     index = headerLength;
                     header = true;
                     //if packet contains more then just a header, print newline to differentiate parts
@@ -170,13 +175,13 @@ namespace ipk2
                 }
 
                 //if last line was process, don't forget to print it
-                if ((data10 + headerLength == packet.Data.Length) && header)
+                if ((counterHex16 + headerLength == packet.Data.Length) && header)
                 {
                     if (_hex == "")
                     {
                         continue;
                     }
-                    AlignGenerate(data10, index);
+                    AlignGenerate(counterHex16, index);
                 }
             }
             Console.Write("\n");
@@ -197,6 +202,7 @@ namespace ipk2
         private void WriteString(int data, int index)
         {
             var alignment = "";
+            //alignment generation
             if (index % 16 != 0)
             {
                 for (var i = 0; i < 16 - (index % 16); i++)
@@ -204,6 +210,7 @@ namespace ipk2
                     alignment += "   ";
                 }
             }
+            //final output line
             var dataCount = "0x" + data.ToString("X4") + ": " + _hex + alignment + _text;
             Console.WriteLine(dataCount);
             _text = "";
