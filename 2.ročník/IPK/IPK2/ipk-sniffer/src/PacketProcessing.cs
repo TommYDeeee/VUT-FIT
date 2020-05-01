@@ -30,24 +30,11 @@ namespace ipk2
             _srcIp = ipPacket.SourceAddress.ToString();
             _dstIp = ipPacket.DestinationAddress.ToString();
 
-            //try to resolve hostname, if not found use IP address
-            try
-            {
-                _srcIp = Dns.GetHostEntry(_srcIp).HostName;
-            }
-            catch
-            {
-                // ignored
-            }
-
-            try
-            {
-                _dstIp = Dns.GetHostEntry(_dstIp).HostName;
-            }
-            catch
-            {
-                // ignored
-            }
+            
+            //try to get host name from local DNS cache
+            _srcIp = IpToHost(_srcIp);
+            _dstIp = IpToHost(_dstIp);
+            
 
             //extraction of TCP packet
             var tcp = parsedRawPacked.Extract<PacketDotNet.TcpPacket>();
@@ -216,5 +203,34 @@ namespace ipk2
             _text = "";
             _hex = "";
         }
+        
+        //method to resolve hostname from given IP address from local DNS cache or from DNS function GetHostEntry()
+        private static string IpToHost(string ip)
+        {
+            string host;
+            //try to get hostname from local DNS if it already contains given IP
+            if (DnsCache.GetDnsRecord(ip) != null)
+            {
+                host = DnsCache.GetDnsRecord(ip).ToString();
+            }
+            //if the record does not exist try to get hostname from DNS function
+            else
+            {
+                host = ip;
+                try
+                {
+                    host = Dns.GetHostEntry(ip).HostName;
+                }
+                catch
+                {
+                    // ignored
+                }
+                //if successful add to local DNS (IP->hostname)
+                //if not add (IP->IP) to also avoid loops for unknown IPs
+                DnsCache.AddDnsRecord(ip, host);
+            }
+            return host;
+        }
     }
+    
 }

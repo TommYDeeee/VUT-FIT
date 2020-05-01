@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using static System.Int32;
 using SharpPcap;
 
@@ -18,25 +19,40 @@ namespace ipk2
         public string Main(IEnumerable<string> args)
         {
             //bool variables and default values initialized for further use
-            bool tcp = false, udp = false, igmp = false, icmp = false, icmp6 = false, nVal = false, iVal = false, pVal = false;
-            bool haveN = false, haveI = false, haveP = false;
+            bool tcp = false, udp = false, igmp = false, icmp = false, icmp6 = false, nVal = false, iVal = false, pVal = false, prVal = false;
+            bool haveN = false, haveI = false, haveP = false, havePr = false;
             int? p = null;
-            string i = null;
+            string i = null, pr = null, portFilter = null;
             var filter = "";
 
             //loop over arguments and parsing them, catching errors
             //each argument could be given only once
             foreach (var arg in args)
             {
+                //port number parsing, bonus support for multiple port numbers separated by comma
                 if (pVal)
                 {
                     try
                     {
-                        p = Parse(arg);
-                        //should be valid port number
-                        if (p <= 0 || p > 65535)
+                        var ports = arg.Split(",");
+                        portFilter = "(";
+                        for (var j = 0; j < ports.Length; j++ )
                         {
-                            Exit("Port number not in valid range 1-65535");
+                            p = Parse(ports[j]);
+                            //should be valid port number
+                            if (p <= 0 || p > 65535)
+                            {
+                                Exit("Port number not in valid range 1-65535");
+                            }
+
+                            if (j != ports.Length - 1)
+                            {
+                                portFilter += p + " or ";
+                            }
+                            else
+                            {
+                                portFilter += p + ")";
+                            }
                         }
                     }
                     catch
@@ -46,6 +62,43 @@ namespace ipk2
 
                     haveP = true;
                     pVal = false;
+                    continue;
+                }
+
+                //bonus filtering by port range, check validity of portrange syntax by regular expression, check validity of port numbers
+                //supported multiple port ranges for maximum usability
+                //port ranges can be combined with just port arguments
+                if (prVal)
+                {
+                    var portRangeRegex = new Regex("\\d+-\\d+");
+                    var portRanges = arg.Split(",");
+                    pr = "(";
+                    for (var j = 0; j < portRanges.Length; j++)
+                    {
+                        if (!portRangeRegex.Match(portRanges[j]).Success)
+                        {
+                            Exit("Port range string must be in format [1-65535]-[1-65535]");
+                        }
+                        else
+                        {
+                            var range = portRanges[j].Split("-");
+                            if ((Parse(range[0]) <= 0 || Parse(range[0]) > 65535)|| (Parse(range[1]) <= 0 || Parse(range[1]) > 65535))
+                            {
+                                Exit("Wrong port range, ports numbers must be between 1-65535");
+                            }
+                        }
+                        if (j != portRanges.Length - 1)
+                        {
+                            pr += portRanges[j] + " or ";
+                        }
+                        else
+                        {
+                            pr += portRanges[j] + ")";
+                        }
+                    }
+                    
+                    havePr = true;
+                    prVal = false;
                     continue;
                 }
 
@@ -90,12 +143,21 @@ namespace ipk2
                         iVal = true;
                         continue;
                     case "-p":
+                        //port filtering cant be combined with port range filtering
                         if (haveP)
                         {
-                            Exit("Multiple port arguments");
+                            Exit("Multiple port/portrange arguments");
                         }
 
                         pVal = true;
+                        continue;
+                    case  "-pr":
+                        //port range cant be combined with just port filtering
+                        if (havePr)
+                        {
+                            Exit("Multiple port/portrange arguments");
+                        }
+                        prVal = true;
                         continue;
                     case "-n":
                         if (haveN)
@@ -240,13 +302,32 @@ namespace ipk2
             }
             
             //filter for port number if required
-            if (p == null)
+            //bonus assignment for port-range filtering
+            if (portFilter == null && pr == null)
             {
                 filter += "))";
             }
             else
             {
-                filter += $" and port {p}))";
+                if (portFilter != null)
+                {
+                    filter += $" and port {portFilter}";
+                }
+                if(pr != null)
+                {
+                    if (portFilter != null)
+                    {
+                        filter += $" or portrange {pr}))";  
+                    }
+                    else
+                    {
+                        filter += $" and portrange {pr}))";
+                    }
+                }
+                else
+                {
+                    filter += "))";
+                }
             }
 
             //if no interface provided, list of active devices is print. Otherwise  provided device is initialized for further use
@@ -281,7 +362,7 @@ namespace ipk2
                                 "Author: Tomáš Ďuriš (xduris05)\n" +
                                 "FIT VUT, 17.4.2020\n\n" +
                                 "USAGE:\n" +
-                                "./ipk-sniffer -i interface [-p port] [--tcp|-t] [--udp|-u] [-n num] [--icmp|-ic] [--icmp6|-ic6] [--igmp|-ig] [-h|--help]\n\n" +
+                                "./ipk-sniffer -i interface [-p port,port] [-pr port-port,port-port] [--tcp|-t] [--udp|-u] [-n num] [--icmp|-ic] [--icmp6|-ic6] [--igmp|-ig] [-h|--help]\n\n" +
                                 "ARGUMENTS:\n" +
                                 "-i : interface must be a valid interface, to see valid interfaces please use script without this argument, INTERFACE on which packets are being sniffed\n" +
                                 "-p : port must be a valid number in range 1 - 65535, PORT on which are packets being sniffed\n" +
@@ -291,10 +372,12 @@ namespace ipk2
                                 "-n : number must be an integer, NUMBER of packets that are processed\n\n" +
                                 "*ADDITIONAL (BONUS) ASSIGNMENT*\n" +
                                 "-h|--help : help with basic info\n" +
+                                "-p port,port: multiple ports support, ports must be separated by comma, packets are being sniffed on all given ports\n" +
+                                "-pr port-port,port-port: port range support, port ranges must be separated by comma, possible combination with \"-p\", packets are being sniffed on given port range/ranges and other given ports\n" +
                                 "-ig|--igmp : additional igmp packets are being shown\n" +
                                 "-ic|--icmp : additional icmp packets are being shown\n" +
                                 "-ic6|--icmp6 : additional icmp6 packets are being shown\n" +
-                                "additional arguments could be combined with regular arguments and even with regular arguments with port filters (just tcp or udp packets will be filtered with port number)\n";
+                                "additional arguments could be combined with regular arguments and even with regular arguments with port filters (just tcp or udp packets will be filtered with port number/numbers or port range/ranges)\n";
 
             return help;
         }

@@ -8,7 +8,7 @@
 Cieľom bolo vytvoriť sieťový analyzátor v jazyku C/C++/C#, ktorý bude schopný na určitom sieťovom rozhraní zachytávať a filtrovať pakety
 
 ### Stručný popis riešenia
-Program bol napísaný v jazyku C#, Program podporuje TCP, UDP, IGMP, ICMPv4 a ICMPv6 protokoly. Program podporuje ako aj IPv4 tak aj IPv6.  Program bol testovaný na referenčnom virtuálnom stroji a porovnávaný s open source programom WireShark. 
+Program bol napísaný v jazyku C#, Program podporuje TCP, UDP, IGMP, ICMPv4 a ICMPv6 protokoly. Program podporuje ako aj IPv4 tak aj IPv6. Program podporuje viacero portov, rozpätie portov a aj ich kombináciu.  Program bol testovaný na referenčnom virtuálnom stroji a porovnávaný s open source programom WireShark. 
 Kompatibilné s OS Linux a OS Windows
 Program vyžaduje .NET Core 3.0 a knižnicu Sharppcap (knižnica pcap pre jazyk C#)
 https://github.com/chmorgan/sharppcap
@@ -19,12 +19,13 @@ Preklad skriptu prebieha pomocou Makefile,
 ```make build"``` alebo ```make``` preloží projekt do publikovatelnej verzie. Je využíty prepínač dotnet publish s parametrom PublishSingeFile nastaveným na true. Výsledkom je jeden sebestačný spustitelný súbor pre OS Linux uložený do koreňového adresára (aktuálny adresár so súborom Makefile). Následne je možné skript spustiť príkazom
 ```./ipk-sniffer <args>```, kde args sú argumenty skriptu.
 Príklad spustenia:
-```./ipk-sniffer -i interface [-p port] [--tcp|-t] [--udp|-u] [-n num] [--icmp|-ic] [--icmp6|-ic6] [--igmp|-ig] [-h|--help]```
+```./ipk-sniffer -i interface [-p port,port] [-pr port-port,port-port] [--tcp|-t] [--udp|-u] [-n num] [--icmp|-ic] [--icmp6|-ic6] [--igmp|-ig] [-h|--help]```
 
 #### Argumenty
 
  - každý argument môže byť zadaný iba raz
  - na poradí argumentov nezáleží
+ - v prípade argumentu "-p" alebo "-pr" sú jednotlivé kombinácie oddelené čiarkou, "-p" a "-pr" môžu byť zadané naraz
  - rozširujúce argumenty sú plne kombinovateľné s pôvodnými
  - pri spustení skriptu bez argumentov je vypísaný zoznam dostupných rozhraní
  - pri zadaní nesprávneho argumentu alebo nesprávnej hodnoty argumentu je vypísaná krátka chybová hláška, nápoveda a program je ukončený
@@ -32,7 +33,7 @@ Príklad spustenia:
 ##### ZÁKLADNÉ ARGUMENTY
  ```
 -i  rozhranie : rozhranie musí byť validné, pre vypísanie validných rozhraní použite skript bez tohto argumentu, alebo argument -h, udáva rozhranie na ktorom budú odchytávané pakety
--p port :  port musí byť v číslo v rozpätí 1 - 65535, udáva port na ktorom budú odchytávané pakety
+-p port :  port musí byť v číslo/čísla v rozpätí 1 - 65535, udáva port na ktorom budú odchytávané pakety
 -t|--tcp : iba TCP pakety sú odchytávané
 -u|--udp : iba UDP pakety sú odchytávané
 pokiaľ je zadané obe -t|--tcp aj -u|--udp alebo ani jedno, berieme do úvahy aj TCP aj UDP pakety
@@ -41,10 +42,12 @@ pokiaľ je zadané obe -t|--tcp aj -u|--udp alebo ani jedno, berieme do úvahy a
 ##### ROZŠÍRENIE
 ```
 -h|--help : vypísanie krátkej nápovedy ako správne používať skript
+-p port,port : podpora viacerých portov, pri zadaní viacero portov musia byť oddelené čiarkou, pakety sa zachytávajú na všetkých zadaných portoch
+-pr port-port,port-port : podpora rozpätia na porty, pri zadaní viacero rozpätí musia byť oddelené čiarkou, možná kombinácia aj s argumentom "-p" kedy sa pakety zachytávajú aj na danom rozpätí a aj na manuálne zadanom porte
 -ig|--igmp : IGMP pakety sú odchytené a spracované
 -ic|--icmp : ICMP pakety sú odchytené a spracované 
 -ic6|--icmp6 : ICMPv6 pakety sú odchytené a spracované
-Bonusové parametry sú plne kompatibilné so základnými parametrami a a filtrami. Keďže IGMP/ICMP pakety nepracujú na konkrétnom porte, pri zadaní filtra na port sa tento filter aplikuje iba na TCP/UDP pakety (ak bude zadané aj ich odchytávanie, inak bude zahlásená chyba).
+Bonusové parametry sú plne kompatibilné so základnými parametrami a a filtrami. Keďže IGMP/ICMP pakety nepracujú na konkrétnom porte, pri zadaní filtra na port sa tento filter aplikuje iba na TCP/UDP pakety (ak bude zadané aj ich odchytávanie, inak bude zahlásená chyba). Užívateľ dokáže jednoducho odchytávať na všetkých možných kombináciach portov a rozpätí. 
 ```
 
 #### Príklad vstupu a výstupu 
