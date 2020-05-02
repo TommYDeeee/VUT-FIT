@@ -47,12 +47,12 @@ pokiaľ je zadané obe -t|--tcp aj -u|--udp alebo ani jedno, berieme do úvahy a
 -ig|--igmp : IGMP pakety sú odchytené a spracované
 -ic|--icmp : ICMP pakety sú odchytené a spracované 
 -ic6|--icmp6 : ICMPv6 pakety sú odchytené a spracované
-Bonusové parametry sú plne kompatibilné so základnými parametrami a a filtrami. Keďže IGMP/ICMP pakety nepracujú na konkrétnom porte, pri zadaní filtra na port sa tento filter aplikuje iba na TCP/UDP pakety (ak bude zadané aj ich odchytávanie, inak bude zahlásená chyba). Užívateľ dokáže jednoducho odchytávať na všetkých možných kombináciach portov a rozpätí. 
+Bonusové parametry sú plne kompatibilné so základnými parametrami a a filtrami. Keďže IGMP/ICMP pakety nepracujú na konkrétnom porte, pri zadaní filtra na port sa tento filter aplikuje iba na TCP/UDP pakety (ak bude zadané aj ich odchytávanie, inak bude zahlásená chyba). Užívateľ dokáže jednoducho odchytávať na všetkých možných kombináciach portov a rozpätí. Na uloženie preložených IP adries na doménové mená používam vytvorenú lokálnu DNS cache, aby sa predišlo zacykleniu.
 ```
 
 #### Príklad vstupu a výstupu 
 **Vstup**
-> ./ipk-sniffer -i wlo1 -t   
+> ./ipk-sniffer -i wlo1 -t 
 
 **Výstup**
 ``` 
@@ -69,6 +69,7 @@ Bonusové parametry sú plne kompatibilné so základnými parametrami a a filtr
 #### Formát výstupu
 Vypísaný je celý paket, riadok výpisu obsahuje:
 ```
+- hlavičku s časom uloženým v pakete (GMT), zdrojová IP adresa (prípadne doménové meno) : PORT, cieľový IP adresa (prípadne doménové meno) : PORT
 - index prvého čísla v riadku
 - jednotlivé bajty v hexadecimálnej reprezentácii
 - ich prevod do ASCII hodnoty, pričom netlačiteľné znaky sú nahradené ".".
