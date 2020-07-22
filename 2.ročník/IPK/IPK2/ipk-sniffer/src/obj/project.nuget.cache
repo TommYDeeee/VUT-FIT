@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "lWGnErGCjN9u4+3+ZESBUGRTJKn1iioWyIMcVytq/5LwitfqX28Bg5epfwrZKswsQWMFeG/G8mzZPiVA8FSrYA==",
+  "success": true,
+  "projectFilePath": "/home/tomas/Documents/VUT-FIT/2.ročník/IPK/IPK2/ipk-sniffer/src/ipk-sniffer.csproj",
+  "expectedPackageFiles": [
+    "/home/tomas/.nuget/packages/packetdotnet/1.0.3/packetdotnet.1.0.3.nupkg.sha512",
+    "/home/tomas/.nuget/packages/sharppcap/5.1.0/sharppcap.5.1.0.nupkg.sha512",
+    "/home/tomas/.nuget/packages/system.runtime.compilerservices.unsafe/4.6.0/system.runtime.compilerservices.unsafe.4.6.0.nupkg.sha512",
+    "/home/tomas/.nuget/packages/microsoft.netcore.app.ref/3.0.0/microsoft.netcore.app.ref.3.0.0.nupkg.sha512",
+    "/home/tomas/.nuget/packages/microsoft.aspnetcore.app.ref/3.0.1/microsoft.aspnetcore.app.ref.3.0.1.nupkg.sha512",
+    "/home/tomas/.nuget/packages/microsoft.netcore.app.host.linux-x64/3.0.3/microsoft.netcore.app.host.linux-x64.3.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
