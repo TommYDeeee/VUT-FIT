@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
     const u_char *packet;
     struct bpf_program fp;
     char filter[] = "tcp";
-    
+    map<string, ssl_connection> ssl_identif;
 
     if(have_file){
         cout << "FILE:" << file << "\n";
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "Couldn't set filter %s: %s", filter, pcap_geterr(handle));
 		return(2);
     }
-    pcap_loop(handle, 10, callback, NULL);
+    pcap_loop(handle, -1, callback, (u_char*)&ssl_identif);
     pcap_close(handle);
     return 0;
 }
