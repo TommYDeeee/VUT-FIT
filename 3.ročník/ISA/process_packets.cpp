@@ -13,10 +13,10 @@ const u_char * filter_ssl_packets(const u_char*packet, const u_char *ssl_start){
     }
 }
 
-void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *packet){
+void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char *packet){
     struct ip *iph = (struct ip*)(packet + ETH_HLEN);
-    struct tm  *time_stamp = localtime(&header->ts.tv_sec);
-    map<string, ssl_connection>*ssl_identif = (map<string, ssl_connection>*) args; 
+    void ** ssl_args = reinterpret_cast<void**>(args_array);
+    map<string, ssl_connection> *ssl_session_map = reinterpret_cast<map<string, ssl_connection>*>(ssl_args[0]);
     ip_address_struct ip_address;
     unsigned short iphdrlen;
     char source[INET6_ADDRSTRLEN];
@@ -40,37 +40,96 @@ void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *pack
 
     struct tcphdr *tcph = (struct tcphdr*)(packet + iphdrlen + sizeof(struct ethhdr));
     const u_char *tcph_len = (const u_char *)((unsigned char *)tcph + (tcph->doff * 4));
-	ssl_connection_info ssl_session;
-
+    struct tm *time_stamp = localtime(&header->ts.tv_sec);
     packet = filter_ssl_packets(packet, tcph_len);
 
     string client_ID = source + to_string(ntohs(tcph->source));
     string server_ID = dest + to_string(ntohs(tcph->dest));
     client_ID.erase(remove(client_ID.begin(), client_ID.end(), '.'), client_ID.end());
     server_ID.erase(remove(server_ID.begin(), server_ID.end(), '.'), server_ID.end());
-    ssl_session.serverID = server_ID;
-    strcpy(ssl_session.ip_src, source);
-    strcpy(ssl_session.ip_dst, dest);
+
     
     //UROBIT ZE NAJPRV IP PODLA CLIENT HELLO, POTOM OSTATNE POZERAT CI UZ IP-PORT SU V TABULKE
     //A VZDY PRIDAT NOVU IP AZ PODLA CLIENT HELLO - NOVE SPOJENIE
-    
+    int offset = 0;
     if(tcph_len[0] == 0x16){
-        if(ssl_identif->find(client_ID) == ssl_identif->end()){
-            if(ssl_identif->find(server_ID) == ssl_identif->end()){
-                ssl_identif->insert(pair<string, ssl_connection>(client_ID, ssl_session));
+        if(tcph_len[5] == 0x01){
+            ssl_connection ssl_session;
+            ssl_session_map->insert(pair<string, ssl_connection>(client_ID, ssl_session));
+            ssl_session_map->find(client_ID)->second.serverID = server_ID;
+            strcpy(ssl_session_map->find(client_ID)->second.ip_src, source);
+            strcpy(ssl_session_map->find(client_ID)->second.ip_dst, dest);
+            ssl_session_map->find(client_ID)->second.packet_count = 1;
+            ssl_session_map->find(client_ID)->second.session_bytes =  tcph_len[3] << 8 | tcph_len[4];
+            offset =(tcph_len[3] << 8 | tcph_len[4]) + 5;
+            while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
+                offset = tcph_len[offset+3] << 8 | tcph_len[offset + 4] + 5;
+                printf("%02X\n", tcph_len[offset]);
+            }
+            offset = 0;
+
+            ssl_session_map->find(client_ID)->second.session_time_stamp = localtime(&header->ts.tv_usec);
+        } else {
+            if(ssl_session_map->find(client_ID) == ssl_session_map->end()){
+                if(ssl_session_map->find(server_ID) == ssl_session_map->end()){
+                } else {
+                    ssl_session_map->find(server_ID)->second.packet_count += 1;
+                    ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
+                    offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
+                    while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                        ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
+                        printf("%02X:", tcph_len[offset]);
+                        printf("%d\n", (tcph_len[offset+3] << 8 | tcph_len[offset + 4]));
+                        offset += tcph_len[offset+3] << 8 | tcph_len[offset + 4] + 5;
+                    }
+                    offset = 0;
+                }
             } else {
-                ssl_identif->insert(pair<string, ssl_connection>(server_ID, ssl_session));
+                ssl_session_map->find(client_ID)->second.packet_count += 1;
+                ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
+                offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
+                while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                    ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
+                    printf("%02X:", tcph_len[offset]);
+                    printf("%d\n", (tcph_len[offset+3] << 8 | tcph_len[offset + 4]));
+                    offset += tcph_len[offset+3] << 8 | tcph_len[offset + 4] + 5;
+                }
+                offset = 0;
+            }
+        }
+    } else if(tcph_len[0] == 0x14 || tcph_len[0] == 0x15 || tcph_len[0] == 0x17){
+        if(ssl_session_map->find(client_ID) == ssl_session_map->end()){
+            if(ssl_session_map->find(server_ID) == ssl_session_map->end()){
+            } else {
+                ssl_session_map->find(server_ID)->second.packet_count += 1;
+                ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
+                printf("%d-%02X:%d:%d\n", offset,tcph_len[offset], tcph_len[3] << 8 | tcph_len[4], ssl_session_map->find(server_ID)->second.session_bytes);
+                offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
+                while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                    ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
+                    printf("%d-%02X:%d:%d\n", offset,tcph_len[offset-1], tcph_len[offset + 3] << 8 | tcph_len[offset + 4], ssl_session_map->find(server_ID)->second.session_bytes);
+                    offset += tcph_len[offset+3] << 8 | tcph_len[offset + 4] + 5;
+                }
             }
         } else {
-            ssl_identif->insert(pair<string, ssl_connection>(client_ID, ssl_session));
+            ssl_session_map->find(client_ID)->second.packet_count += 1;
+            ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
+            printf("%d-%02X:%d:%d\n", offset,tcph_len[offset], tcph_len[3] << 8 | tcph_len[4], ssl_session_map->find(server_ID)->second.session_bytes);
+            offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
+            while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
+                printf("%02X:", tcph_len[offset]);
+                printf("%d\n", (tcph_len[offset+3] << 8 | tcph_len[offset + 4]));
+                offset += tcph_len[offset+3] << 8 | tcph_len[offset + 4] + 5;
+            }
+            offset = 0;
         }
     }
     if(packet != NULL){
-         for(auto const& pair: *ssl_identif){
-            cout << pair.first << ":" << pair.second.serverID << "/" <<pair.second.ip_dst << "\n";
+         for(auto const& pair: *ssl_session_map){
+            cout << pair.first << ":" << pair.second.serverID << "/" <<pair.second.packet_count << " time: " << pair.second.session_time_stamp->tm_sec << "length:" << pair.second.session_bytes <<"\n";
         }
 	    printf("%d-%02d-%02d\n%02d:%02d:%02d.%.6ld,%s,%d,%s,SNI,bytes,packets,duration_in_sec\n", (time_stamp->tm_year+1900), (time_stamp->tm_mon+1), time_stamp->tm_mday, time_stamp->tm_hour, time_stamp->tm_min, time_stamp->tm_sec, header->ts.tv_usec, source, ntohs(tcph->source), dest);
     }
-
 }

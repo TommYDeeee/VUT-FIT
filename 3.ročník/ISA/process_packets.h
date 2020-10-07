@@ -44,6 +44,9 @@ typedef struct ip_address{
     string serverID;
     char ip_dst[46];
     char ip_src[46];
+    int session_bytes;
+    int packet_count;
+    struct tm  *session_time_stamp;
  } ssl_connection;
 
 void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
