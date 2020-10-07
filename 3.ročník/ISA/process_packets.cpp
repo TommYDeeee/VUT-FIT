@@ -62,7 +62,7 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
             ssl_session_map->find(client_ID)->second.packet_count = 1;
             ssl_session_map->find(client_ID)->second.session_bytes =  tcph_len[3] << 8 | tcph_len[4];
             offset =(tcph_len[3] << 8 | tcph_len[4]) + 5;
-            while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+            while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17 || tcph_len[offset] == 0x16){
                 ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
                 offset = tcph_len[offset+3] << 8 | tcph_len[offset + 4] + 5;
                 printf("%02X\n", tcph_len[offset]);
@@ -77,7 +77,7 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                     ssl_session_map->find(server_ID)->second.packet_count += 1;
                     ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
                     offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
-                    while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                    while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17 || tcph_len[offset] == 0x16){
                         ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
                         printf("%02X:", tcph_len[offset]);
                         printf("%d\n", (tcph_len[offset+3] << 8 | tcph_len[offset + 4]));
@@ -89,7 +89,7 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                 ssl_session_map->find(client_ID)->second.packet_count += 1;
                 ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
                 offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
-                while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17 || tcph_len[offset] == 0x16){
                     ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
                     printf("%02X:", tcph_len[offset]);
                     printf("%d\n", (tcph_len[offset+3] << 8 | tcph_len[offset + 4]));
@@ -106,9 +106,9 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                 ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
                 printf("%d-%02X:%d:%d\n", offset,tcph_len[offset], tcph_len[3] << 8 | tcph_len[4], ssl_session_map->find(server_ID)->second.session_bytes);
                 offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
-                while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+                while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17 || tcph_len[offset] == 0x16){
                     ssl_session_map->find(server_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
-                    printf("%d-%02X:%d:%d\n", offset,tcph_len[offset-1], tcph_len[offset + 3] << 8 | tcph_len[offset + 4], ssl_session_map->find(server_ID)->second.session_bytes);
+                    printf("%d-%02X:%d:%d\n", offset,tcph_len[offset], tcph_len[offset + 3] << 8 | tcph_len[offset + 4], ssl_session_map->find(server_ID)->second.session_bytes);
                     offset += tcph_len[offset+3] << 8 | tcph_len[offset + 4] + 5;
                 }
             }
@@ -117,7 +117,7 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
             ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[3] << 8 | tcph_len[4];
             printf("%d-%02X:%d:%d\n", offset,tcph_len[offset], tcph_len[3] << 8 | tcph_len[4], ssl_session_map->find(server_ID)->second.session_bytes);
             offset = (tcph_len[3] << 8 | tcph_len[4]) + 5;
-            while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17){
+            while(tcph_len[offset] == 0x14 || tcph_len[offset] == 0x15 || tcph_len[offset] == 0x17 || tcph_len[offset] == 0x16){
                 ssl_session_map->find(client_ID)->second.session_bytes += tcph_len[offset+3] << 8 | tcph_len[offset + 4];
                 printf("%02X:", tcph_len[offset]);
                 printf("%d\n", (tcph_len[offset+3] << 8 | tcph_len[offset + 4]));
