@@ -70,6 +70,8 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                         ssl_session_map->find(client_ID)->second.packet_count = 1;
                         packet_counted = true;
                         ssl_session_map->find(client_ID)->second.session_bytes =  ssl_start[3] << 8 | ssl_start[4];
+                        i += (ssl_start[3] << 8 | ssl_start[4])+4;
+                        printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
                         printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
                         ssl_session_map->find(client_ID)->second.session_time_stamp = localtime(&header->ts.tv_usec);
                     } else {
@@ -81,6 +83,8 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                                     packet_counted = true;
                                 }
                                 ssl_session_map->find(server_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
+                                i += (ssl_start[3] << 8 | ssl_start[4])+4;
+                                printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
                                 printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
                             }
                         } else {
@@ -89,7 +93,9 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                                 packet_counted = true;
                             }
                             ssl_session_map->find(client_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
-                                            printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
+                            i += (ssl_start[3] << 8 | ssl_start[4])+4;
+                            printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
+                            printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
                         }
                     }
                 } else if(ssl_start[0] == 0x14 || ssl_start[0] == 0x15 || ssl_start[0] == 0x17){
@@ -101,7 +107,9 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                                 packet_counted = true;
                             }
                             ssl_session_map->find(server_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
-                                                    printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
+                            i += (ssl_start[3] << 8 | ssl_start[4])+4;
+                            printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
+                            printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
                         }
                     } else {
                         if(packet_counted == false){
@@ -109,7 +117,9 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                             packet_counted = true;
                         }
                         ssl_session_map->find(client_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
-                                                printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
+                        i += (ssl_start[3] << 8 | ssl_start[4])+4;
+                        printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
+                        printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
                     }
                 }
             }
