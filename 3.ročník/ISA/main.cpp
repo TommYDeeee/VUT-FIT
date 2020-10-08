@@ -43,5 +43,8 @@ int main(int argc, char *argv[]){
     }
     pcap_loop(handle, -1, callback, reinterpret_cast<u_char*>(ssl_args));
     pcap_close(handle);
+    for(auto const& pair: ssl_session){
+        cout << pair.first << ":" << pair.second.serverID << ","<<  pair.second.SNI <<"/PACKETS:" <<pair.second.packet_count << " time: " << pair.second.session_time_stamp->tm_sec << "length:" << pair.second.session_bytes <<"\n";
+    }
     return 0;
 }
