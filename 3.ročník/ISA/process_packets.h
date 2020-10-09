@@ -45,12 +45,17 @@ typedef struct ip_address{
     string serverID;
     char ip_dst[46];
     char ip_src[46];
+    int port_src;
+    int port_dst;
     int session_bytes;
     int packet_count;
-    struct tm  *session_time_stamp;
+    struct tm  session_time_stamp;
+    timeval duration;
+    timeval starttime;
     string SNI;
  } ssl_connection;
 
 void get_SNI(ssl_connection *ssl_session, const u_char* client_hello_header);
 void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 const u_char * filter_ssl_packets(const u_char*packet, const u_char *ssl_start);
+void time_diff(struct timeval *difference, const timeval *end_time, struct timeval *start_time);

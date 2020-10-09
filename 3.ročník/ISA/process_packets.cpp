@@ -19,19 +19,43 @@ void append(char* string, char c) {
         string[len+1] = '\0';
 }
 
+void time_diff(struct timeval *difference, const timeval *end_time, struct timeval *start_time){
+    difference->tv_sec =end_time->tv_sec -start_time->tv_sec ;
+    difference->tv_usec=end_time->tv_usec-start_time->tv_usec;
+
+    while(difference->tv_usec<0)
+    {
+        difference->tv_usec+=1000000;
+        difference->tv_sec -=1;
+    }
+}
+
 char* get_SNI(const u_char* client_hello_header){
     int session_id_length = client_hello_header[0] + 1;
     int cipher_suites_length = (client_hello_header[session_id_length] << 8 | client_hello_header[session_id_length + 1]) + 2;
     int compression_method_length = client_hello_header[session_id_length+cipher_suites_length] + 1;
-    int extenstion_header_length = 9;
-    int SNI_length = client_hello_header[session_id_length + cipher_suites_length + compression_method_length + extenstion_header_length] << 8 | client_hello_header[session_id_length + cipher_suites_length + compression_method_length + extenstion_header_length+1];
-    int offset = session_id_length + cipher_suites_length + compression_method_length + extenstion_header_length +2;
-    char* SNI = (char*)malloc(SNI_length+1);
-    SNI[0]='\0';
-    for(int i =  offset; i < offset + SNI_length; i++){
-        append(SNI, (char)client_hello_header[i]);
-    }
-    return SNI;
+    int extenstion_header_length = 2;
+    
+    int offset =  session_id_length + cipher_suites_length + compression_method_length + extenstion_header_length;
+    int extension_type = client_hello_header[offset] << 8 | client_hello_header[offset+1];
+    while (extension_type != 0){
+        int reserved_length = client_hello_header[offset + 2] << 8 | client_hello_header[offset + 3];
+        offset += 4 + reserved_length;
+        extension_type = client_hello_header[offset] << 8 | client_hello_header[offset+1];
+    } 
+    if ((client_hello_header[offset] << 8 | client_hello_header[offset + 1] ) == 0){
+        offset += 7;
+        int SNI_length = client_hello_header[offset] << 8 | client_hello_header[offset + 1];
+        offset += 2;
+        char* SNI = (char*)malloc(SNI_length+1);
+        SNI[0]='\0';
+        for(int i =  offset; i < offset + SNI_length; i++){
+            append(SNI, (char)client_hello_header[i]);
+        }
+        return SNI;
+    } else {
+        return NULL;
+    } 
 }
 
 void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char *packet){
@@ -62,7 +86,6 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
 
     struct tcphdr *tcph = (struct tcphdr*)(packet + iphdrlen + sizeof(struct ethhdr));
     const u_char *tcph_len = (const u_char *)((unsigned char *)tcph + (tcph->doff * 4));
-    struct tm *time_stamp = localtime(&header->ts.tv_sec);
     for (int i = 0; i < header->caplen; i++){
        /* if ((i % 16) == 0) 
             printf("\n");
@@ -85,18 +108,26 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                     if(ssl_start[5] == 0x01){
                         ssl_connection ssl_session;
                         char *SNI = get_SNI(ssl_start + FIXED_CLIENT_HELLO_HEADER_LENGTH);
-                        ssl_session.SNI = SNI;
+                        if(SNI != NULL){
+                            ssl_session.SNI = SNI;
+                            free(SNI);
+                        } else {
+                            ssl_session.SNI = "";
+                        }
                         ssl_session_map->insert(pair<string, ssl_connection>(client_ID, ssl_session));
                         ssl_session_map->find(client_ID)->second.serverID = server_ID;
                         strcpy(ssl_session_map->find(client_ID)->second.ip_src, source);
                         strcpy(ssl_session_map->find(client_ID)->second.ip_dst, dest);
+                        ssl_session_map->find(client_ID)->second.port_src = ntohs(tcph->source);
+                        ssl_session_map->find(client_ID)->second.port_dst = ntohs(tcph->dest);
                         ssl_session_map->find(client_ID)->second.packet_count = 1;
                         packet_counted = true;
                         ssl_session_map->find(client_ID)->second.session_bytes =  ssl_start[3] << 8 | ssl_start[4];
                         i += (ssl_start[3] << 8 | ssl_start[4])+4;
                         //printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
                         //printf("\npridavam: %d\n", ssl_start[3] << 8 | ssl_start[4]);
-                        ssl_session_map->find(client_ID)->second.session_time_stamp = localtime(&header->ts.tv_usec);
+                        ssl_session_map->find(client_ID)->second.session_time_stamp = *localtime(&header->ts.tv_sec);
+                        ssl_session_map->find(client_ID)->second.starttime = header->ts;
                     } else {
                         if(ssl_session_map->find(client_ID) == ssl_session_map->end()){
                             if(ssl_session_map->find(server_ID) == ssl_session_map->end()){
@@ -105,6 +136,8 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                                     ssl_session_map->find(server_ID)->second.packet_count += 1;
                                     packet_counted = true;
                                 }
+                                //printf("%d-%ld\n", ssl_session_map->find(server_ID)->second.session_time_stamp->tm_sec, ssl_session_map->find(server_ID)->second.starttime.tv_usec );
+                                time_diff(&ssl_session_map->find(server_ID)->second.duration, &header->ts, &ssl_session_map->find(server_ID)->second.starttime);
                                 ssl_session_map->find(server_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
                                 i += (ssl_start[3] << 8 | ssl_start[4])+4;
                                 //printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
@@ -115,6 +148,8 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                                 ssl_session_map->find(client_ID)->second.packet_count += 1;
                                 packet_counted = true;
                             }
+                            //printf("%d-%ld\n", ssl_session_map->find(client_ID)->second.session_time_stamp->tm_sec, ssl_session_map->find(client_ID)->second.starttime.tv_usec );
+                            time_diff(&ssl_session_map->find(client_ID)->second.duration, &header->ts, &ssl_session_map->find(client_ID)->second.starttime);
                             ssl_session_map->find(client_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
                             i += (ssl_start[3] << 8 | ssl_start[4])+4;
                             //printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
@@ -129,6 +164,8 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                                 ssl_session_map->find(server_ID)->second.packet_count += 1;
                                 packet_counted = true;
                             }
+                            //printf("%d-%ld\n", ssl_session_map->find(server_ID)->second.session_time_stamp->tm_sec, ssl_session_map->find(server_ID)->second.starttime.tv_usec );
+                            time_diff(&ssl_session_map->find(server_ID)->second.duration, &header->ts, &ssl_session_map->find(server_ID)->second.starttime);
                             ssl_session_map->find(server_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
                             i += (ssl_start[3] << 8 | ssl_start[4])+4;
                             //printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
@@ -139,6 +176,8 @@ void callback(u_char *args_array, const struct pcap_pkthdr *header, const u_char
                             ssl_session_map->find(client_ID)->second.packet_count += 1;
                             packet_counted = true;
                         }
+                        //printf("%d-%ld\n", ssl_session_map->find(client_ID)->second.session_time_stamp->tm_sec, ssl_session_map->find(client_ID)->second.starttime.tv_usec );
+                        time_diff(&ssl_session_map->find(client_ID)->second.duration, &header->ts, &ssl_session_map->find(client_ID)->second.starttime);
                         ssl_session_map->find(client_ID)->second.session_bytes += ssl_start[3] << 8 | ssl_start[4];
                         i += (ssl_start[3] << 8 | ssl_start[4])+4;
                         //printf("%02X, %02X, %02X", ssl_start[0], ssl_start[1], ssl_start[2]);
