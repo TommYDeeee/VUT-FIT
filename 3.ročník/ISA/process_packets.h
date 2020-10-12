@@ -4,6 +4,7 @@
 #include <map>
 #include <algorithm>
 
+#include <arpa/inet.h>
 #include<net/ethernet.h> 
 #include<netinet/tcp.h>	
 #include<netinet/ip.h>	
