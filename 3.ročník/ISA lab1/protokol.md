@@ -34,16 +34,21 @@
 
 ### (6.) TCP spojení
 
-*Záznam + popis*: 
-State      Recv-Q Send-Q Local Address:Port                 Peer Address:Port                
+**Záznam + popis**: 
+
+State      Recv-Q Send-Q Local Address:Port                 Peer Address:Port
 ESTAB      0      0      10.0.2.15:48314                172.217.23.234:https
 
-####Popis:
-STATE -  stav v ktorom je pripojenie ( v našom prípade ESTAB - TCP spojenie je nadviazané )
-RECV-Q - Označuje počet bajtov dát vo fronte, ktoré sa majú odoslať do zariadenia, ktoré nadviazalo spojenie
-SEND-Q - Označuje počet bajtov vo fronte, ktoré sa majú odoslať vzdialenému zariadeniu, s ktorým sme nadviazali spojenie
-Local Address:port - Lokálna adresa nášho zariadenia a číslo portu z ktorého prebieha komunikácia (zdroj)
-Peer Address:Port - IP adresa a port s ktorou komunikujeme (vzdialená/cieľ)
+#### Popis:
+**STATE** -  stav v ktorom je pripojenie ( v našom prípade ESTAB - TCP spojenie je nadviazané )
+
+**RECV-Q** - Označuje počet bajtov dát vo fronte, ktoré sa majú odoslať do zariadenia, ktoré nadviazalo spojenie
+
+**SEND-Q** - Označuje počet bajtov vo fronte, ktoré sa majú odoslať vzdialenému zariadeniu, s ktorým sme nadviazali spojenie
+
+**Local Address:port** - Lokálna adresa nášho zariadenia a číslo portu z ktorého prebieha komunikácia (zdroj)
+
+**Peer Address:Port** - IP adresa a port s ktorou komunikujeme (vzdialená/cieľ)
 
 
 ### (8.) NetworkManager události
@@ -52,7 +57,7 @@ Peer Address:Port - IP adresa a port s ktorou komunikujeme (vzdialená/cieľ)
 
 ### (9.) Chybová hláška sudo
 
-*Příkaz*: sudo wireshark
+*Příkaz*: journalctl -t sudo
 
 *Chybová hláška*: user : command not allowed ; TTY=pts/0 ; PWD=/home/user ; USER=root ; COMMAND=/bin/wireshark
 
@@ -64,13 +69,17 @@ Peer Address:Port - IP adresa a port s ktorou komunikujeme (vzdialená/cieľ)
 
 ### (2.) Zachycená HTTP komunikace
 
-Komu patří nalezené IPv4 adresy a MAC adresy? Pri požiadavku HTTP: zdrojová IP adresa patrí klientovi. Cieľová IP adresa patrí serveru. Zdrojová MAC adresa patrí rozhraniu. Cieľová MAC adresa patrí východzej bráne (gateway). Pri odpovedi sa klient/server vymenia.
+Komu patří nalezené IPv4 adresy a MAC adresy? 
+
+Zdrojová IP adresa patrí klientovi. Cieľová IP adresa patrí serveru. Zdrojová MAC adresa patrí rozhraniu. Cieľová MAC adresa patrí východzej bráne (gateway). 
 
 Vypisovali jste již některé z nich? 
-Vypisoval som MAC adresu pri bráne aj pri rozhraní a IP adresu rozhrania (klienta) (požiadavok HTTP)
 
-Proč tomu tak je?  
-Cieľovú IP adresu som predtým nevypísal, lebo bola zadaná až v tomto kroku zadania, MAC adresu som už vypisoval, lebo je to adresa východzej brány (gateway) -  Ethernet rámec sa vždy prebalí pri každom skoku, IP rámec ostáva. (Požiadavok HTTP)
+Vypisoval som MAC adresu pri bráne aj pri rozhraní (klient) a IP adresu rozhrania (klient) 
+
+Proč tomu tak je? 
+
+Cieľovú IP adresu som predtým nevypísal, lebo bola zadaná až v tomto kroku zadania, MAC adresu som už vypisoval, lebo je to adresa východzej brány (gateway) -  Ethernet rámec sa vždy prebalí pri každom skoku, IP rámec ostáva. 
 
 #### Požadavek HTTP
 
@@ -92,7 +101,7 @@ Zdrojová MAC adresa
 Zdrojová IP adresa
 
   - *Adresa*: 10.0.2.15
-  - *Role zařízení*: rozhranie (klient)
+  - *Role zařízení*: rozhranie (klienta)
 
 
 #### Odpověď HTTP
@@ -100,12 +109,12 @@ Zdrojová IP adresa
 Cílová MAC adresa
 
   - *Adresa*: 08:00:27:a9:3f:64
-  - *Role zařízení*: server
+  - *Role zařízení*: rozhranie (klienta)
 
 Cílová IP adresa
 
   - *Adresa*: 10.0.2.15
-  - *Role zařízení*: server
+  - *Role zařízení*: rozhranie (klienta)
 
 Zdrojová MAC adresa
 
@@ -115,7 +124,7 @@ Zdrojová MAC adresa
 Zdrojová IP adresa
 
   - *Adresa*: 147.22.177.179
-  - *Role zařízení*: klient
+  - *Role zařízení*: server
 
 ### (3.) Zachycená ARP komunikace
 
@@ -125,4 +134,5 @@ Zdrojová IP adresa
 
 Jaký je formát zobrazených dat funkcí *Follow TCP stream*, slovně popište
 význam funkce *Follow TCP stream*: 
-vidíme celú komunikáciu pokope v textovom formáte a máme farebne odlíšeného klienta a server, ktorí spolu komunikujú.
+
+vidíme celú komunikáciu pokope a zoradenú v textovom formáte a máme farebne odlíšeného klienta a server, ktorí spolu komunikujú.
