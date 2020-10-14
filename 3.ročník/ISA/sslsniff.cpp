@@ -42,10 +42,5 @@ int main(int argc, char *argv[]){
     pcap_loop(handle, -1, callback,  (u_char *)&ssl_sessions);
     pcap_freecode(&fp);
     pcap_close(handle);
-    for(auto const& session: ssl_sessions){
-        printf("%d-%02d-%02d\n%02d:%02d:%02d.%.6ld,%s,%d,%s,%s,%d,%d,%ld.%ld\n", (session.second.session_time_stamp.tm_year+1900), (session.second.session_time_stamp.tm_mon+1), session.second.session_time_stamp.tm_mday,
-        session.second.session_time_stamp.tm_hour, session.second.session_time_stamp.tm_min, session.second.session_time_stamp.tm_sec, session.second.starttime.tv_usec, 
-        session.second.ip_src, session.second.port_src, session.second.ip_dst, session.second.SNI.c_str(), session.second.session_bytes, session.second.packet_count, session.second.duration.tv_sec, session.second.duration.tv_usec);
-    }
     return EXIT_SUCCESS;
 }

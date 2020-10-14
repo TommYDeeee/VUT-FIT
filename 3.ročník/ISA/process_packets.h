@@ -77,11 +77,15 @@ typedef struct ip_address{
     timeval duration;
     timeval starttime;
     string SNI;
+    bool FIN = false;
  } ssl_connection;
 
+/* Function definitions */
+void process_FIN_packet(tcphdr *tcph, string client_ID, string server_ID, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header);
 int get_int_from_two_bytes(const u_char *ssl_start, int offset);
 void get_SNI(ssl_connection *ssl_session, const u_char* client_hello_header);
 void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 const u_char * filter_ssl_packets(const u_char*packet, const u_char *ssl_start);
 void time_diff(struct timeval *difference, const timeval *end_time, struct timeval *start_time);
-bpf_u_int32 process_packet(string ID, bool packet_counted, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header, const u_char *ssl_start, bpf_u_int32 i);
+bpf_u_int32 process_packet(string ID, bool packet_counted, map<string, ssl_connection> *ssl_session_map, const u_char *ssl_start, bpf_u_int32 i, tcphdr *tcph);
+void print_session(ssl_connection ssl_session);
