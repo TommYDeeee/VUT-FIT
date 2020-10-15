@@ -27,6 +27,7 @@
 #define SSL_HANDSHAKE 0x16
 #define SSL_APPLICATION_DATA 0x17
 #define SSL_HANDSHAKE_CLIENT_HELLO 0x01
+#define SSL_HANDSHAKE_SERVER_HELLO 0x02
 
 #define SSL_CONTENT_TYPE_OFFSET 0
 #define SSL_HANDSHAKE_TYPE_OFFSET 5
@@ -67,6 +68,7 @@ typedef struct ip_address{
 * Structure with all necessary info about ssl_connection
 */
  typedef struct ssl_connection_info{
+    bool active = false;
     char ip_dst[46];
     char ip_src[46];
     int port_src;
@@ -81,11 +83,12 @@ typedef struct ip_address{
  } ssl_connection;
 
 /* Function definitions */
-void process_FIN_packet(tcphdr *tcph, string client_ID, string server_ID, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header);
+void process_FIN_packet(tcphdr *tcph, string ID, ssl_connection *ssl_struct, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header);
 int get_int_from_two_bytes(const u_char *ssl_start, int offset);
 void get_SNI(ssl_connection *ssl_session, const u_char* client_hello_header);
 void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 const u_char * filter_ssl_packets(const u_char*packet, const u_char *ssl_start);
 void time_diff(struct timeval *difference, const timeval *end_time, struct timeval *start_time);
+string find_ID_map(map<string, ssl_connection> *ssl_session_map, string client_ID, string server_ID);
 bpf_u_int32 process_packet(string ID, bool packet_counted, map<string, ssl_connection> *ssl_session_map, const u_char *ssl_start, bpf_u_int32 i, tcphdr *tcph);
 void print_session(ssl_connection ssl_session);
