@@ -1,5 +1,4 @@
 #include "process_packets.h"
-
 /* 
 * Filter given packet, and return it only if it is SSL packet
 * convert given byte array to string and compare it with SSL versions
@@ -157,7 +156,7 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
     char source[INET6_ADDRSTRLEN];
     char dest[INET6_ADDRSTRLEN];
 
-    struct ip *iph = (struct ip*)(packet + ETH_HLEN);
+    struct ip *iph = (struct ip*)(packet + link_layer_length);
 
     /* get IP address according to providen IP version, calculate different offset for IPv6 and IPv4, save them to ip_address structure */
     if(iph->ip_v == IPv4){
@@ -168,7 +167,7 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
         inet_ntop(AF_INET, &(ip_address.ip_dst.ipv4), dest, INET_ADDRSTRLEN);
 
     } else if (iph->ip_v == IPv6){
-        struct ip6_hdr *ip6h = (struct ip6_hdr*)(packet + ETH_HLEN);
+        struct ip6_hdr *ip6h = (struct ip6_hdr*)(packet + link_layer_length);
 
 	    ip_address.ip_src.ipv6 = ip6h->ip6_src;
         ip_address.ip_dst.ipv6 = ip6h->ip6_dst;
@@ -178,16 +177,16 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
     }
     
     /* TCP header for flags and source and destination port number*/
-    struct tcphdr *tcph = (struct tcphdr*)(packet + iphdrlen + sizeof(struct ethhdr));
+    struct tcphdr *tcph = (struct tcphdr*)(packet + iphdrlen + link_layer_length);
 
     string client_ID = source + to_string(ntohs(tcph->source)); //unique ID for SSL connection (IP+Port number)
     string server_ID = dest + to_string(ntohs(tcph->dest)); // save also server ID (IP+Port number !not unique, just  to check!)
     client_ID.erase(remove(client_ID.begin(), client_ID.end(), '.'), client_ID.end()); //format client ID to string just with numbers
     server_ID.erase(remove(server_ID.begin(), server_ID.end(), '.'), server_ID.end()); //format server ID to string just with numbers
     ssl_connection *map_ID_pointer = NULL;
-
-    string ID = find_ID_map(ssl_session_map, client_ID, server_ID);
     
+    /* if ssl connection is already in map, save pointer to it */
+    string ID = find_ID_map(ssl_session_map, client_ID, server_ID);
     if(ID != ""){
        map_ID_pointer = &ssl_session_map->find(ID)->second;
     }
@@ -234,6 +233,7 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
                     
                     /*Process "handshake" type packet other then Client Hello */
                     } else if (ID != ""){
+                        /* if handskae type is Server Hello and connection is not already active, make it active otherwise delete connection*/
                         if(ssl_start[SSL_HANDSHAKE_TYPE_OFFSET] == SSL_HANDSHAKE_SERVER_HELLO){
                             if(map_ID_pointer->active == false){
                                 map_ID_pointer->active = true;
@@ -249,7 +249,7 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
                             }
                         }
                     }
-                /*Process all others SSL packets*/
+                /*Process all others SSL packets, work only with active ssl connections, delete unactive*/
                 } else if((ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_CHANGE_CIPHER_SPEC || ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_ALERT || ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_APPLICATION_DATA) && ID != ""){
                     if(map_ID_pointer->active){
                         i = process_packet(ID, &packet_counted, ssl_session_map, ssl_start, i);

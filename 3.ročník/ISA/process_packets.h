@@ -21,6 +21,7 @@
 #define EXTENSION_TYPE_SNI 0
 #define IPv4 4
 #define IPv6 6
+#define LINUX_SLL 16
 
 #define SSL_CHANGE_CIPHER_SPEC 0x14
 #define SSL_ALERT 0x15
@@ -47,7 +48,7 @@
 #define SNI_LENGTH_CONSTANT 2
 
 using namespace std;
-
+extern int link_layer_length;
 /*
 * Structure with ipv4 and ipv6 addresses
 */

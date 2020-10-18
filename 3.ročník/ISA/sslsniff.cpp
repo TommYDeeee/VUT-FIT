@@ -1,5 +1,6 @@
 #include "arg_parser.h"
 #include "process_packets.h"
+int link_layer_length;
 
 /*
 * Main function, parse arguments, sniff either file or interface, compile filter, and parse packets
@@ -28,6 +29,14 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "Couldn't open device %s: %s\n", interface.c_str(), errbuf);
 		return(EXIT_FAILURE);
 	 }
+     if(pcap_datalink(handle) == DLT_EN10MB){
+        link_layer_length = ETH_HLEN;
+     } else if (pcap_datalink(handle) == DLT_LINUX_SLL){
+        link_layer_length = LINUX_SLL;
+     } else {
+        fprintf(stderr, "WRONG LINK-LAYER HEADER");
+		return(EXIT_FAILURE);
+     }
      /* could not compile filter */
      if(pcap_compile(handle,&fp, filter, 0, net) == -1){
         fprintf(stderr, "Couldn't parse filter %s: %s", filter, pcap_geterr(handle));
