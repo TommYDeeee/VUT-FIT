@@ -69,27 +69,31 @@ typedef struct ip_address{
 * Structure with all necessary info about ssl_connection
 */
  typedef struct ssl_connection_info{
+    bool client_hello = false;
     bool active = false;
+    string server_ID;
     char ip_dst[46];
     char ip_src[46];
     int port_src;
     int port_dst;
-    int session_bytes;
-    int packet_count;
+    int session_bytes = 0;
+    int packet_count = 0;
     struct tm  session_time_stamp;
     timeval duration;
     timeval starttime;
     string SNI;
-    bool FIN = false;
+    bool FIN_client = false;
+    string FIN_client_ID;
+    bool FIN_server = false;
  } ssl_connection;
 
 /* Function definitions */
-void process_FIN_packet(tcphdr *tcph, string ID, ssl_connection *ssl_struct, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header);
+void process_FIN_packet(tcphdr *tcph, string ID, ssl_connection *ssl_struct, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header, string client_ID);
 int get_int_from_two_bytes(const u_char *ssl_start, int offset);
 void get_SNI(ssl_connection *ssl_session, const u_char* client_hello_header);
 void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 const u_char * filter_ssl_packets(const u_char*packet, const u_char *ssl_start);
 void time_diff(struct timeval *difference, const timeval *end_time, struct timeval *start_time);
 string find_ID_map(map<string, ssl_connection> *ssl_session_map, string client_ID, string server_ID);
-bpf_u_int32 process_packet(string ID, bool packet_counted, map<string, ssl_connection> *ssl_session_map, const u_char *ssl_start, bpf_u_int32 i, tcphdr *tcph);
+bpf_u_int32 process_packet(string ID, map<string, ssl_connection> *ssl_session_map, const u_char *ssl_start, bpf_u_int32 i, tcphdr *tcph);
 void print_session(ssl_connection ssl_session);
