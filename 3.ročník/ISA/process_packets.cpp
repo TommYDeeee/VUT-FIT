@@ -196,6 +196,7 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
         ssl_session.session_time_stamp = *localtime(&header->ts.tv_sec);
         ssl_session.starttime = header->ts;
         ssl_session_map->insert(pair<string, ssl_connection>(client_ID, ssl_session));
+        map_ID_pointer = &ssl_session_map->find(client_ID)->second;
     }
     else if(ID != ""){
        map_ID_pointer = &ssl_session_map->find(ID)->second;
