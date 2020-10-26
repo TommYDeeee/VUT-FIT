@@ -10,6 +10,87 @@ from bs4 import BeautifulSoup
 
 
 class DataDownloader:
+    string_list = [
+        "p1",
+        "p36",
+        "p37",
+        "p2a",
+        "weekday(p2a)",
+        "p2b",
+        "p6",
+        "p7",
+        "p8",
+        "p9",
+        "p10",
+        "p11",
+        "p12",
+        "p13a",
+        "p13b",
+        "p13c",
+        "p14",
+        "p15",
+        "p16",
+        "p17",
+        "p18",
+        "p19",
+        "p20",
+        "p21",
+        "p22",
+        "p23",
+        "p24",
+        "p27",
+        "p28",
+        "p34",
+        "p35",
+        "p39",
+        "p44",
+        "p45a",
+        "p47",
+        "p48a",
+        "p49",
+        "p50a",
+        "p50b",
+        "p51",
+        "p52",
+        "p53",
+        "p55a",
+        "p57",
+        "p58",
+        "a",
+        "b",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "p2a"]
+    all_regions_list = [
+        "PHA",
+        "STC",
+        "JHC",
+        "PLK",
+        "KVK",
+        "ULK",
+        "LBK",
+        "HKK",
+        "PAK",
+        "OLK",
+        "MSK",
+        "JHM",
+        "ZLK",
+        "VYS"]
+
     def __init__(
             self,
             url="https://ehw.fit.vutbr.cz/izv/",
@@ -59,73 +140,8 @@ class DataDownloader:
             'JHM': '06.csv',
             'ZLK': '15.csv',
             'VYS': '16.csv'}
-        region = regions_ID.get(region)
+        region_file = regions_ID.get(region)
         latest_month_for_year = {}
-        string_list = [
-            "p1",
-            "p36",
-            "p37",
-            "p2a",
-            "weekday(p2a)",
-            "p2b",
-            "p6",
-            "p7",
-            "p8",
-            "p9",
-            "p10",
-            "p11",
-            "p12",
-            "p13a",
-            "p13b",
-            "p13c",
-            "p14",
-            "p15",
-            "p16",
-            "p17",
-            "p18",
-            "p19",
-            "p20",
-            "p21",
-            "p22",
-            "p23",
-            "p24",
-            "p27",
-            "p28",
-            "p34",
-            "p35",
-            "p39",
-            "p44",
-            "p45a",
-            "p47",
-            "p48a",
-            "p49",
-            "p50a",
-            "p50b",
-            "p51",
-            "p52",
-            "p53",
-            "p55a",
-            "p57",
-            "p58",
-            "a",
-            "b",
-            "d",
-            "e",
-            "f",
-            "g",
-            "h",
-            "i",
-            "j",
-            "k",
-            "l",
-            "n",
-            "o",
-            "p",
-            "q",
-            "r",
-            "s",
-            "t",
-            "p2a"]
         data_types = [
             int,
             int,
@@ -178,21 +194,22 @@ class DataDownloader:
             float,
             float,
             float,
-            'U100',
-            'U100',
-            'U100',
-            'U100',
-            'U100',
+            'U25',
+            'U25',
+            'U25',
+            'U25',
+            'U25',
             int,
-            'U100',
-            'U100',
-            'U100',
+            'U25',
+            'U25',
+            'U25',
             int,
             int,
-            'U100',
+            'U25',
             int]
-        data_list = [list() for name in string_list]
-        region_data = (string_list, data_list)
+        data_list = [[] for _ in range(len(self.string_list))]
+        strings = [string for string in self.string_list]
+        region_data = (strings, data_list)
         for file in os.listdir(self.folder):
             file_regex = re.search(r".*?(\d{2})?-?(\d{4})\.zip", file)
             month = file_regex.group(1)
@@ -207,7 +224,7 @@ class DataDownloader:
 
         for zip_file in latest_month_for_year.values():
             with zipfile.ZipFile(self.folder + '/' + zip_file[1]) as current_zip:
-                with current_zip.open(region, 'r') as opened_csv:
+                with current_zip.open(region_file, 'r') as opened_csv:
                     reader = csv.reader(
                         TextIOWrapper(
                             opened_csv,
@@ -219,7 +236,8 @@ class DataDownloader:
                         for i, value in enumerate(row):
                             if data_types[i] == float:
                                 try:
-                                    region_data[1][i].append(float(value.replace(',', '.')))
+                                    region_data[1][i].append(
+                                        float(value.replace(',', '.')))
                                 except ValueError:
                                     region_data[1][i].append(np.nan)
                             elif data_types[i] == int:
@@ -233,7 +251,33 @@ class DataDownloader:
         for i, region_list in enumerate(region_data[1]):
             region_data[1][i] = np.array(region_list, dtype=data_types[i])
 
-        print(type(region_data[1][-14][-1]))
+        region_ID = np.full(region_data[1][0].shape, region)
+        region_data[1].append(region_ID)
+        region_data[0].append("region")
+        return region_data
+
+    def get_list(self, regions=None):
+        data_list = [[] for _ in range(len(self.string_list))]
+        strings = [string for string in self.string_list]
+        region_list_data = (strings, data_list)
+        region_list_data[1].append(np.array([]))
+        region_list_data[0].append("region")
+        array = []
+        if regions is None:
+            for region in self.all_regions_list:
+                array.append(self.parse_region_data(region))
+
+        else:
+            for region in regions:
+                array.append(self.parse_region_data(region))
+
+        for i in range(len(region_list_data[0])):
+            region_list_data[1][i] = np.concatenate(
+                ([test[1][i] for test in array]))
+            print(region_list_data[1][i])
+        print(type(region_list_data[1][0][0]))
+        return region_list_data
+
 
 d = DataDownloader()
-d.parse_region_data("PLK")
+d.get_list(["PLK"])
