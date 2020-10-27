@@ -4,12 +4,26 @@ import re
 import numpy as np
 import zipfile
 import csv
+import pickle
 
 from io import TextIOWrapper
 from bs4 import BeautifulSoup
 
 
+def get_data(obj, regions):
+    regions = [region for region in regions if region not in obj.data_dict.keys()]
+    for region in regions:
+        path = os.path.join(obj.folder, obj.cache_filename.format(region))
+        if not os.path.isfile(path):
+            with open(path, 'wb') as f:
+                pickle.dump(obj.parse_region_data(region), f)
+
+        with open(path, 'rb') as f:
+            obj.data_dict[region] = pickle.load(f)
+
+
 class DataDownloader:
+    data_dict = {}
     string_list = [
         "p1",
         "p36",
@@ -74,7 +88,7 @@ class DataDownloader:
         "r",
         "s",
         "t",
-        "p2a"]
+        "p5a"]
     all_regions_list = [
         "PHA",
         "STC",
@@ -98,6 +112,7 @@ class DataDownloader:
             cache_filename="data_{}.pkl.gz"):
         self.url = url
         self.folder = folder
+        self.cache_filename = cache_filename
 
     def download_data(self):
         headers = {
@@ -211,16 +226,17 @@ class DataDownloader:
         strings = [string for string in self.string_list]
         region_data = (strings, data_list)
         for file in os.listdir(self.folder):
-            file_regex = re.search(r".*?(\d{2})?-?(\d{4})\.zip", file)
-            month = file_regex.group(1)
-            year = file_regex.group(2)
-            if month is None:
-                month = '12'
-            if year in latest_month_for_year:
-                if latest_month_for_year[year][0] < int(month):
+            if file.endswith(".zip"):
+                file_regex = re.search(r".*?(\d{2})?-?(\d{4})\.zip", file)
+                month = file_regex.group(1)
+                year = file_regex.group(2)
+                if month is None:
+                    month = '12'
+                if year in latest_month_for_year:
+                    if latest_month_for_year[year][0] < int(month):
+                        latest_month_for_year[year] = [int(month), file]
+                else:
                     latest_month_for_year[year] = [int(month), file]
-            else:
-                latest_month_for_year[year] = [int(month), file]
 
         for zip_file in latest_month_for_year.values():
             with zipfile.ZipFile(self.folder + '/' + zip_file[1]) as current_zip:
@@ -262,22 +278,21 @@ class DataDownloader:
         region_list_data = (strings, data_list)
         region_list_data[1].append(np.array([]))
         region_list_data[0].append("region")
-        array = []
         if regions is None:
-            for region in self.all_regions_list:
-                array.append(self.parse_region_data(region))
+            regions = [region for region in self.all_regions_list]
 
-        else:
-            for region in regions:
-                array.append(self.parse_region_data(region))
+        get_data(self, regions)
 
         for i in range(len(region_list_data[0])):
-            region_list_data[1][i] = np.concatenate(
-                ([test[1][i] for test in array]))
-            print(region_list_data[1][i])
-        print(type(region_list_data[1][0][0]))
+            region_list_data[1][i] = np.concatenate(([test[1][i] for test in self.data_dict.values()]))
+
         return region_list_data
 
 
-d = DataDownloader()
-d.get_list(["PLK"])
+if __name__ == "__main__":
+    obj = DataDownloader()
+    output = obj.get_list(["JHM", "PLK", "PAK"])
+    print(f'STLPCE: {output[0]}')
+    print(f'POCET ZAZNAMOV: {len(output[1][0])}')
+    print(f'KRAJE: {set(output[1][-1])}')
+
