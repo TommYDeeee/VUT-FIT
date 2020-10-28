@@ -284,15 +284,15 @@ class DataDownloader:
         get_data(self, regions)
 
         for i in range(len(region_list_data[0])):
-            region_list_data[1][i] = np.concatenate(([test[1][i] for test in self.data_dict.values()]))
+            region_list_data[1][i] = np.concatenate(
+                ([test[1][i] for test in self.data_dict.values()]))
 
         return region_list_data
 
 
 if __name__ == "__main__":
     obj = DataDownloader()
-    output = obj.get_list(["JHM", "PLK", "PAK"])
+    output = obj.get_list(["JHC", "PAK", "PLK"])
     print(f'STLPCE: {output[0]}')
     print(f'POCET ZAZNAMOV: {len(output[1][0])}')
     print(f'KRAJE: {set(output[1][-1])}')
-
