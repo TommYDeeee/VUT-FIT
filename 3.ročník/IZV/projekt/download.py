@@ -5,6 +5,7 @@ import numpy as np
 import zipfile
 import csv
 import pickle
+import gzip
 
 from io import TextIOWrapper
 from bs4 import BeautifulSoup
@@ -15,10 +16,10 @@ def get_data(obj, regions):
     for region in regions:
         path = os.path.join(obj.folder, obj.cache_filename.format(region))
         if not os.path.isfile(path):
-            with open(path, 'wb') as f:
+            with gzip.open(path, 'wb') as f:
                 pickle.dump(obj.parse_region_data(region), f)
 
-        with open(path, 'rb') as f:
+        with gzip.open(path, 'rb') as f:
             obj.data_dict[region] = pickle.load(f)
 
 
@@ -247,8 +248,7 @@ class DataDownloader:
                             'iso8859-2'),
                         delimiter=';',
                         quotechar='"')
-                    all_rows = list(reader)
-                    for row in all_rows:
+                    for row in reader:
                         for i, value in enumerate(row):
                             if data_types[i] == float:
                                 try:
@@ -292,7 +292,7 @@ class DataDownloader:
 
 if __name__ == "__main__":
     obj = DataDownloader()
-    output = obj.get_list(["JHC", "PAK", "PLK"])
+    output = obj.get_list()
     print(f'STLPCE: {output[0]}')
     print(f'POCET ZAZNAMOV: {len(output[1][0])}')
     print(f'KRAJE: {set(output[1][-1])}')
