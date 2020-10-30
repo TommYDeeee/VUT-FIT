@@ -238,10 +238,6 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
                                 map_ID_pointer->port_dst = ntohs(tcph->dest);
                                 /* Get bytes from SSL header  and save them to struct with ssl_session info*/
                                 i = process_packet(ID, ssl_session_map, ssl_start, i);
-                                /* Save timestamp and starttime in seconds to struct with ssl_session info */
-
-                                /*insert ssl_session struct into map with all sessions*/
-                            
                             /*Process "handshake" type packet other then Client Hello */
                             } else if (ID != ""){
                                 /* if handskae type is Server Hello and connection is not already active, make it active otherwise delete connection*/
