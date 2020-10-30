@@ -104,11 +104,11 @@ char* get_SNI(const u_char* client_hello_header){
 * find ID that matches session in map
 */
 string find_ID_map(map<string, ssl_connection> *ssl_session_map, string client_ID, string server_ID){
-    for (auto const& x : *ssl_session_map)
+    for (auto const& session : *ssl_session_map)
     {
-        if(x.first == client_ID && x.second.server_ID == server_ID){
+        if(session.first == client_ID && session.second.server_ID == server_ID){
             return client_ID;
-        } else if (x.first == server_ID && x.second.server_ID == client_ID){
+        } else if (session.first == server_ID && session.second.server_ID == client_ID){
             return server_ID;
         }
     }
@@ -191,76 +191,82 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
     /* if ssl connection is already in map, save pointer to it */
     string ID = find_ID_map(ssl_session_map, client_ID, server_ID);
     if(ID == ""){
-        ssl_session.server_ID = server_ID;
-        ssl_session.packet_count += 1;
-        ssl_session.session_time_stamp = *localtime(&header->ts.tv_sec);
-        ssl_session.starttime = header->ts;
-        ssl_session_map->insert(pair<string, ssl_connection>(client_ID, ssl_session));
-        map_ID_pointer = &ssl_session_map->find(client_ID)->second;
+        if(tcph->syn == 1){
+            ssl_session.server_ID = server_ID;
+            ssl_session.packet_count += 1;
+            ssl_session.session_time_stamp = *localtime(&header->ts.tv_sec);
+            ssl_session.starttime = header->ts;
+            ssl_session_map->insert(pair<string, ssl_connection>(client_ID, ssl_session));
+            map_ID_pointer = &ssl_session_map->find(client_ID)->second;
+        }
     }
     else if(ID != ""){
        map_ID_pointer = &ssl_session_map->find(ID)->second;
        map_ID_pointer->packet_count += 1;
     }
-    /* loop over whole packet, until SSL header is found */
-    for (bpf_u_int32 i = tcphdr_len; i < header->caplen; i++){
-        if(header->caplen - i >= 5){
-            /*SSL content type must be handshake, dpplication data, change cipher spec or alert */
-            if(packet[i] == SSL_CHANGE_CIPHER_SPEC || packet[i] == SSL_ALERT || packet[i] == SSL_HANDSHAKE || packet[i] == SSL_APPLICATION_DATA){
-                const u_char *filtered_packet = filter_ssl_packets(packet, &packet[i]);
-                /* process only SSL packets */
-                if(filtered_packet != NULL){
-                    const u_char *ssl_start = (const u_char*)(unsigned char*)&packet[i]; //pointer to sll header start
+    
+    /* There is a session to work with */
+    if(map_ID_pointer){
+        /* loop over whole packet, until SSL header is found */
+        for (bpf_u_int32 i = tcphdr_len; i < header->caplen; i++){
+            if(header->caplen - i >= 5){
+                /*SSL content type must be handshake, dpplication data, change cipher spec or alert */
+                if(packet[i] == SSL_CHANGE_CIPHER_SPEC || packet[i] == SSL_ALERT || packet[i] == SSL_HANDSHAKE || packet[i] == SSL_APPLICATION_DATA){
+                    const u_char *filtered_packet = filter_ssl_packets(packet, &packet[i]);
+                    /* process only SSL packets */
+                    if(filtered_packet != NULL){
+                        const u_char *ssl_start = (const u_char*)(unsigned char*)&packet[i]; //pointer to sll header start
 
-                    /* Check if packet is "handshake type"*/
-                    if(ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_HANDSHAKE){
-                        /*if handshake type is Client Hello save all necessary infp (SSL connection started)*/
-                        if(ssl_start[SSL_HANDSHAKE_TYPE_OFFSET] == SSL_HANDSHAKE_CLIENT_HELLO && ssl_session_map->find(ID)->second.client_hello == false){
-                            map_ID_pointer->client_hello = true;
-                            /* Get SNI from packet and save SNI or empty string if it is missing to struct with ssl_session info*/
-                            char *SNI = get_SNI(ssl_start + FIXED_CLIENT_HELLO_HEADER_LENGTH);
-                            if(SNI != NULL){
-                                map_ID_pointer->SNI = SNI;
-                                free(SNI);
-                            } else {
-                                map_ID_pointer->SNI = "";
-                            }
-                            /* Save source and destination IP addresses to struct with ssl_session info */
-                            strcpy(map_ID_pointer->ip_src, source);
-                            strcpy(map_ID_pointer->ip_dst, dest);
-                            /* Save source and destination port numbers to struct with ssl_session info */
-                            map_ID_pointer->port_src = ntohs(tcph->source);
-                            map_ID_pointer->port_dst = ntohs(tcph->dest);
-                            /* Get bytes from SSL header  and save them to struct with ssl_session info*/
-                            i = process_packet(ID, ssl_session_map, ssl_start, i);
-                            /* Save timestamp and starttime in seconds to struct with ssl_session info */
+                        /* Check if packet is "handshake type"*/
+                        if(ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_HANDSHAKE){
+                            /*if handshake type is Client Hello save all necessary infp (SSL connection started)*/
+                            if(ssl_start[SSL_HANDSHAKE_TYPE_OFFSET] == SSL_HANDSHAKE_CLIENT_HELLO && map_ID_pointer->client_hello == false){
+                                map_ID_pointer->client_hello = true;
+                                /* Get SNI from packet and save SNI or empty string if it is missing to struct with ssl_session info*/
+                                char *SNI = get_SNI(ssl_start + FIXED_CLIENT_HELLO_HEADER_LENGTH);
+                                if(SNI != NULL){
+                                    map_ID_pointer->SNI = SNI;
+                                    free(SNI);
+                                } else {
+                                    map_ID_pointer->SNI = "";
+                                }
+                                /* Save source and destination IP addresses to struct with ssl_session info */
+                                strcpy(map_ID_pointer->ip_src, source);
+                                strcpy(map_ID_pointer->ip_dst, dest);
+                                /* Save source and destination port numbers to struct with ssl_session info */
+                                map_ID_pointer->port_src = ntohs(tcph->source);
+                                map_ID_pointer->port_dst = ntohs(tcph->dest);
+                                /* Get bytes from SSL header  and save them to struct with ssl_session info*/
+                                i = process_packet(ID, ssl_session_map, ssl_start, i);
+                                /* Save timestamp and starttime in seconds to struct with ssl_session info */
 
-                            /*insert ssl_session struct into map with all sessions*/
-                        
-                        /*Process "handshake" type packet other then Client Hello */
-                        } else if (ID != ""){
-                            /* if handskae type is Server Hello and connection is not already active, make it active otherwise delete connection*/
-                            if(ssl_start[SSL_HANDSHAKE_TYPE_OFFSET] == SSL_HANDSHAKE_SERVER_HELLO){
-                                if(map_ID_pointer->client_hello == true){
-                                    map_ID_pointer->active = true;
-                                    i = process_packet(ID, ssl_session_map, ssl_start, i);
+                                /*insert ssl_session struct into map with all sessions*/
+                            
+                            /*Process "handshake" type packet other then Client Hello */
+                            } else if (ID != ""){
+                                /* if handskae type is Server Hello and connection is not already active, make it active otherwise delete connection*/
+                                if(ssl_start[SSL_HANDSHAKE_TYPE_OFFSET] == SSL_HANDSHAKE_SERVER_HELLO){
+                                    if(map_ID_pointer->client_hello == true){
+                                        map_ID_pointer->active = true;
+                                        i = process_packet(ID, ssl_session_map, ssl_start, i);
+                                    } else {
+                                        ssl_session_map->erase(ID);
+                                    }
                                 } else {
-                                    ssl_session_map->erase(ID);
-                                }
-                            } else {
-                                if(map_ID_pointer->client_hello){
-                                    i = process_packet(ID, ssl_session_map, ssl_start, i);
-                                } else {
-                                    ssl_session_map->erase(ID);
+                                    if(map_ID_pointer->client_hello){
+                                        i = process_packet(ID, ssl_session_map, ssl_start, i);
+                                    } else {
+                                        ssl_session_map->erase(ID);
+                                    }
                                 }
                             }
-                        }
-                    /*Process all others SSL packets, work only with active ssl connections, delete unactive*/
-                    } else if((ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_CHANGE_CIPHER_SPEC || ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_ALERT || ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_APPLICATION_DATA) && ID != ""){
-                        if(map_ID_pointer->client_hello){
-                            i = process_packet(ID, ssl_session_map, ssl_start, i);
-                        } else {
-                            ssl_session_map->erase(ID);
+                        /*Process all others SSL packets, work only with active ssl connections, delete unactive*/
+                        } else if((ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_CHANGE_CIPHER_SPEC || ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_ALERT || ssl_start[SSL_CONTENT_TYPE_OFFSET] == SSL_APPLICATION_DATA) && ID != ""){
+                            if(map_ID_pointer->client_hello){
+                                i = process_packet(ID, ssl_session_map, ssl_start, i);
+                            } else {
+                                ssl_session_map->erase(ID);
+                            }
                         }
                     }
                 }
