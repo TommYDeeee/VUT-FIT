@@ -22,7 +22,7 @@ def get_data(obj, regions):
         content into class attribute otherwise firstly store data into pickle
         and then load into class attribute
     """
-    regions = [region for region in regions if region not in obj.data_dict.keys()]
+    regions = [region for region in regions if region not in obj.data_dict.keys() and region in obj.regions_ID.keys()]
     for region in regions:
         path = os.path.join(obj.folder, obj.cache_filename.format(region))
         if not os.path.isfile(path):
@@ -79,6 +79,8 @@ class DataDownloader:
         # dictionary with data from pickle grouped together
         self.data_dict = {}
 
+        #dictionary with lates zip files for each year
+        self.latest_zip_for_year = {}
         # list of pre-defined column names in CSV
         self.string_list = [
             "p1", "p36", "p37", "p2a", "weekday(p2a)", "p2b",
@@ -92,13 +94,12 @@ class DataDownloader:
 
         # list of appropriate data types for each column in CSV
         self.data_types = [
-            int, int, int, 'U15', int, int, int, int, int, int,
-            int, int, int, int, int, int, int, int, int, int, int,
-            int, int, int, int, int, int, int, int, int, int, int,
-            int, int, int, int, int, int, int, int, int, int, int,
-            int, int, int, int, float, float, float, float,
-            'U25', 'U25', 'U25', 'U25', 'U25', int,
-            'U25', 'U25', 'U25', int, int, 'U25', int]
+            'U12', 'u8', 'u8', 'U10', 'u8', 'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
+            'u8', 'u8', 'u8', 'u8', 'u8',  'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
+            'u8', 'u8', 'u8', 'u8', 'u8',  'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
+            'u8', 'u8', 'u8', 'u8', 'u8',  'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
+            'u8', 'u8', 'u8', 'f8', 'f8', 'f8', 'f8', 'U25', 'U25', 'U25',
+            'U25', 'U25', 'u8', 'U25', 'U25', 'U25', 'u8', 'u8', 'U25', 'u8']
 
     def download_data(self):
         """
@@ -118,16 +119,31 @@ class DataDownloader:
         all_links = [link.get('href') for link in all_hrefs]
         zip_files = [dl for dl in all_links if dl and '.zip' in dl]
 
+        for z_file in zip_files:
+            if z_file.endswith(".zip"):
+                z_file = z_file.split("/")[1]
+                file_regex = re.search(r".*?(\d{2})?-?(\d{4})\.zip", z_file)
+                month = file_regex.group(1)
+                year = file_regex.group(2)
+                if month is None:
+                    month = '12'
+                if year in self.latest_zip_for_year:
+                    if self.latest_zip_for_year[year][0] < int(month):
+                        self.latest_zip_for_year[year] = [int(month), z_file]
+                else:
+                    self.latest_zip_for_year[year] = [int(month), z_file]
+
         if not os.path.exists(self.folder):
             os.makedirs(self.folder)
 
-        # download each zip on web if it is not already downloaded
-        for zip_file in zip_files:
-            if os.path.isfile(self.folder + "/" + zip_file.split("/")[1]):
+        # download each latest zip on web if it is not already downloaded
+        for zip_file in self.latest_zip_for_year.values():
+            file_to_download = "data/" + zip_file[1]
+            if os.path.isfile(self.folder + "/" + zip_file[1]):
                 pass
             else:
-                r = requests.get(self.url + zip_file, headers=headers)
-                zip_filename = os.path.basename(zip_file)
+                r = requests.get(self.url + file_to_download, headers=headers)
+                zip_filename = os.path.basename(zip_file[1])
                 dl_path = os.path.join(self.folder, zip_filename)
 
                 with open(dl_path, 'wb') as z_file:
@@ -150,26 +166,13 @@ class DataDownloader:
 
         # Filter unnecessary zip files, work just with latest month in year
         region_file = self.regions_ID.get(region)
-        latest_month_for_year = {}
         data_list = [[] for _ in range(len(self.string_list))]
         strings = [string for string in self.string_list]
         region_data = (strings, data_list)
-        for file in os.listdir(self.folder):
-            if file.endswith(".zip"):
-                file_regex = re.search(r".*?(\d{2})?-?(\d{4})\.zip", file)
-                month = file_regex.group(1)
-                year = file_regex.group(2)
-                if month is None:
-                    month = '12'
-                if year in latest_month_for_year:
-                    if latest_month_for_year[year][0] < int(month):
-                        latest_month_for_year[year] = [int(month), file]
-                else:
-                    latest_month_for_year[year] = [int(month), file]
 
         # parse and clean data about region just from latest month in every
         # year and store each row in CSV file for given region into numpy list
-        for zip_file in latest_month_for_year.values():
+        for zip_file in self.latest_zip_for_year.values():
             with zipfile.ZipFile(self.folder + '/' + zip_file[1]) as current_zip:
                 with current_zip.open(region_file, 'r') as opened_csv:
                     reader = csv.reader(
@@ -180,26 +183,26 @@ class DataDownloader:
                         quotechar='"')
                     for row in reader:
                         for i, value in enumerate(row):
-                            if self.data_types[i] == float:
+                            if self.data_types[i] == 'f8':
                                 try:
                                     region_data[1][i].append(
                                         float(value.replace(',', '.')))
                                 except ValueError:
                                     region_data[1][i].append(np.nan)
-                            elif self.data_types[i] == int:
+                            elif self.data_types[i] == 'u8':
                                 if i == 5:
                                     if(value == "2560"):
-                                        region_data[1][i].append(-999999)
+                                        region_data[1][i].append(-1)
                                     else:
                                         try:
                                             region_data[1][i].append(int(value))
                                         except ValueError:
-                                            region_data[1][i].append(-999999)
+                                            region_data[1][i].append(-1)
                                 else:
                                     try:
                                         region_data[1][i].append(int(value))
                                     except ValueError:
-                                        region_data[1][i].append(-999999)
+                                        region_data[1][i].append(-1)
                             else:
                                 region_data[1][i].append(value)
 
@@ -218,7 +221,6 @@ class DataDownloader:
             Get data for list of regions grouped together in one tuple.
             Data are either taken from class attribute, pickle or even parsed
             from zip files
-
             Args:
                 regions (list): List of regions that we want data about
            
