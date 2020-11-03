@@ -22,6 +22,8 @@ def get_data(obj, regions):
         content into class attribute otherwise firstly store data into pickle
         and then load into class attribute
     """
+    if not os.path.exists(obj.folder):
+        os.makedirs(obj.folder)
     regions = [region for region in regions if region not in obj.data_dict.keys() and region in obj.regions_ID.keys()]
     for region in regions:
         path = os.path.join(obj.folder, obj.cache_filename.format(region))
@@ -94,12 +96,12 @@ class DataDownloader:
 
         # list of appropriate data types for each column in CSV
         self.data_types = [
-            'U12', 'u8', 'u8', 'U10', 'u8', 'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
-            'u8', 'u8', 'u8', 'u8', 'u8',  'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
-            'u8', 'u8', 'u8', 'u8', 'u8',  'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
-            'u8', 'u8', 'u8', 'u8', 'u8',  'u8', 'u8', 'u8', 'u8', 'u8', 'u8',
-            'u8', 'u8', 'u8', 'f8', 'f8', 'f8', 'f8', 'U25', 'U25', 'U25',
-            'U25', 'U25', 'u8', 'U25', 'U25', 'U25', 'u8', 'u8', 'U25', 'u8']
+            'U12', 'i1', 'i4', 'M8', 'i1', 'U4', 'i1', 'i1', 'i1', 'i1', 'i1',
+            'i1', 'i2', 'i1', 'i1', 'i1',  'i4', 'i1', 'i1', 'i1', 'i1', 'i1',
+            'i1', 'i1', 'i1', 'i1', 'i1',  'i1', 'i1', 'i2', 'i1', 'i1', 'i1',
+            'i1', 'i1', 'i1', 'i1', 'i1',  'i1', 'i1', 'i1', 'i4', 'i1', 'i1',
+            'i1', 'i8', 'i8', 'f8', 'f8', 'f8', 'f8', 'U25', 'U25', 'U25',
+            'U25', 'U25', 'i8', 'U25', 'U25', 'U25', 'i8', 'i8', 'U25', 'i8']
 
     def download_data(self):
         """
@@ -133,8 +135,6 @@ class DataDownloader:
                 else:
                     self.latest_zip_for_year[year] = [int(month), z_file]
 
-        if not os.path.exists(self.folder):
-            os.makedirs(self.folder)
 
         # download each latest zip on web if it is not already downloaded
         for zip_file in self.latest_zip_for_year.values():
@@ -178,7 +178,7 @@ class DataDownloader:
                     reader = csv.reader(
                         TextIOWrapper(
                             opened_csv,
-                            'iso8859-2'),
+                            'windows-1250'),
                         delimiter=';',
                         quotechar='"')
                     for row in reader:
@@ -189,7 +189,7 @@ class DataDownloader:
                                         float(value.replace(',', '.')))
                                 except ValueError:
                                     region_data[1][i].append(np.nan)
-                            elif self.data_types[i] == 'u8':
+                            elif self.data_types[i] in ['i1', 'i2', 'i4', 'i8']:
                                 if i == 5:
                                     if(value == "2560"):
                                         region_data[1][i].append(-1)
@@ -204,7 +204,13 @@ class DataDownloader:
                                     except ValueError:
                                         region_data[1][i].append(-1)
                             else:
-                                region_data[1][i].append(value)
+                                if i == 3:
+                                    try:
+                                        region_data[1][i].append(np.datetime64(value))
+                                    except ValueError:
+                                        region_data[1][i].append(-1)
+                                else:
+                                    region_data[1][i].append(value)
 
         # change list with column information into numpy array
         for i, region_list in enumerate(region_data[1]):
@@ -253,7 +259,7 @@ class DataDownloader:
 # print basic information about chosen regions (JHC, PLK, PAK)
 if __name__ == "__main__":
     obj = DataDownloader()
-    output = obj.get_list(["JHC", "PLK", "PAK"])
+    output = obj.get_list(["JHC", "PAK", "PLK"])
     print(f'STLPCE: {output[0]}')
     print(f'POCET ZAZNAMOV: {len(output[1][0])}')
     print(f'KRAJE: {set(output[1][-1])}')

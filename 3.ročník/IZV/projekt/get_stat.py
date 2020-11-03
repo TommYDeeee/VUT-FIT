@@ -35,8 +35,7 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
     for key in dict_regions.keys():
         from_i = dict_regions.get(key)[0]
         to_i = dict_regions.get(key)[0] + dict_regions.get(key)[1]
-        years, counts = np.unique([year.split(
-            "-")[0] for year in data_source[1][3][from_i:to_i]], return_counts=True)
+        years, counts = np.unique([year.astype("datetime64[Y]") for year in data_source[1][3][from_i:to_i]], return_counts=True)
         formated_dict[key] = dict(zip(years, counts))
 
     # regroup dictionary to have year as a key
@@ -132,7 +131,7 @@ if __name__ == "__main__":
     parser.add_argument('--show_figure', action='store_true')
     args = parser.parse_args()
 
-    data_source = DataDownloader().get_list()
+    data_source = DataDownloader().get_list(["JHC", "PAK", "PLK"])
     plot_stat(
         data_source,
         fig_location=args.fig_location,
