@@ -46,6 +46,9 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
                 ready_to_visualize_dict[k2] = {}
             ready_to_visualize_dict[k2][k1] = v2
 
+    # remove  invalid year from visualization
+    ready_to_visualize_dict.pop(np.datetime64('1969'), None)
+
     # sort regions according to number of traffic incidents (for annotations)
     sorted_regions = {region: 0 for region in ready_to_visualize_dict.keys()}
     for item, values in ready_to_visualize_dict.items():
@@ -109,7 +112,7 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
                 ha='center',
                 va='bottom', color='xkcd:dark')
     fig.subplots_adjust(hspace=0.5, top=0.91, bottom=0.05)
-    
+
     # save graph if location was providen
     if fig_location is not None:
         os.makedirs(
@@ -131,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument('--show_figure', action='store_true')
     args = parser.parse_args()
 
-    data_source = DataDownloader().get_list(["JHC", "PAK", "PLK"])
+    data_source = DataDownloader().get_list()
     plot_stat(
         data_source,
         fig_location=args.fig_location,

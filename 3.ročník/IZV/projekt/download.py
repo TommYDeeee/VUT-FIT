@@ -30,9 +30,12 @@ def get_data(obj, regions):
         if not os.path.isfile(path):
             with gzip.open(path, 'wb') as f:
                 pickle.dump(obj.parse_region_data(region), f)
-
-        with gzip.open(path, 'rb') as f:
-            obj.data_dict[region] = pickle.load(f)
+        try:
+            with gzip.open(path, 'rb') as f:
+                obj.data_dict[region] = pickle.load(f)
+        except EOFError:
+            print("Corrupted cache file")
+            exit(1)
 
 
 class DataDownloader:
@@ -81,7 +84,7 @@ class DataDownloader:
         # dictionary with data from pickle grouped together
         self.data_dict = {}
 
-        #dictionary with lates zip files for each year
+        # dictionary with lates zip files for each year
         self.latest_zip_for_year = {}
         # list of pre-defined column names in CSV
         self.string_list = [
@@ -109,7 +112,7 @@ class DataDownloader:
             and store them into given folder
         """
 
-        # Request header to avoid robot detection
+        # request header to avoid robot detection
         headers = {
             'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/ \
                 537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'}
@@ -134,7 +137,6 @@ class DataDownloader:
                         self.latest_zip_for_year[year] = [int(month), z_file]
                 else:
                     self.latest_zip_for_year[year] = [int(month), z_file]
-
 
         # download each latest zip on web if it is not already downloaded
         for zip_file in self.latest_zip_for_year.values():
@@ -190,25 +192,21 @@ class DataDownloader:
                                 except ValueError:
                                     region_data[1][i].append(np.nan)
                             elif self.data_types[i] in ['i1', 'i2', 'i4', 'i8']:
-                                if i == 5:
-                                    if(value == "2560"):
-                                        region_data[1][i].append(-1)
-                                    else:
-                                        try:
-                                            region_data[1][i].append(int(value))
-                                        except ValueError:
-                                            region_data[1][i].append(-1)
-                                else:
-                                    try:
-                                        region_data[1][i].append(int(value))
-                                    except ValueError:
-                                        region_data[1][i].append(-1)
+                                try:
+                                    region_data[1][i].append(int(value))
+                                except ValueError:
+                                    region_data[1][i].append(-1)
                             else:
                                 if i == 3:
                                     try:
                                         region_data[1][i].append(np.datetime64(value))
                                     except ValueError:
                                         region_data[1][i].append(-1)
+                                elif i == 5:
+                                    if(value == "2560"):
+                                        region_data[1][i].append("-1")
+                                    else:
+                                        region_data[1][i].append(value)
                                 else:
                                     region_data[1][i].append(value)
 
@@ -229,7 +227,7 @@ class DataDownloader:
             from zip files
             Args:
                 regions (list): List of regions that we want data about
-           
+
             Return:
                 tuple: Tuple with concatenated information about given regions
         """
@@ -248,9 +246,15 @@ class DataDownloader:
         get_data(self, regions)
 
         # concatenate all data about given regions
-        for i in range(len(region_list_data[0])):
-            region_list_data[1][i] = np.concatenate(
-                ([test[1][i] for test in self.data_dict.values()]))
+        try:
+            for i in range(len(region_list_data[0])):
+                region_list_data[1][i] = np.concatenate(
+                    ([test[1][i] for test in self.data_dict.values()]))
+        except ValueError:
+            print("Given empty list or list with only invalid regions. "
+                  "Argument must either not be given or given with "
+                  "at least one correct value (others will be skipped")
+            exit(1)
 
         return region_list_data
 
@@ -259,7 +263,7 @@ class DataDownloader:
 # print basic information about chosen regions (JHC, PLK, PAK)
 if __name__ == "__main__":
     obj = DataDownloader()
-    output = obj.get_list(["JHC", "PAK", "PLK"])
+    output = obj.get_list()
     print(f'STLPCE: {output[0]}')
     print(f'POCET ZAZNAMOV: {len(output[1][0])}')
     print(f'KRAJE: {set(output[1][-1])}')
