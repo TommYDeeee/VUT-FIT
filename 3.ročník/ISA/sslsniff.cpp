@@ -26,7 +26,8 @@ int main(int argc, char *argv[]){
     }
     /* given interface was invalid */
     if (handle == NULL) {
-		fprintf(stderr, "Couldn't open device %s: %s\n", interface.c_str(), errbuf);
+		fprintf(stderr, "INVALID DEVICE OR FILE: %s: %s\n", interface.c_str(), errbuf);
+        fprintf(stderr, "To see help start program with 0 arguments\n");
 		return(EXIT_FAILURE);
 	 }
      if(pcap_datalink(handle) == DLT_EN10MB){
@@ -34,18 +35,21 @@ int main(int argc, char *argv[]){
      } else if (pcap_datalink(handle) == DLT_LINUX_SLL){
         link_layer_length = LINUX_SLL;
      } else {
-        fprintf(stderr, "WRONG LINK-LAYER HEADER");
+        fprintf(stderr, "WRONG LINK-LAYER HEADER\n");
+        fprintf(stderr, "To see help start program with 0 arguments\n");
 		return(EXIT_FAILURE);
      }
      /* could not compile filter */
      if(pcap_compile(handle,&fp, filter, 0, net) == -1){
-        fprintf(stderr, "Couldn't parse filter %s: %s", filter, pcap_geterr(handle));
+        fprintf(stderr, "INVALID FILTER: %s: %s", filter, pcap_geterr(handle));
+        fprintf(stderr, "To see help start program with 0 arguments\n");
 		return(EXIT_FAILURE);
      }
     /* could not set filter */
     if(pcap_setfilter(handle, &fp) == -1){
-        fprintf(stderr, "Couldn't set filter %s: %s", filter, pcap_geterr(handle));
-		return(2);
+        fprintf(stderr, "FILTER %s cannot be set: %s", filter, pcap_geterr(handle));
+        fprintf(stderr, "To see help start program with 0 arguments\n");
+		return(EXIT_FAILURE);
     }
     /* loop over packets, clean memory afterwards and close handle */
     pcap_loop(handle, -1, callback,  (u_char *)&ssl_sessions);

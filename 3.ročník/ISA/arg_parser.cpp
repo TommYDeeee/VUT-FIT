@@ -7,7 +7,18 @@ string file, interface;
 * Print help
 */
 void print_help(){
-    printf("TODO HELP\n");
+    printf("Simple ssl monitoring program that prints basic information about SSL connection into STDOUT\n");
+    printf("\n");
+    printf("BASIC INFORMATION ARE: <timestamp>,<client IP>,<client PORT>,<server IP>,<bytes>,<SNI>,<packets>,<duration sec>\n");
+    printf("\n");
+    printf("SUPPORTED ARGUMENTS: <-r FILE> <-i INTERFACE>\n");
+    printf("FILE must be a valid file and INTERFACE must be a valid network interface\n");
+    printf("\n");
+    printf("EXAMPLES:\n");
+    printf("./sslsniff -r seznam.pcapng");
+    printf("./sslsniff -i any");
+    printf("\n");
+    printf("AUTHOR: Tomas Duris (xduris05)\n");
 }
 
 /*
@@ -19,7 +30,8 @@ void parse_args(int argc, char *argv[]){
         print_help();
         exit(EXIT_SUCCESS);
     } else if  (argc > 5){
-        printf("WRONG ARGUMENT COUNT\n");
+        fprintf(stderr, "WRONG ARGUMENT COUNT\n");
+        fprintf(stderr, "To see help start program with 0 arguments\n");
         exit(EXIT_FAILURE);
     } 
     else {
@@ -43,7 +55,8 @@ void parse_args(int argc, char *argv[]){
                 have_interface = true;
                 continue;
             } else {
-                printf("WRONG ARGUMENT\n");
+                fprintf(stderr, "WRONG ARGUMENT\n");
+                fprintf(stderr,"To see help start program with 0 arguments\n");
                 exit(EXIT_FAILURE);
             }
         }

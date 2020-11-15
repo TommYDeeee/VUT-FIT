@@ -1,0 +1,52 @@
+.TH man 8 "11 October 2020" "1.0" "sslsniff man page"
+.SH PROLOG
+Simple man page for sslsniff - ssl monitoring tool, that parse and provides simple information about each ssl connection
+Specific implementation details are mentioned below in section
+.B DESCRIPTION
+.SH NAME
+.B sslsniff
+\- simple ssl connection monitoring
+.SH SYNOPSIS
+.B sslsniff
+[\fB\-r\fR \fIFILE\fR]
+[\fB\-i\fR \fIINTERFACE\fR]
+.SH EXAMPLES
+.IP \[bu] 4 
+.B sslsniff
+\fB\-r\fR \fIseznam.pcapng\fR 
+.IP \[bu] 4 
+.B sslsniff
+\fB\-i\fR \fIany\fR 
+.SH DESCRIPTION
+.SS BASIC INFORMATION OUTPUT
+<timestamp>,<client IP>,<client PORT>,<server IP>,<bytes>,<SNI>,<packets>,<duration sec>
+.IP \[bu] 4 
+timestamp is time info from first SYN packet in TCP connection
+.IP \[bu] 4 
+bytes is total number of bytes from all SSL packets in same connection
+.IP \[bu] 4
+packets is number of packets in same connection starting from first SYN packet and ending with second FIN packet
+.IP \[bu] 4 
+duration is difference between time in first packet and time in last packet
+.SS ARGUMENTS
+.IP \[bu] 4 
+If program was started with wrong arguments, program exits with non-zero EXIT code and/or prints basic HELP \n
+.IP \[bu] 4 
+If parameter <\fB\-r\fR \fIINTERFACE\fR> was given \fB\sslsniff\fR parse given file and prints basic information about SSL connection into STDOUT.
+.IP \[bu] 4 
+If parameter <\fB-i\fR \fIFILE\fR> was given, program sniffs on live interface, capture, parse and prints basic information about SSL connection into STDOUT
+.IP \[bu] 4 
+If both arguments were given, parameter <\fB\-r\fR \fIINTERFACE\fR> is preferred
+.IP \[bu] 4 
+If none arguments were given, program prints simple help and exits with zero return code
+.SS CONDITIONS THAT NEEDS TO BE MET TO PRINT SSL CONNECTION
+.IP \[bu] 4 
+supported link-layer types are \fBANY\fR and \fBETHERNET\fR
+.IP \[bu] 4 
+connection must be active - to consider connection as an active SSL handshake must have been made (Client hello followed by Server hello)
+.IP \[bu] 4 
+connection must be properly finished - to consider connection as a finished, packet with FIN flag must have came from one side of connection and packet with FIN and ACK must have came from the other side of connection
+.IP \[bu] 4 
+connection must contain correct SSL version header - as a correct ssl version header is considered \fBTLS1.0\fR, \fBTLS1.1\fR, \fBTLS1.2\fR and \fBTLS1.3\fR
+.SH AUTHOR
+Tomáš Ďuriš (xduris05)
