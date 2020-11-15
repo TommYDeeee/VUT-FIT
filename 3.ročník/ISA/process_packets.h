@@ -5,18 +5,18 @@
 #include <algorithm>
 
 #include <arpa/inet.h>
-#include<net/ethernet.h> 
-#include<netinet/tcp.h>	
-#include<netinet/ip.h>	
-#include<netinet/ip6.h>	
+#include <net/ethernet.h> 
+#include <netinet/tcp.h>	
+#include <netinet/ip.h>	
+#include <netinet/ip6.h>	
 
 /* DEFINED CONSTANTS */
 
-#define SSLv3 "0300"
-#define TLS1_0 "0301"
-#define TLS1_1 "0302"
-#define TLS1_2 "0303"
-#define TLS1_3 "0304"
+#define TLS 0x03
+#define TLS1_0 0x01
+#define TLS1_1 0x02
+#define TLS1_2 0x03
+#define TLS1_3 0x04
 
 #define EXTENSION_TYPE_SNI 0
 #define IPv4 4
@@ -30,6 +30,8 @@
 #define SSL_HANDSHAKE_CLIENT_HELLO 0x01
 #define SSL_HANDSHAKE_SERVER_HELLO 0x02
 
+#define SSL_TLS_OFFSET 1
+#define SSL_TLS_VERSION_OFFSET 2
 #define SSL_CONTENT_TYPE_OFFSET 0
 #define SSL_HANDSHAKE_TYPE_OFFSET 5
 #define SSL_HEADER_LENGTH_OFFSET 3
@@ -49,6 +51,7 @@
 
 using namespace std;
 extern int link_layer_length;
+
 /*
 * Structure with ipv4 and ipv6 addresses
 */
@@ -62,7 +65,7 @@ typedef struct ip_address{
         struct in_addr ipv4;
         struct in6_addr ipv6;
     } ip_dst;
-
+    
 }ip_address_struct;
  
 /* 
@@ -71,29 +74,28 @@ typedef struct ip_address{
  typedef struct ssl_connection_info{
     bool client_hello = false;
     bool active = false;
-    string server_ID;
+    bool FIN_client = false;
     char ip_dst[46];
     char ip_src[46];
     int port_src;
     int port_dst;
     int session_bytes = 0;
     int packet_count = 0;
+    string server_ID;
+    string SNI;
+    string FIN_client_ID;
     struct tm  session_time_stamp;
     timeval duration;
     timeval starttime;
-    string SNI;
-    bool FIN_client = false;
-    string FIN_client_ID;
-    bool FIN_server = false;
  } ssl_connection;
 
 /* Function definitions */
-void process_FIN_packet(tcphdr *tcph, string ID, ssl_connection *ssl_struct, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header, string client_ID);
+void process_FIN_packet(tcphdr *tcph, ssl_connection *session_ptr, map<string, ssl_connection> *ssl_session_map, const struct pcap_pkthdr *header, string ID, string client_ID);
 int get_int_from_two_bytes(const u_char *ssl_start, int offset);
 void get_SNI(ssl_connection *ssl_session, const u_char* client_hello_header);
 void callback(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 const u_char * filter_ssl_packets(const u_char*packet, const u_char *ssl_start);
 void time_diff(struct timeval *difference, const timeval *end_time, struct timeval *start_time);
 string find_ID_map(map<string, ssl_connection> *ssl_session_map, string client_ID, string server_ID);
-bpf_u_int32 process_packet(string ID, map<string, ssl_connection> *ssl_session_map, const u_char *ssl_start, bpf_u_int32 i, tcphdr *tcph);
-void print_session(ssl_connection ssl_session);
+bpf_u_int32 process_packet(ssl_connection *ssl_session_map, const u_char *ssl_start, bpf_u_int32 i, tcphdr *tcph);
+void print_session(ssl_connection *ssl_session);
