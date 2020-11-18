@@ -271,11 +271,18 @@ void callback(u_char *ssl_sessions, const struct pcap_pkthdr *header, const u_ch
                 }
             }
         }
-    }
-
-    /* FIN flag was reciever, process packet*/
-    if(tcph->fin == 1 && map_ID_pointer){
-        if(map_ID_pointer->client_hello == true){
+        /* RST flag was received, if session is active print it out and erase from map*/
+        if(tcph->rst ==1){
+            if(map_ID_pointer->active){
+                time_diff(&map_ID_pointer->duration, &header->ts, &map_ID_pointer->starttime);
+                print_session(map_ID_pointer);
+                ssl_session_map->erase(ID);
+            } else {
+                ssl_session_map->erase(ID);
+            }
+        }
+        /* FIN flag was received, process packet*/
+        else if(tcph->fin == 1){
             process_FIN_packet(tcph, map_ID_pointer, ssl_session_map, header, ID, client_ID);
         }
     }

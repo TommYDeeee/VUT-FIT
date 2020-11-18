@@ -3,6 +3,8 @@
 Simple man page for sslsniff - ssl monitoring tool, that parse and provides simple information about each ssl connection
 Specific implementation details are mentioned below in section
 .B DESCRIPTION
+.PP
+\fBMakefile\fR is included, run \fBmake\fR to build project or \fBmake clean\fR to remove build files. Project is build into current folder.
 .SH NAME
 .B sslsniff
 \- simple ssl connection monitoring
@@ -27,7 +29,7 @@ bytes is total number of bytes from all SSL packets in same connection
 .IP \[bu] 4
 packets is number of packets in same connection starting from first SYN packet and ending with second FIN packet
 .IP \[bu] 4 
-duration is difference between time in first packet and time in last packet
+duration is difference between time in first packet and time in last packet, duration has 6 digits to preserve consistency with <timestamp>!
 .SS ARGUMENTS
 .IP \[bu] 4 
 If program was started with wrong arguments, program exits with non-zero EXIT code and/or prints basic HELP \n
@@ -39,14 +41,26 @@ If parameter <\fB-i\fR \fIFILE\fR> was given, program sniffs on live interface, 
 If both arguments were given, parameter <\fB\-r\fR \fIINTERFACE\fR> is preferred
 .IP \[bu] 4 
 If none arguments were given, program prints simple help and exits with zero return code
-.SS CONDITIONS THAT NEEDS TO BE MET TO PRINT SSL CONNECTION
+.SS CONDITIONS THAT NEED TO BE MET TO PRINT SSL CONNECTION
 .IP \[bu] 4 
-supported link-layer types are \fBANY\fR and \fBETHERNET\fR
+supported link-layer types are \fBANY\fR(LINUX COOKED HEADER) and \fBETHERNET\fR
 .IP \[bu] 4 
 connection must be active - to consider connection as an active SSL handshake must have been made (Client hello followed by Server hello)
 .IP \[bu] 4 
-connection must be properly finished - to consider connection as a finished, packet with FIN flag must have came from one side of connection and packet with FIN and ACK must have came from the other side of connection
+connection must be properly finished - to consider connection as a finished, packet with FIN flag must have came from one side of connection and packet with FIN and ACK must have came from the other side of connection, also if packet with RST flag came from any side of connection ssl connection is considered as properly finished
 .IP \[bu] 4 
 connection must contain correct SSL version header - as a correct ssl version header is considered \fBTLS1.0\fR, \fBTLS1.1\fR, \fBTLS1.2\fR and \fBTLS1.3\fR
+.SH LIST OF FILES
+Each file is descibed in manual.pdf
+.IP \[bu] 4 
+sslsniff.cpp
+.IP \[bu] 4 
+arg_parser.cpp
+.IP \[bu] 4 
+arg_parser.h
+.IP \[bu] 4 
+process_packets.cpp
+.IP \[bu] 4 
+process_packets.h
 .SH AUTHOR
 Tomáš Ďuriš (xduris05)
