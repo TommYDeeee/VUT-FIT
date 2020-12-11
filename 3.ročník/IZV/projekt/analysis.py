@@ -37,17 +37,17 @@ def get_dataframe(filename: str, verbose: bool = False) -> pd.DataFrame:
 # Ukol 2: následky nehod v jednotlivých regionech
 def plot_conseq(df: pd.DataFrame, fig_location: str = None,
                 show_figure: bool = False):
-    df_deaths_by_region = df.groupby(['region']).agg({"p13a": "sum"}).reset_index().sort_values('p13a', ascending=False)
-    df_heavy_injured_by_region = df.groupby(['region']).agg({"p13b": "sum"}).reset_index().sort_values('p13b', ascending=False)
-    df_light_injured_by_region = df.groupby(['region']).agg({"p13c": "sum"}).reset_index().sort_values('p13c', ascending=False)
+    df_deaths_by_region = df.groupby(['region']).agg({"p13a": "sum"}).reset_index()
+    df_heavy_injured_by_region = df.groupby(['region']).agg({"p13b": "sum"}).reset_index()
+    df_light_injured_by_region = df.groupby(['region']).agg({"p13c": "sum"}).reset_index()
     df_accidents_count_by_region = df.groupby(['region']).agg({"p1": "count"}).reset_index().sort_values('p1', ascending=False)
     fig, ax = plt.subplots(4, figsize=(8.27, 11.69))
     fig.patch.set_facecolor('tab:gray')
-    sns.barplot(ax=ax[0], data=df_deaths_by_region, x="region", y="p13a", palette='mako', zorder=3)
+    sns.barplot(ax=ax[0], data=df_deaths_by_region, x="region", y="p13a", palette='mako', zorder=3, order=df_accidents_count_by_region["region"])
     ax[0].title.set_text('Úmrtia')
-    sns.barplot(ax=ax[1], data=df_heavy_injured_by_region, x="region", y="p13b", palette='mako', zorder=3)
+    sns.barplot(ax=ax[1], data=df_heavy_injured_by_region, x="region", y="p13b", palette='mako', zorder=3, order=df_accidents_count_by_region["region"])
     ax[1].title.set_text('Ťažko zranení')
-    sns.barplot(ax=ax[2], data=df_light_injured_by_region, x="region", y="p13c", palette='mako', zorder=3)
+    sns.barplot(ax=ax[2], data=df_light_injured_by_region, x="region", y="p13c", palette='mako', zorder=3, order=df_accidents_count_by_region["region"])
     ax[2].title.set_text('Ľahko zranení')
     sns.barplot(ax=ax[3], data=df_accidents_count_by_region, x="region", y="p1", palette='mako', zorder=3)
     ax[3].title.set_text('Celkový počet nehôd')
@@ -72,7 +72,6 @@ def plot_damage(df: pd.DataFrame, fig_location: str = None,
                 show_figure: bool = False):
 
     df.drop(df.columns.difference(['p1', 'region','p12', 'p53']), 1, inplace=True)
-    print(df)
     df.drop(df[(df['region'] != "JHM") & (df['region'] != "HKK") & (df['region'] != "PLK") & (df['region'] != "PHA")].index, inplace=True)
     df['p53'] = df['p53']/10
     df["pricina"] = pd.cut(df["p12"], [np.NINF, 200,300,400,500,600,700], labels=["nezaviněná řidičem", 
@@ -88,31 +87,34 @@ def plot_damage(df: pd.DataFrame, fig_location: str = None,
     df_skoda_PLK = df.loc[df["region"] == "PLK"].groupby(['skoda', 'pricina']).size().reset_index(name='pocet') 
     df_skoda_PHA = df.loc[df["region"] == "PHA"].groupby(['skoda', 'pricina']).size().reset_index(name='pocet') 
 
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8.27, 11.69))
+    fig, ax = plt.subplots(nrows=2, ncols=2, sharey=True, sharex=True, figsize=(11.69, 8.27))
     fig.patch.set_facecolor('darkgray')
     sns.set_style("darkgrid")
     sns.barplot(ax=ax[0][0], data=df_skoda_JHM, x="skoda", y="pocet", hue="pricina", zorder=3)
     ax[0][0].title.set_text("JHM")
+    ax[0][0].set(ylabel="Počet", xlabel="")
     handles, labels = ax[0][0].get_legend_handles_labels()
     sns.barplot(ax=ax[0][1], data=df_skoda_HKK, x="skoda", y="pocet", hue="pricina", zorder=3)
     ax[0][1].title.set_text("HKK")
+    ax[0][1].set(ylabel="", xlabel="")
     sns.barplot(ax=ax[1][0], data=df_skoda_PLK, x="skoda", y="pocet", hue="pricina", zorder=3)
     ax[1][0].title.set_text("PLK")
+    ax[1][0].set(xlabel="Škoda [tisíc Kč]", ylabel="Počet")
+    ax[1][0].set_xticklabels(["< 50", "50 - 200", "200 - 500", "500 - 1000", "> 1000"])
     sns.barplot(ax=ax[1][1], data=df_skoda_PHA, x="skoda", y="pocet", hue="pricina", zorder=3)
     ax[1][1].title.set_text("PHA")
+    ax[1][1].set(xlabel="Škoda [tisíc Kč]", ylabel="")
+    ax[1][1].set_xticklabels(["< 50", "50 - 200", "200 - 500", "500 - 1000", "> 1000"])
 
     for row_ax in ax:
         for ax in row_ax:
             ax.set_yscale("log")
             ax.legend().remove()
-            ax.set(xlabel="Škoda [tisíc Kč]", ylabel="Počet")
-            ax.set_xticklabels(["< 50", "50 - 200", "200 - 500", "500 - 1000", "> 1000"])
-            plt.setp(ax.get_xticklabels(), rotation=30)
             ax.set_facecolor('#eaeaf2')
             ax.yaxis.grid(True, zorder=0, color='dimgrey')
-
-    fig.legend(handles, labels, loc='center right', bbox_to_anchor=(1.01, 0.39))
-    fig.subplots_adjust(hspace=0.35, wspace=0.25, top=0.95, bottom=0.1, right=0.95, left= 0.08)
+    
+    fig.legend(handles, labels, loc='center right', bbox_to_anchor=(1, 0.5), prop={'size': 8})
+    fig.subplots_adjust(hspace=0.2, wspace=0.15, top=0.95, bottom=0.1, right=0.83, left= 0.08)
     
     if fig_location is not None:
         os.makedirs(
@@ -127,7 +129,49 @@ def plot_damage(df: pd.DataFrame, fig_location: str = None,
 # Ukol 4: povrch vozovky
 def plot_surface(df: pd.DataFrame, fig_location: str = None,
                  show_figure: bool = False):
-    pass
+
+    df.drop(df.columns.difference(['p1', 'region','p16', 'date']), 1, inplace=True)
+    df.drop(df[(df['region'] != "JHM") & (df['region'] != "HKK") & (df['region'] != "PLK") & (df['region'] != "KVK")].index, inplace=True)
+    replace_values = {0 : 'iný stav', 1 : 'suchý - neznečistený', 2 : 'suchý - znečistený', 3 : 'mokrý', 4 : 'bláto', 5 : 'náledí, ujetý sníh - posypané', 6 : 'náledí, ujetý sníh - neposypané', 7 : 'rozlitý olej, nafta apod.', 8 : 'sněhová vrstva, rozbředlý sníh', 9 : 'náhla zmena stavu' }     
+    df.replace({'p16' : replace_values}, inplace=True)
+
+    df_povrch_JHM = df.loc[df["region"] == "JHM"].groupby(['p16', pd.Grouper(key='date', freq='M')]).size().reset_index(name='pocet')
+    df_povrch_HKK = df.loc[df["region"] == "HKK"].groupby(['p16', pd.Grouper(key='date', freq='M')]).size().reset_index(name='pocet')
+    df_povrch_PLK = df.loc[df["region"] == "PLK"].groupby(['p16', pd.Grouper(key='date', freq='M')]).size().reset_index(name='pocet')
+    df_povrch_KVK = df.loc[df["region"] == "KVK"].groupby(['p16', pd.Grouper(key='date', freq='M')]).size().reset_index(name='pocet')
+
+
+    fig, ax = plt.subplots(nrows=2, ncols=2, sharey=True, sharex=True, figsize=(11.69, 8.27))
+    fig.patch.set_facecolor('tab:gray')
+    sns.lineplot(ax=ax[0][0], x="date", y="pocet", hue="p16", data=df_povrch_JHM, zorder=3, palette="Dark2_r")
+    ax[0][0].title.set_text("JHM")
+    handles, labels = ax[0][0].get_legend_handles_labels()
+    sns.lineplot(ax=ax[0][1], x="date", y="pocet", hue="p16", data=df_povrch_HKK, zorder=3, palette="Dark2_r")
+    ax[0][1].title.set_text("HKK")
+    sns.lineplot(ax=ax[1][0], x="date", y="pocet", hue="p16", data=df_povrch_PLK, zorder=3, palette="Dark2_r")
+    ax[1][0].title.set_text("PLK")
+    sns.lineplot(ax=ax[1][1], x="date", y="pocet", hue="p16", data=df_povrch_KVK, zorder=3, palette="Dark2_r")
+    ax[1][1].title.set_text("KVK")
+
+    for row_ax in ax:
+        for ax in row_ax:
+            ax.legend().remove()
+            ax.set(xlabel="Dátum vzniku nehody", ylabel="Počet nehôd")
+            ax.set_facecolor('darkgray')
+            ax.yaxis.grid(True, zorder=0, color='dimgrey')
+
+    fig.legend(handles, labels, loc='center right', bbox_to_anchor=(1, 0.5), prop={'size': 8})
+    fig.subplots_adjust(hspace=0.20, wspace=0.15, top=0.9, bottom=0.1, right=0.83, left= 0.08)
+
+    if fig_location is not None:
+        os.makedirs(
+            os.path.dirname(
+                os.path.abspath(fig_location)),
+            exist_ok=True)
+        plt.savefig(fig_location, dpi=600)
+    
+    if show_figure:
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -138,4 +182,4 @@ if __name__ == "__main__":
     df = get_dataframe("accidents.pkl.gz", verbose=True)
     #plot_conseq(df, fig_location="01_nasledky.png", show_figure=True)
     plot_damage(df, "02_priciny.png", True)
-    plot_surface(df, "03_stav.png", True)
+    #plot_surface(df, "03_stav.png", True)
